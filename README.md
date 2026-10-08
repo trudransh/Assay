@@ -123,8 +123,11 @@ result.reproduce.anchored;  // { kind: "contract-call", address, function, args 
 | **ReceiptAnchor** | [`0x049A73755cA3508ef3Daa4752A3406f6e00CfB13`](https://monadvision.com/address/0x049A73755cA3508ef3Daa4752A3406f6e00CfB13) | [tx](https://monadvision.com/tx/0x293c2684a3fefd2ae2deec1a432eee78c591d41eed848efe02f5a5c1b89d1545) |
 | **VerifierRegistry** | [`0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1`](https://monadvision.com/address/0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1) | [tx](https://monadvision.com/tx/0x8649c6abab999a902feb4d8ba79b14b3b553dfd5374313ca8c6a88f8f6372dfe) |
 | **CreAttestor** | [`0xAD9e30dcC63670E1e54f1f12468D16eC1bceDf7a`](https://monadvision.com/address/0xAD9e30dcC63670E1e54f1f12468D16eC1bceDf7a) | [tx](https://monadvision.com/tx/0x7949a60e38f42352079e082e8b85fa2337023dde5d181b3096856268be68219e) |
+| **AssayAccount** (EIP-7702 delegate) | [`0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91`](https://monadvision.com/address/0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91) | [tx](https://monadvision.com/tx/0x0ed03b802f4b6a254445965401bd606d5ae0ed0ff4b98b41aab36b2c0ce057f2) |
 
 Verified on Sourcify (exact match). Host agent **10278** and verifier agent **10279** are registered on the mainnet ERC-8004 registry. ⛓️ The [first mainnet receipt](https://monadvision.com/tx/0x48bcf6abe5914a1a8aee3678a6f84eeb2773c4131bd670e995e44e34dd49a9a4) is anchored, and `verifyReceipt` returns true onchain. The [first mainnet grade](https://monadvision.com/tx/0x1e0b1d63984ff0140e675c116003fd36968816ffbc30d6040fb2c2defb980d50) is posted too: host 10278 scored 38/38 against Google's own API. It's a plumbing check, because the host relays that same API, so it shows the loop works on mainnet rather than measuring host quality.
+
+A second mainnet host, agent **10316**, serves Kimi K2.6 from Moonshot's own endpoint. Its grade is 32/32 against Moonshot's endpoint, and a Chainlink CRE re-check of that grade [agrees onchain](https://monadvision.com/tx/0x7b7c9eebd185972218932b5224da77cd8c68139ffb4c2ec3485cb6305e5af753).
 
 ## Also on Monad testnet (chain 10143)
 
@@ -166,9 +169,9 @@ Proof: [`indexer/`](indexer/) · [endpoint](https://indexer.dev.hyperindex.xyz/f
 ### 🔗 Chainlink CRE
 **`grade-recheck` workflow**
 
-One verifier could lie about a grade. On every `GradePosted`, the workflow downloads the evidence, checks its sha256, recounts pass and total, recomputes the Wilson interval, and writes agree or disagree to `CreAttestor`. On the real grade it **agrees**. On an inflated replay (claims 10/10, the logs say 8/10) it returns **`agree=false`**.
+One verifier could lie about a grade. On every `GradePosted` (finalized), the workflow downloads the evidence, checks its sha256, recounts pass and total, and recomputes the Wilson interval, and every node must agree on the result byte for byte. Before writing, it reads `VerifierRegistry` and `CreAttestor` at the finalized block, so it never attests a claim the registry doesn't hold, or the same grade twice. On mainnet it [re-checked two real grades](docs/deployments.md) and wrote **`agree=true`**. An inflated replay (claims 10/10, the logs say 8/10) returns **`agree=false`**.
 
-Proof: [`docs/evidence/cre-simulate-grade-recheck.txt`](docs/evidence/cre-simulate-grade-recheck.txt) · [`cre/`](cre/) · 27 tests
+Proof: [`docs/evidence/cre-simulate-mainnet.txt`](docs/evidence/cre-simulate-mainnet.txt) · [`cre/`](cre/) · 31 tests
 
 </td>
 </tr>
@@ -178,7 +181,7 @@ Proof: [`docs/evidence/cre-simulate-grade-recheck.txt`](docs/evidence/cre-simula
 ### 🗝️ Mera PRF
 **One passkey, many keys**
 
-The passkey's PRF output derives an AES-GCM key for a vault that keeps your receipts and salts as ciphertext only, per-receipt reveal keys for showing one answer to one person, and per-app secp256k1 requester keys that can't be linked across apps. Nothing derived is stored, and a second device with the same passkey re-derives it all. Per-app keys co-sign onchain with `cosignK`.
+The passkey's PRF output derives an AES-GCM key for a vault that keeps your receipts and salts as ciphertext only, per-receipt reveal keys for showing one answer to one person, and per-app secp256k1 requester keys that can't be linked across apps. Nothing derived is stored, and a second device with the same passkey re-derives it all. Per-app keys co-sign onchain with `cosignK`, and the host pays the gas, so a per-app address never needs funding.
 
 Proof: [`web/src/lib/vault.ts`](web/src/lib/vault.ts) · [`web/src/mera.ts`](web/src/mera.ts) · [docs](https://assay.gitbook.io/assay-docs/integrations/mera)
 
@@ -200,7 +203,7 @@ Proof: `test_post_afterIdentityTransferred_reverts` · 3 fork tests against the 
 ### 🛡️ MonadGuard
 **Same receipt format, verified both ways**
 
-MonadGuard checks the tool, Assay checks the model host that answered. Both sign ES256 over JCS with keys in a JWKS. Assay's verifier passes MonadGuard's mainnet receipts, and MonadGuard's `verify-foreign.mjs` passes ours with 10 of 10 checks, including a byte-for-byte JCS match. Each side pins the other's receipts as offline CI fixtures.
+MonadGuard checks the tool, Assay checks the model host that answered. Both sign ES256 over JCS with keys in a JWKS. Assay's verifier passes MonadGuard's mainnet receipts, and MonadGuard's `verify-foreign.mjs` passes six of ours (three on mainnet, one co-signed) with 10 of 10 checks, including a byte-for-byte JCS match. Each side pins the other's receipts as offline CI fixtures and checks that a copy with one byte flipped is rejected.
 
 Proof: [`docs/interop/`](docs/interop/) · `sdk/test/interop.test.ts`
 
@@ -213,6 +216,50 @@ Proof: [`docs/interop/`](docs/interop/) · `sdk/test/interop.test.ts`
 A mandate bounds how much an agent spends. [PR #12](https://github.com/aliveevie/mandate/pull/12) adds `@ibxlab/mandate/assay`, so an agent under a mandate only pays inference hosts that verifiers it trusts grade `pass`. One view call to `gradeOf`, fails closed, no new dependencies, 10 tests.
 
 Proof: [aliveevie/mandate#12](https://github.com/aliveevie/mandate/pull/12)
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### 🧠 Mida
+**Context that carries its own receipt**
+
+Mida keeps what one agent learned, encrypted under the user's keys, so the next agent the user approves can pick it up. A Mida record now carries the Assay receipt of the call that produced it, with its salt inside the encrypted body. Before using the context, the next agent runs `checkRecord`: the host must be pinned, the receipt anchored, and the salt must open both commits. The Mida team built their side and merged it into this repo. Their test run saved a receipt with one agent, read it with a second, then revoked the reader. They also found a gap in our offline mode, now fixed.
+
+Proof: [PR #6](https://github.com/trudransh/Assay/pull/6) · [`examples/mida-context/`](examples/mida-context/) · `sdk/test/record.test.ts`
+
+</td>
+<td width="50%" valign="top">
+
+### 🌙 Kimi K2.6
+**A Kimi host, and every Kimi host graded**
+
+Host agent 10316 serves Kimi K2.6 on mainnet from Moonshot's own endpoint, and every answer gets a receipt. We graded all 17 OpenRouter endpoints for Kimi K2.6, plus our host, against Moonshot's endpoint: 16 graded hosts and ours passed 32/32 tool-calling checks, whatever precision they claim (int4, fp4, fp8, bf16 or none). Three of them ignored the token limit set in the request. One rate-limited every request, so it got no grade.
+
+Proof: [17 grades onchain](docs/deployments.md) · [`docs/evidence/grades_20261008T033914Z.json`](docs/evidence/grades_20261008T033914Z.json)
+
+</td>
+</tr>
+<tr>
+<td width="50%" valign="top">
+
+### ⛽ Gas sponsorship (EIP-7702)
+**Per-app keys that never hold MON**
+
+A per-app address delegates to `AssayAccount` with EIP-7702, and the host's relayer pays the gas for its co-sign and for its ERC-8004 feedback. The relayer only pays for feedback about its own host that cites a receipt the sender co-signed, so it can't be drained for anything else. A fresh address with zero MON co-signed and filed feedback on testnet, and still had zero afterwards.
+
+Proof: [`contracts/src/AssayAccount.sol`](contracts/src/AssayAccount.sol) · a fork test against the real ReputationRegistry · [`host/src/sponsor.ts`](host/src/sponsor.ts)
+
+</td>
+<td width="50%" valign="top">
+
+### 💸 Kanmani escrow
+**Proposed: pay a host per verified receipt**
+
+Kanmani runs an escrow on Monad mainnet that settles metered jobs in USDC. They proposed buying responses from our host and settling one unit per receipt that verifies against our anchored batches. We agreed on the terms, but the first paid job hasn't run yet.
+
+Proof: [issue #4](https://github.com/trudransh/Assay/issues/4)
 
 </td>
 </tr>
@@ -234,17 +281,20 @@ The threat model maps every attack to the test that blocks it: [docs](https://as
 | Stale grades and sold identities can't post | `test_post_staleGrade_reverts` · `test_post_afterIdentityTransferred_reverts` |
 | Only our CRE workflow, through the forwarder, can write attestations | `test_onReport_nonForwarder_reverts` · `test_onReport_wrongWorkflowId_reverts` |
 | The P256 precompile is live, never the 250k-gas fallback | `test_precompile_knownVector_returnsOne` · `test_valid_usesPrecompile_gasBound` |
+| A real browser passkey co-sign from mainnet verifies, and changing any byte of it fails | `MainnetReplayTest` (replays the real anchor and co-sign transactions) |
+| Only a host's own signature anchors, never twice, and a receipt verifies only under a host that anchored it | `ReceiptAnchorInvariantTest` (3 invariants, random call sequences) |
+| A sponsored call only runs if the per-app key signed it, once, on this chain, before its deadline | `AssayAccountTest` (12 tests, including a fuzz test) |
 
 | Package | Tests |
 |---|---|
-| Contracts (Foundry) | 99 + 3 fork tests against the real ERC-8004 registry |
-| SDK `@assay/receipts` | 133, including cross-implementation checks of MonadGuard's receipts |
-| Host | 49, plus a 16/16 end-to-end run on a local chain in CI |
-| Web app | 68 |
+| Contracts (Foundry) | 121, plus fork tests against the real ERC-8004 registries |
+| SDK `@assay/receipts` | 148, including cross-implementation checks of MonadGuard's receipts |
+| Host | 74, plus a 16/16 end-to-end run on a local chain in CI |
+| Web app | 96 |
 | Grader (Python) | 43 |
-| Envio indexer | 22, plus the HyperSync stats script |
-| Chainlink CRE workflow | 27 |
-| **Total** | **442**, across 6 CI workflows |
+| Envio indexer | 24, plus the HyperSync stats script |
+| Chainlink CRE workflow | 31 |
+| **Total** | **537**, across 6 CI workflows |
 
 TypeScript and Solidity check each other: the SDK generates the signatures and Merkle proofs that the Foundry tests verify.
 
