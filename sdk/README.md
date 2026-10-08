@@ -19,7 +19,7 @@ const VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"; // a verifier you
 // Refuse the host before sending (or paying) unless your verifiers grade it "pass".
 const ask = wrap(fetch, {
   gate: {
-    check: hostGradeCheck(`${HOST}/v1/grade`, { model: "gemma-4-31b-it", host: "erc8004:143:10278", verifiers: [VERIFIER] }),
+    check: hostGradeCheck(HOST, { model: "gemma-4-31b-it", host: "erc8004:143:10278", verifiers: [VERIFIER], reference: "direct:generativelanguage.googleapis.com" }),
     allow: ["pass"],
   },
 });
@@ -33,7 +33,7 @@ const { json, receipt, salt } = await ask(`${HOST}/v1/chat/completions`, {
 // Keep `salt`: it's the only way to prove later that this output answered this prompt.
 ```
 
-`wrap` sends a fresh 32-byte salt with the request, reads the receipt from the response headers, and checks that the output commit matches the bytes you received. If the gate says no, it throws `GradeGateError` and sends nothing.
+`reference` is the lab's own endpoint for the model: the host is judged against it. Without one, a grade must clear an absolute floor (its 95% lower bound at least 80%) to pass. `wrap` sends a fresh 32-byte salt with the request, reads the receipt from the response headers, and checks that the output commit matches the bytes you received. If the gate says no, it throws `GradeGateError` and sends nothing.
 
 ## Verify a receipt
 

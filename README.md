@@ -97,7 +97,7 @@ import { wrap, hostGradeCheck, verifyReceipt, GradeGateError } from "@assay/rece
 // Refuse a host before sending (or paying) unless verifiers you trust grade it "pass"
 const ask = wrap(fetch, {
   gate: {
-    check: hostGradeCheck(`${HOST}/v1/grade`, { model: "z-ai/glm-5.3", host: "erc8004:10143:1962", verifiers: [MY_VERIFIER] }),
+    check: hostGradeCheck(HOST, { model: "z-ai/glm-5.3", host: "erc8004:10143:1962", verifiers: [MY_VERIFIER], reference: "openrouter:z-ai/fp8" }),
     allow: ["pass"],
   },
 });
