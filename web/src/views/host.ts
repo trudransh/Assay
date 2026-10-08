@@ -1,6 +1,6 @@
 import { hostKeyForAgent } from "@assay/receipts";
 import { badge, chip, emptyState, errorText, h, kv, shortHash } from "../dom.js";
-import { CHAIN_ID, CHAINS, chainConfig } from "../lib/config.js";
+import { CHAIN_ID, CHAINS, EXTRA_HOSTS, chainConfig } from "../lib/config.js";
 import { fetchBatch } from "../lib/host.js";
 import { hostProfile, type HostProfile } from "../lib/indexer.js";
 import type { Hex } from "viem";
@@ -71,7 +71,8 @@ export function renderHost(p: HostProfile, chainId: number = CHAIN_ID): HTMLElem
   const { explorer: EXPLORER, name: network } = chainConfig(chainId);
   const a = p.agent;
   const id = a.agentId;
-  const name = a.name ?? `Agent ${id}`;
+  // Our own hosts are named in config, for when the indexer couldn't load their card yet.
+  const name = a.name ?? EXTRA_HOSTS.find((x) => x.chainId === chainId && String(x.agentId) === String(id))?.name ?? `Agent ${id}`;
   const card8004 = a.cardStatus === "OK" ? chip("Agent card OK", "lime", { dot: true }) : chip(`Agent card ${(a.cardStatus ?? "missing").toLowerCase()}`, "muted");
   const head = h(
     "header",
