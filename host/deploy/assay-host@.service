@@ -6,7 +6,7 @@ Wants=network-online.target
 [Service]
 User=assay
 WorkingDirectory=/opt/assay/host
-# One instance per network: assay-host@testnet (port 8787) and assay-host@mainnet (port 8788).
+# One instance per host: assay-host@testnet (8787), assay-host@mainnet (8788), assay-host@kimi (8789, mainnet).
 EnvironmentFile=/etc/assay/host-%i.env
 ExecStart=/opt/assay/host/node_modules/.bin/tsx src/server.ts
 Restart=always
@@ -15,7 +15,7 @@ RestartSec=5
 # If a restart fails, `journalctl -u assay-host@<net> -n 50` names the line; `systemd-analyze security assay-host@mainnet` scores it.
 NoNewPrivileges=yes
 ProtectSystem=strict
-ReadWritePaths=-/opt/assay/host/data -/opt/assay/host/data-mainnet
+ReadWritePaths=-/opt/assay/host/data -/opt/assay/host/data-mainnet -/opt/assay/host/data-kimi
 ProtectHome=yes
 PrivateTmp=yes
 PrivateDevices=yes

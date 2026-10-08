@@ -17,12 +17,12 @@ id assay >/dev/null 2>&1 || useradd --system --create-home --shell /usr/sbin/nol
 chown -R assay:assay /opt/assay
 cd /opt/assay
 sudo -u assay COREPACK_ENABLE_DOWNLOAD_PROMPT=0 corepack pnpm install --frozen-lockfile --filter @assay/host...
-install -d -o assay -g assay -m 700 host/.keys host/data host/data-mainnet
+install -d -o assay -g assay -m 700 host/.keys host/data host/data-mainnet host/data-kimi
 install -d -m 750 -g assay /etc/assay
 
 install -m 644 host/deploy/assay-host@.service /etc/systemd/system/assay-host@.service
-# Testnet at the root (older receipt links keep working), mainnet under /mainnet/.
-printf '%s {\n\thandle_path /mainnet/* {\n\t\treverse_proxy 127.0.0.1:8788\n\t}\n\thandle {\n\t\treverse_proxy 127.0.0.1:8787\n\t}\n}\n' "$DOMAIN" > /etc/caddy/Caddyfile
+# Testnet at the root (older receipt links keep working), mainnet under /mainnet/, the Kimi host under /kimi/.
+printf '%s {\n\thandle_path /mainnet/* {\n\t\treverse_proxy 127.0.0.1:8788\n\t}\n\thandle_path /kimi/* {\n\t\treverse_proxy 127.0.0.1:8789\n\t}\n\thandle {\n\t\treverse_proxy 127.0.0.1:8787\n\t}\n}\n' "$DOMAIN" > /etc/caddy/Caddyfile
 systemctl daemon-reload
 # Each instance is enabled by push-secrets.sh once its env file exists.
 systemctl reload-or-restart caddy
