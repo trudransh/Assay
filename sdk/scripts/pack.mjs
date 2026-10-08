@@ -1,7 +1,7 @@
 // Builds the SDK and assembles sdk/npm/, the folder published to npm as `assay-receipts`.
 // Inside this repo the package stays `@assay/receipts` (workspace imports); the public name differs
 // because the `@assay` npm scope belongs to someone else.
-//   node scripts/pack.mjs && npm publish sdk/npm --access public
+//   node scripts/pack.mjs && (cd npm && npm publish --access public)   (not "npm publish sdk/npm": npm reads that as GitHub user/repo)
 import { execSync } from "node:child_process";
 import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
