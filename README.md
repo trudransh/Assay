@@ -49,7 +49,7 @@ We measured one difference ourselves on 8 Oct. Sixteen hosts on OpenRouter answe
 | ⚠️ | Per-app keys that never hold MON (EIP-7702 gas sponsorship) work end to end on testnet; there's no mainnet run yet | [`host/src/sponsor.ts`](host/src/sponsor.ts) |
 | ⚠️ | The tool-calling checks are easy: every host we graded passed. The token-cap test is the first one that separates hosts | [`harness/`](harness/) |
 | ❌ | Which weights ran. A receipt proves who served which bytes and what they claimed, not the model behind them | [roadmap](https://assay.gitbook.io/assay-docs/resources/roadmap) |
-| ❌ | The SDK isn't on npm yet; it will be published as `assay-receipts` | [`sdk/`](sdk/) |
+| ✅ | The SDK is on npm as [`assay-receipts`](https://www.npmjs.com/package/assay-receipts) (0.1.0) | [`sdk/`](sdk/) |
 
 ## What a receipt proves
 
@@ -130,7 +130,7 @@ result.checks;              // { jws, hash, kid, merkle, anchored, outputCommit,
 result.reproduce.anchored;  // { kind: "contract-call", address, function, args } → paste into cast
 ```
 
-`@assay/receipts` is the `sdk/` workspace package. It isn't on npm yet; it will be published as `assay-receipts`, because the `@assay` scope belongs to someone else. [SDK reference](https://assay.gitbook.io/assay-docs/for-developers/sdk) · [Quickstart](https://assay.gitbook.io/assay-docs/getting-started/quickstart)
+`@assay/receipts` is the `sdk/` workspace package. It is published on npm as [`assay-receipts`](https://www.npmjs.com/package/assay-receipts) (`npm install assay-receipts`), because the `@assay` scope belongs to someone else. [SDK reference](https://assay.gitbook.io/assay-docs/for-developers/sdk) · [Quickstart](https://assay.gitbook.io/assay-docs/getting-started/quickstart)
 
 ## Live on Monad mainnet (chain 143)
 
