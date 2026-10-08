@@ -26,6 +26,17 @@ Deployed 5 Oct 2026 with Foundry 1.7.1, solc 0.8.30 and `evm_version = "osaka"`,
 
 First sponsored run, testnet, 7 Oct: a fresh per-app address `0xBB14ffc0…Bc2f` with a balance of 0 co-signed receipt `0x401a4ec7…baae` through `POST /v1/sponsor/cosignk` ([`0x98ed7832…`](https://testnet.monadvision.com/tx/0x98ed7832321f1026d0dc3d80a0bf494cdc879dbda84824ee7a66581914321bea)), then filed ERC-8004 feedback citing it through `POST /v1/sponsor/feedback`, which installed the EIP-7702 delegation in the same transaction ([`0x30898fc9…`](https://testnet.monadvision.com/tx/0x30898fc98ed99382bf4e585b6450ee8dda696e7b11af4cdce30f5a97ce407147)). Its balance was still 0 afterwards, and the Envio indexer counts the feedback as receipt-backed.
 
+### Kimi host (8 Oct)
+
+A second mainnet host, ERC-8004 agent **10316** ("Assay Kimi host"), serves Kimi K2.6 through OpenRouter pinned to Moonshot's own endpoint (`moonshotai/int4`), with its own signing key (kid `F6V1sRvW…Wstls`). It runs at https://34-45-1-81.sslip.io/kimi, with reasoning turned off by the host (signed into every receipt's `req.params`) and tight request caps.
+
+| Identity or action | Tx | Block |
+|---|---|---|
+| Agent **10316** registered | [`0x76d69bb6…`](https://monadvision.com/tx/0x76d69bb665c77a68df9d934dcab96922838993cfb9f3fa9475026f0769ca3aa6) | 111501003 |
+| First Kimi receipt `0xf554e816…4b9e` anchored | [`0xc3891517…`](https://monadvision.com/tx/0xc3891517c41a0a8b022e21dad2e78d5c10e0fa732f3a2457f30ff1957180a482) | 8 Oct |
+| **Kimi K2.6 grades:** verifier 10279 graded 16 OpenRouter endpoints (Moonshot's own included) and host 10316 against Moonshot's endpoint, 32 tool checks each. All 17 passed 32/32. `gmicloud/fp8` rate-limited every request and got no grade. Evidence `0xded48f9b…309b` (`docs/evidence/grades_20261008T033914Z.json`) | first [`0x3e1b2b20…`](https://monadvision.com/tx/0x3e1b2b2032eabe72305d752738664206b42e6bc20196bb03aaaf132b5c3c228e) · host 10316 [`0xc129015b…`](https://monadvision.com/tx/0xc129015b41d992206ea43444cef39095b148db4094ca50d0c1ff98b91dc6f2cc) | 8 Oct |
+| **CRE re-check of host 10316's grade:** recounted 32/32 from the evidence, `GradeAttested(agree=true)` | [`0x7b7c9eeb…`](https://monadvision.com/tx/0x7b7c9eebd185972218932b5224da77cd8c68139ffb4c2ec3485cb6305e5af753) | 8 Oct |
+
 What the CRE attestation means: every `cre workflow simulate --broadcast` stamps the same placeholder workflow owner and id, so this attestor accepts a simulated report from anyone running the workflow, and a later report for the same grade overwrites an earlier one. It shows that the workflow ran on this grade and that anyone can re-run it on the same transaction and get the same answer. It isn't a signature from a Chainlink DON; a deployed workflow would write to a new attestor pinned to its own owner.
 
 The mainnet host runs at https://34-45-1-81.sslip.io/mainnet (the web app reaches it at `/host-mainnet`). Testnet stays live below as the place to experiment for free.
