@@ -60,7 +60,7 @@ The report is `abi.encode(address verifier, bytes32 model, bytes32 hostKey, uint
 ```bash
 cd cre/grade-recheck
 bun install
-bun test           # 27 tests
+bun test           # 31 tests
 bunx tsc --noEmit
 bunx cre-compile main.ts /tmp/grade-recheck.wasm   # builds the WASM, no account needed
 ```

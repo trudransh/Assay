@@ -33,9 +33,9 @@ npx tsx examples/mida-context/check.mts record.json --offline  # CI: every check
 2. The receipt names a pinned host, and the record's `chainId` and `agentId` match it.
 3. The JWS verifies, its `kid` matches the body, and the Merkle proof puts the receipt under `root`.
 4. ReceiptAnchor, at the address the reader pinned (never the record's), says that host anchored `root`. The batch signature was checked onchain when it was anchored.
+5. The salt opens both commits: this exact output answered these exact messages.
 
 Offline (`--offline`, for CI) step 4 is skipped, and that step is what ties the signing key to the host: the record carries its own JWKS. So offline, the signing key must also match a key the reader pinned by its RFC 7638 thumbprint (`pinnedKeys`), and the output says "not checked on chain". Without pinned keys, offline mode refuses. Thanks to Mida for finding this.
-5. The salt opens both commits: this exact output answered these exact messages.
 
 A co-signature is reported but not required.
 

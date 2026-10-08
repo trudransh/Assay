@@ -11,7 +11,7 @@
 [![Live app](https://img.shields.io/badge/live%20app-assay--ten--xi.vercel.app-C9A227?style=for-the-badge&logo=googlechrome&logoColor=white)](https://assay-ten-xi.vercel.app)
 [![Docs](https://img.shields.io/badge/docs-assay.gitbook.io-4FC3F7?style=for-the-badge&logo=gitbook&logoColor=white)](https://assay.gitbook.io/assay-docs)
 [![Monad mainnet](https://img.shields.io/badge/Monad-mainnet%20143-8B73FF?style=for-the-badge)](https://monadvision.com/address/0x049A73755cA3508ef3Daa4752A3406f6e00CfB13)
-[![Tests](https://img.shields.io/badge/tests-442-B8F03C?style=for-the-badge)](#security)
+[![Tests](https://img.shields.io/badge/tests-537-B8F03C?style=for-the-badge)](#security)
 [![CI](https://img.shields.io/github/actions/workflow/status/trudransh/Assay/contracts.yml?branch=main&style=for-the-badge&label=contracts)](https://github.com/trudransh/Assay/actions)
 [![License](https://img.shields.io/badge/license-MIT-EDE6D6?style=for-the-badge)](LICENSE)
 
@@ -114,7 +114,7 @@ result.checks;              // { jws, hash, kid, merkle, anchored, outputCommit,
 result.reproduce.anchored;  // { kind: "contract-call", address, function, args } → paste into cast
 ```
 
-`@assay/receipts` is the `sdk/` workspace package. [SDK reference](https://assay.gitbook.io/assay-docs/for-developers/sdk) · [Quickstart](https://assay.gitbook.io/assay-docs/getting-started/quickstart)
+`@assay/receipts` is the `sdk/` workspace package. It isn't on npm yet; it will be published as `assay-receipts`, because the `@assay` scope belongs to someone else. [SDK reference](https://assay.gitbook.io/assay-docs/for-developers/sdk) · [Quickstart](https://assay.gitbook.io/assay-docs/getting-started/quickstart)
 
 ## Live on Monad mainnet (chain 143)
 
@@ -127,7 +127,7 @@ result.reproduce.anchored;  // { kind: "contract-call", address, function, args 
 
 Verified on Sourcify (exact match). Host agent **10278** and verifier agent **10279** are registered on the mainnet ERC-8004 registry. ⛓️ The [first mainnet receipt](https://monadvision.com/tx/0x48bcf6abe5914a1a8aee3678a6f84eeb2773c4131bd670e995e44e34dd49a9a4) is anchored, and `verifyReceipt` returns true onchain. The [first mainnet grade](https://monadvision.com/tx/0x1e0b1d63984ff0140e675c116003fd36968816ffbc30d6040fb2c2defb980d50) is posted too: host 10278 scored 38/38 against Google's own API. It's a plumbing check, because the host relays that same API, so it shows the loop works on mainnet rather than measuring host quality.
 
-A second mainnet host, agent **10316**, serves Kimi K2.6 from Moonshot's own endpoint. Its grade is 32/32 against Moonshot's endpoint, and a Chainlink CRE re-check of that grade [agrees onchain](https://monadvision.com/tx/0x7b7c9eebd185972218932b5224da77cd8c68139ffb4c2ec3485cb6305e5af753).
+A second mainnet host, agent **10316**, serves Kimi K2.6 from Moonshot's own endpoint. Its grade is 32/32 against Moonshot's endpoint, and a Chainlink CRE re-check of that grade [agrees onchain](https://monadvision.com/tx/0x7b7c9eebd185972218932b5224da77cd8c68139ffb4c2ec3485cb6305e5af753) (a simulation broadcast, not a DON).
 
 ## Also on Monad testnet (chain 10143)
 
@@ -169,7 +169,7 @@ Proof: [`indexer/`](indexer/) · [endpoint](https://indexer.dev.hyperindex.xyz/f
 ### 🔗 Chainlink CRE
 **`grade-recheck` workflow**
 
-One verifier could lie about a grade. On every `GradePosted` (finalized), the workflow downloads the evidence, checks its sha256, recounts pass and total, and recomputes the Wilson interval, and every node must agree on the result byte for byte. Before writing, it reads `VerifierRegistry` and `CreAttestor` at the finalized block, so it never attests a claim the registry doesn't hold, or the same grade twice. On mainnet it [re-checked two real grades](docs/deployments.md) and wrote **`agree=true`**. An inflated replay (claims 10/10, the logs say 8/10) returns **`agree=false`**.
+One verifier could lie about a grade. On every `GradePosted` (finalized), the workflow downloads the evidence, checks its sha256, recounts pass and total, and recomputes the Wilson interval, and every node must agree on the result byte for byte. Before writing, it reads `VerifierRegistry` and `CreAttestor` at the finalized block, so it never attests a claim the registry doesn't hold, or the same grade twice. On mainnet it [re-checked two real grades](docs/deployments.md) and wrote **`agree=true`**. These are simulation broadcasts: no DON ran, our key relayed the simulator's output, and anyone can re-run the same check. An inflated replay (claims 10/10, the logs say 8/10) returns **`agree=false`**.
 
 Proof: [`docs/evidence/cre-simulate-mainnet.txt`](docs/evidence/cre-simulate-mainnet.txt) · [`cre/`](cre/) · 31 tests
 
@@ -181,7 +181,7 @@ Proof: [`docs/evidence/cre-simulate-mainnet.txt`](docs/evidence/cre-simulate-mai
 ### 🗝️ Mera PRF
 **One passkey, many keys**
 
-The passkey's PRF output derives an AES-GCM key for a vault that keeps your receipts and salts as ciphertext only, per-receipt reveal keys for showing one answer to one person, and per-app secp256k1 requester keys that can't be linked across apps. Nothing derived is stored, and a second device with the same passkey re-derives it all. Per-app keys co-sign onchain with `cosignK`, and the host pays the gas, so a per-app address never needs funding.
+The passkey's PRF output derives an AES-GCM key for a vault that keeps your receipts and salts as ciphertext only, per-receipt reveal keys for showing one answer to one person, and per-app secp256k1 requester keys that can't be linked across apps. Nothing derived is stored, and a second device with the same passkey re-derives it all. Per-app keys co-sign onchain with `cosignK`, and the host pays the gas, so a per-app address never needs funding. So far that has run on testnet; there is no mainnet `cosignK` yet.
 
 Proof: [`web/src/lib/vault.ts`](web/src/lib/vault.ts) · [`web/src/mera.ts`](web/src/mera.ts) · [docs](https://assay.gitbook.io/assay-docs/integrations/mera)
 
@@ -279,7 +279,7 @@ The threat model maps every attack to the test that blocks it: [docs](https://as
 | A passkey co-sign needs user verification and low-s | `test_cosign_missingUV_reverts` · `test_cosign_highS_reverts` |
 | Key rotation keeps old anchors valid, and grades don't follow the key | `test_setHostKey_rotation_keepsOldAnchors` · `test_gradeOf_otherHostKeyIsSeparate` |
 | Stale grades and sold identities can't post | `test_post_staleGrade_reverts` · `test_post_afterIdentityTransferred_reverts` |
-| Only our CRE workflow, through the forwarder, can write attestations | `test_onReport_nonForwarder_reverts` · `test_onReport_wrongWorkflowId_reverts` |
+| An attestor only accepts reports from its configured forwarder and workflow. The mainnet v1 instance is configured for the CRE simulator, whose forwarder and workflow ids are public, so anyone can write to it: its attestations show the check ran and can be re-run, not that our workflow alone wrote them | `test_onReport_nonForwarder_reverts` · `test_onReport_wrongWorkflowId_reverts` |
 | The P256 precompile is live, never the 250k-gas fallback | `test_precompile_knownVector_returnsOne` · `test_valid_usesPrecompile_gasBound` |
 | A real browser passkey co-sign from mainnet verifies, and changing any byte of it fails | `MainnetReplayTest` (replays the real anchor and co-sign transactions) |
 | Only a host's own signature anchors, never twice, and a receipt verifies only under a host that anchored it | `ReceiptAnchorInvariantTest` (3 invariants, random call sequences) |
