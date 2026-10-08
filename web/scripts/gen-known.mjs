@@ -14,6 +14,7 @@ for (const f of readdirSync(EVIDENCE).filter((f) => /^grades_.*\.json$/.test(f))
 }
 // Assay's reference hosts sign receipts; their grades are keyed by ERC-8004 identity (D21).
 for (const [chain, agent] of [[10143, 1962], [143, 10278]]) hosts.set(`erc8004:${chain}:${agent}`, `Assay host ${agent}`);
+hosts.set("erc8004:143:10316", "Assay Kimi host 10316");
 
 const h = (s) => keccak256(stringToBytes(s));
 const modelRows = [...models].sort().map((m) => `  "${h(m)}": ${JSON.stringify(m)},`);

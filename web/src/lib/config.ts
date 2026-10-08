@@ -22,6 +22,11 @@ export interface ChainConfig {
   assayAccount?: Address;
 }
 
+/// Hosts beyond each chain's reference host. Receipt lookups try them too; each serves one model.
+export const EXTRA_HOSTS: { chainId: number; agentId: number; host: string; name: string; model: string }[] = [
+  { chainId: 143, agentId: 10316, host: import.meta.env.VITE_HOST_URL_KIMI ?? "/host-kimi", name: "Assay Kimi host", model: "moonshotai/kimi-k2.6" },
+];
+
 /// Every chain Assay is deployed on. A receipt names its chain in host.agentId (erc8004:<chainId>:<id>).
 export const CHAINS: Record<number, ChainConfig> = {
   10143: {

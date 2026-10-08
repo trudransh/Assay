@@ -11,6 +11,7 @@ export const KNOWN_HOSTS: Record<string, { preimage: string; label: string }> = 
   "0xd0fe1e8708e22bc3fe3b101f9ab21a41052eb11b27d4d994f91cccca881927c7": { preimage: "direct:generativelanguage.googleapis.com", label: "direct:generativelanguage.googleapis.com" },
   "0xbc6bc5b79f83de1bb4e63bacbdb8d82c8a38e1c9caa38043f8b6ba33ffb33e6c": { preimage: "erc8004:10143:1962", label: "Assay host 1962" },
   "0x86cbfee7b8932227e5fa898eeb64b928ac8c4c61a9e65d575bc41622ac813234": { preimage: "erc8004:143:10278", label: "Assay host 10278" },
+  "0x57b4dfbdf9734c34770238340612b51cd2d264ed2c0643cd548f80078b53b984": { preimage: "erc8004:143:10316", label: "Assay Kimi host 10316" },
   "0x12e97d3f65abfd14d0e37e23a61ba6c8db6e9d51022f349abe0a081282d83049": { preimage: "openrouter:akashml/fp8", label: "akashml/fp8" },
   "0xd68626b17a28977c151d82d5d10c7d386fc3f95cabafe28e20aff66ff11a9b37": { preimage: "openrouter:alibaba", label: "alibaba" },
   "0xf8fcca669decaf83b712b5e33cc8d30d11f32c0fa0f3620513d096fd93964c3b": { preimage: "openrouter:alibaba/fast", label: "alibaba/fast" },

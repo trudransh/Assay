@@ -16,7 +16,7 @@ import {
 import type { Address, Hex } from "viem";
 import { badge, banner, button, chip, copyButton, emptyState, errorText, h, kv, levelLadder, shortHash, skeleton, stamp, toast } from "../dom.js";
 import { chainClient } from "../lib/chain.js";
-import { CHAIN_ID, CHAINS, DEFAULT_HOST, chainConfig, chainOfAgentId } from "../lib/config.js";
+import { CHAIN_ID, CHAINS, DEFAULT_HOST, EXTRA_HOSTS, chainConfig, chainOfAgentId } from "../lib/config.js";
 import { loadTrusted, modelKey } from "../lib/grades.js";
 import { fetchJwks, fetchReceiptStatus, httpStatus, type ReceiptStatus } from "../lib/host.js";
 import { anchorInfo, type AnchorInfo, type AnchorReader } from "../lib/indexer.js";
@@ -77,7 +77,8 @@ function defaultDeps(hosts: string[]): ReceiptDeps {
 const hostsFor = (route: Route) => {
   const pinned = route.params.get("host");
   if (pinned) return [pinned];
-  return [DEFAULT_HOST, ...Object.values(CHAINS).map((c) => c.host).filter((h) => h !== DEFAULT_HOST)];
+  const all = [DEFAULT_HOST, ...Object.values(CHAINS).map((c) => c.host), ...EXTRA_HOSTS.map((x) => x.host)];
+  return [...new Set(all)];
 };
 
 const link = (label: string, href: string, cls = "") => h("a", { href, class: cls, ...(href.startsWith("http") ? { target: "_blank", rel: "noopener" } : {}) }, label);

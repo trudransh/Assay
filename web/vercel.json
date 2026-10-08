@@ -1,6 +1,7 @@
 {
   "rewrites": [
     { "source": "/host-mainnet/:path*", "destination": "https://34-45-1-81.sslip.io/mainnet/:path*" },
+    { "source": "/host-kimi/:path*", "destination": "https://34-45-1-81.sslip.io/kimi/:path*" },
     { "source": "/host/:path*", "destination": "https://34-45-1-81.sslip.io/:path*" }
   ],
   "headers": [

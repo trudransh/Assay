@@ -6,7 +6,9 @@ export default defineConfig(({ mode }) => {
   const target = loadEnv(mode, ".", "").HOST_TARGET || "http://localhost:8787";
   // The host sends no CORS headers, so the dev and preview servers serve it under /host.
   const mainnet = loadEnv(mode, ".", "").HOST_TARGET_MAINNET || `${target}/mainnet`;
+  const kimi = loadEnv(mode, ".", "").HOST_TARGET_KIMI || `${target}/kimi`;
   const proxy = {
+    "/host-kimi": { target: kimi, changeOrigin: true, rewrite: (p: string) => p.replace(/^\/host-kimi/, "") },
     "/host-mainnet": { target: mainnet, changeOrigin: true, rewrite: (p: string) => p.replace(/^\/host-mainnet/, "") },
     "/host": { target, changeOrigin: true, rewrite: (p: string) => p.replace(/^\/host/, "") },
   };
