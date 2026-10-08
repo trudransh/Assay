@@ -31,8 +31,10 @@ chmod 600 "$ENV_FILE"
     echo "UPSTREAM_PROVIDER=moonshotai/int4"
     echo "HOST_JWK_PATH=.keys/kimi.jwk.json"
     echo "HOST_NAME=Assay Kimi host"
-    # About $0.002 per answer at most, and at most 30 answers an hour for the whole host.
-    echo "DEFAULT_MAX_TOKENS=512"; echo "MAX_TOKENS_CAP=512"; echo "CHAT_LIMIT=10"; echo "CHAT_LIMIT_GLOBAL=30"
+    # K2.6 reasons by default and can spend the whole budget thinking, leaving no answer: turn it off
+    # (signed into every receipt's params). At most ~$0.004 per answer and 20 answers an hour for the whole host.
+    echo "UPSTREAM_REASONING=off"
+    echo "DEFAULT_MAX_TOKENS=768"; echo "MAX_TOKENS_CAP=1024"; echo "CHAT_LIMIT=10"; echo "CHAT_LIMIT_GLOBAL=20"
   else
     echo "UPSTREAM_URL=https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
     echo "UPSTREAM_API_KEY=$(val GEMINI_API_KEY)"
