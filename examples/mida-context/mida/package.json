@@ -1,0 +1,20 @@
+{
+  "name": "assay-mida-integration",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "vitest run",
+    "check": "for f in src/*.js; do node --check \"$f\" || exit 1; done"
+  },
+  "dependencies": {
+    "@mida-context/sdk": "0.1.4",
+    "viem": "2.56.3"
+  },
+  "devDependencies": {
+    "vitest": "5.0.2"
+  }
+}

@@ -47,3 +47,7 @@ A co-signature is reported but not required.
 ## Fixture
 
 `docs/interop/mida-records/0x401a4ec7…baae.json` is a real testnet receipt ("Say OK", 64 tokens) with its salt and output published on purpose, so `sdk/test/record.test.ts` runs offline in CI. Never publish the salt of a real receipt.
+
+## Producing a record (Mida's side)
+
+`mida/` is the small Node program that produces one: `ask` calls the host, `write` saves the receipt and its opening inside a Mida record, `read` (or `export`) hands one to this check. See [mida/README.md](mida/README.md).
