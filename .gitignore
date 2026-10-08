@@ -17,3 +17,6 @@ private/
 
 __pycache__/
 sdk/npm/
+
+# holds salts, outputs and prompts
+examples/paid-job/job.json
