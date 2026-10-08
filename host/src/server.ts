@@ -49,6 +49,9 @@ export interface AppDeps {
   maxTokensCap?: number;
   /// Name in the agent card. Default: "Assay reference host".
   hostName?: string;
+  /// The host's reasoning setting for reasoning models (OpenRouter `reasoning`). Clients can't set it; it is
+  /// forwarded and signed into req.params, so the receipt says how the answer was produced.
+  reasoning?: Record<string, unknown>;
   /// RPC printed in the reproduce line. Default: testnet's public RPC.
   publicRpc?: string;
   /// Old public keys kept so receipts they signed still verify (D22).
@@ -134,7 +137,8 @@ export function createApp(d: AppDeps): Hono {
     const { messages, model: _model, stream: _stream, provider: _provider, ...rest } = req;
     // Some upstreams (Google's Gemma endpoint) return 500 without a token budget, so fill one in.
     // The filled value is what is forwarded, committed and signed, so the receipt matches the call.
-    const params = rest.max_tokens === undefined && rest.max_completion_tokens === undefined ? { ...rest, max_tokens: d.defaultMaxTokens ?? DEFAULT_MAX_TOKENS } : rest;
+    const filled = rest.max_tokens === undefined && rest.max_completion_tokens === undefined ? { ...rest, max_tokens: d.defaultMaxTokens ?? DEFAULT_MAX_TOKENS } : rest;
+    const params = d.reasoning ? { ...filled, reasoning: d.reasoning } : filled;
     const up = await d.upstream({ ...params, messages, model: d.model, ...providerPin(d.provider) });
     if (up.status !== 200) return c.json(up.json as object, up.status as ContentfulStatusCode);
 
@@ -303,6 +307,7 @@ async function main() {
     defaultMaxTokens: cfg.defaultMaxTokens,
     maxTokensCap: cfg.maxTokensCap,
     hostName: cfg.hostName,
+    reasoning: cfg.reasoning,
     agentId: cfg.hostAgentId,
     anchor: cfg.anchorAddress,
     publicUrl: cfg.publicUrl,

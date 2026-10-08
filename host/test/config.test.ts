@@ -91,3 +91,12 @@ describe("per-host caps", () => {
     expect(() => loadConfig({ ...base, MAX_TOKENS_CAP: "0" })).toThrow(/MAX_TOKENS_CAP/);
   });
 });
+
+describe("UPSTREAM_REASONING", () => {
+  it("maps off and effort levels, and rejects anything else", () => {
+    expect(loadConfig(base).reasoning).toBeUndefined();
+    expect(loadConfig({ ...base, UPSTREAM_REASONING: "off" }).reasoning).toEqual({ enabled: false });
+    expect(loadConfig({ ...base, UPSTREAM_REASONING: "low" }).reasoning).toEqual({ effort: "low" });
+    expect(() => loadConfig({ ...base, UPSTREAM_REASONING: "max" })).toThrow(/UPSTREAM_REASONING/);
+  });
+});

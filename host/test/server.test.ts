@@ -43,7 +43,7 @@ function fakeUpstream(over: Record<string, unknown> = {}, status = 200) {
   return { up, calls };
 }
 
-async function setup(opts: { dir?: string; signer?: HostSigner; upstream?: Upstream; provider?: string; retiredJwks?: JWK[]; chatLimit?: number; chatLimitGlobal?: number; defaultMaxTokens?: number; maxTokensCap?: number } = {}) {
+async function setup(opts: { dir?: string; signer?: HostSigner; upstream?: Upstream; provider?: string; retiredJwks?: JWK[]; chatLimit?: number; chatLimitGlobal?: number; defaultMaxTokens?: number; maxTokensCap?: number; reasoning?: Record<string, unknown> } = {}) {
   const dir = opts.dir ?? tempDir();
   const store = new Store(dir);
   const signer = opts.signer ?? (await newSigner());
@@ -72,6 +72,7 @@ async function setup(opts: { dir?: string; signer?: HostSigner; upstream?: Upstr
     chatLimitGlobal: opts.chatLimitGlobal,
     defaultMaxTokens: opts.defaultMaxTokens,
     maxTokensCap: opts.maxTokensCap,
+    reasoning: opts.reasoning,
     agentId: 1962n,
     anchor: ANCHOR,
     publicUrl: "https://host.example",
@@ -398,6 +399,16 @@ describe("request limits", () => {
     expect((await chat(app, { max_tokens: undefined })).status).toBe(200);
     expect(calls[0].max_tokens).toBe(256);
     expect((await chat(app, { max_tokens: 513 })).status).toBe(400);
+  });
+
+  it("forwards the host's reasoning setting and signs it into req.params; a client can't set it", async () => {
+    const { up, calls } = fakeUpstream();
+    const { app } = await setup({ upstream: up, reasoning: { enabled: false } });
+    const res = await chat(app);
+    expect(res.status).toBe(200);
+    expect(calls[0].reasoning).toEqual({ enabled: false });
+    expect(receiptOf(res).body.req.params).toMatchObject({ reasoning: { enabled: false } });
+    expect((await chat(app, { reasoning: { effort: "high" } })).status).toBe(400);
   });
 
   it("refuses a body over the size limit with 413", async () => {

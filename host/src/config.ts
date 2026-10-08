@@ -61,6 +61,7 @@ export interface Config {
   defaultMaxTokens?: number;
   maxTokensCap?: number;
   hostName?: string;
+  reasoning?: Record<string, unknown>;
 }
 
 /// Reads every variable and reports all problems at once. Values are never echoed, since some are secrets.
@@ -90,6 +91,14 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     return n;
   };
 
+  // off -> { enabled: false }; low, medium or high -> { effort }. Anything else is a config error.
+  const reasoningOf = (v: string | undefined): Record<string, unknown> | undefined => {
+    if (v === undefined) return undefined;
+    if (v === "off") return { enabled: false };
+    if (["low", "medium", "high"].includes(v)) return { effort: v };
+    errors.push("UPSTREAM_REASONING must be off, low, medium or high");
+    return undefined;
+  };
   const optInt = (name: string) => (get(name) === undefined ? undefined : int(name, 0, 1));
 
   const upstreamUrl = get("UPSTREAM_URL");
@@ -151,6 +160,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     defaultMaxTokens: optInt("DEFAULT_MAX_TOKENS"),
     maxTokensCap: optInt("MAX_TOKENS_CAP"),
     hostName: get("HOST_NAME"),
+    reasoning: reasoningOf(get("UPSTREAM_REASONING")),
     port,
   };
   if (errors.length) throw new Error(`host config:\n  - ${errors.join("\n  - ")}`);
