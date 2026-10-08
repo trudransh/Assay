@@ -17,7 +17,7 @@ contract CreAttestorTest is Test {
     bytes32 internal constant WF_ID = keccak256("assay-grade-attest");
 
     function setUp() public {
-        att = new CreAttestor(owner);
+        att = new CreAttestor(owner, address(0));
         vm.prank(owner);
         att.configure(fwd, wfOwner, WF_ID);
     }
@@ -50,11 +50,42 @@ contract CreAttestorTest is Test {
         assertTrue(agree);
     }
 
-    function test_onReport_overwritesSameKey() public {
+    function test_onReport_secondReportSameGrade_reverts_andKeepsTheFirst() public {
         _onReport(_report(47, 50, 8_400, 9_800), bytes4(0));
-        _onReport(_report(10, 50, 1_000, 3_000), bytes4(0));
+        _onReport(_report(10, 50, 1_000, 3_000), CreAttestor.AlreadyAttested.selector);
         (uint32 passed,,,,) = att.attestations(verifier, MODEL, HOST_KEY, T);
-        assertEq(passed, 10);
+        assertEq(passed, 47);
+    }
+
+    // The 8 Oct council forged an attestation on v1 through the simulator's public forwarder from a random
+    // account. With a relayer pinned, the same call reverts; only the relayer's own transactions land.
+    function test_onReport_withRelayer_onlyRelayersTransactionsLand() public {
+        address relayer = makeAddr("relayer");
+        CreAttestor pinned = new CreAttestor(owner, relayer);
+        vm.prank(owner);
+        pinned.configure(fwd, wfOwner, WF_ID);
+        bytes memory report = _report(47, 50, 8_400, 9_800);
+
+        vm.prank(fwd, makeAddr("stranger"));
+        vm.expectRevert(CreAttestor.NotRelayer.selector);
+        pinned.onReport(_meta(WF_ID, wfOwner), report);
+
+        vm.prank(fwd, relayer);
+        pinned.onReport(_meta(WF_ID, wfOwner), report);
+        (, uint32 total,,,) = pinned.attestations(verifier, MODEL, HOST_KEY, T);
+        assertEq(total, 50);
+        assertEq(pinned.relayer(), relayer);
+    }
+
+    function test_onReport_withRelayer_stillNeedsTheForwarder() public {
+        address relayer = makeAddr("relayer");
+        CreAttestor pinned = new CreAttestor(owner, relayer);
+        vm.prank(owner);
+        pinned.configure(fwd, wfOwner, WF_ID);
+        bytes memory report = _report(47, 50, 8_400, 9_800);
+        vm.prank(relayer, relayer);
+        vm.expectRevert(CreAttestor.NotForwarder.selector);
+        pinned.onReport(_meta(WF_ID, wfOwner), report);
     }
 
     function test_onReport_nonForwarder_reverts() public {
@@ -65,7 +96,7 @@ contract CreAttestorTest is Test {
     }
 
     function test_onReport_forwarderUnset_reverts() public {
-        CreAttestor fresh = new CreAttestor(owner);
+        CreAttestor fresh = new CreAttestor(owner, address(0));
         bytes memory report = _report(47, 50, 8_400, 9_800);
         vm.expectRevert(CreAttestor.NotForwarder.selector);
         fresh.onReport(_meta(WF_ID, wfOwner), report);
@@ -78,7 +109,7 @@ contract CreAttestorTest is Test {
     }
 
     function test_configure_nonOwner_reverts() public {
-        CreAttestor fresh = new CreAttestor(owner);
+        CreAttestor fresh = new CreAttestor(owner, address(0));
         vm.expectRevert(CreAttestor.NotOwner.selector);
         fresh.configure(fwd, wfOwner, WF_ID);
     }
@@ -116,7 +147,8 @@ contract CreAttestorTest is Test {
 
     function test_onReport_boundaries_ok() public {
         _onReport(_report(50, 50, 10_000, 10_000), bytes4(0));
-        _onReport(_report(0, 1, 0, 0), bytes4(0));
+        // A separate grade (another t): attestations are write-once per grade.
+        _onReport(abi.encode(verifier, MODEL, HOST_KEY, T + 1, uint32(0), uint32(1), uint16(0), uint16(0), true), bytes4(0));
     }
 
     function test_supportsInterface() public view {
@@ -157,7 +189,7 @@ contract CreAttestorTest is Test {
     }
 
     function test_onReport_anyWorkflowIdFromOwner_whenIdUnset() public {
-        CreAttestor any = new CreAttestor(owner);
+        CreAttestor any = new CreAttestor(owner, address(0));
         vm.prank(owner);
         any.configure(fwd, wfOwner, bytes32(0));
         _onReportMeta(any, _meta(keccak256("v2 workflow"), wfOwner), bytes4(0));
@@ -165,7 +197,7 @@ contract CreAttestorTest is Test {
     }
 
     function test_configure_zeroAddress_reverts() public {
-        CreAttestor fresh = new CreAttestor(owner);
+        CreAttestor fresh = new CreAttestor(owner, address(0));
         vm.startPrank(owner);
         vm.expectRevert(CreAttestor.BadConfig.selector);
         fresh.configure(address(0), wfOwner, WF_ID);
@@ -175,7 +207,7 @@ contract CreAttestorTest is Test {
     }
 
     function test_configure_storesAndEmits() public {
-        CreAttestor fresh = new CreAttestor(owner);
+        CreAttestor fresh = new CreAttestor(owner, address(0));
         vm.expectEmit(address(fresh));
         emit CreAttestor.Configured(fwd, wfOwner, WF_ID);
         vm.prank(owner);
