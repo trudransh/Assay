@@ -7,7 +7,8 @@
     "gen:vectors": "tsx scripts/gen-vectors.ts",
     "test": "vitest run",
     "build": "tsc -p .",
-    "typecheck": "tsc -p . --noEmit"
+    "typecheck": "tsc -p . --noEmit",
+    "pack:npm": "node scripts/pack.mjs"
   },
   "dependencies": {
     "@openzeppelin/merkle-tree": "1.0.8",
@@ -23,5 +24,6 @@
   },
   "exports": {
     ".": "./src/index.ts"
-  }
+  },
+  "publishVersion": "0.1.0"
 }

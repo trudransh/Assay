@@ -16,3 +16,4 @@ private/
 *:Zone.Identifier
 
 __pycache__/
+sdk/npm/
