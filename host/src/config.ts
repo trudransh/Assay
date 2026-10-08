@@ -60,6 +60,7 @@ export interface Config {
   chatLimitGlobal?: number;
   defaultMaxTokens?: number;
   maxTokensCap?: number;
+  hostName?: string;
 }
 
 /// Reads every variable and reports all problems at once. Values are never echoed, since some are secrets.
@@ -149,6 +150,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     chatLimitGlobal: optInt("CHAT_LIMIT_GLOBAL"),
     defaultMaxTokens: optInt("DEFAULT_MAX_TOKENS"),
     maxTokensCap: optInt("MAX_TOKENS_CAP"),
+    hostName: get("HOST_NAME"),
     port,
   };
   if (errors.length) throw new Error(`host config:\n  - ${errors.join("\n  - ")}`);

@@ -47,6 +47,8 @@ export interface AppDeps {
   /// Defaults: DEFAULT_MAX_TOKENS and MAX_TOKENS_CAP. A paid upstream (Kimi) sets both lower.
   defaultMaxTokens?: number;
   maxTokensCap?: number;
+  /// Name in the agent card. Default: "Assay reference host".
+  hostName?: string;
   /// RPC printed in the reproduce line. Default: testnet's public RPC.
   publicRpc?: string;
   /// Old public keys kept so receipts they signed still verify (D22).
@@ -175,8 +177,8 @@ export function createApp(d: AppDeps): Hono {
   app.get("/.well-known/agent-registration.json", (c) =>
     c.json({
       type: "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
-      name: "Assay reference host",
-      description: "OpenAI-compatible proxy that signs an Assay receipt for every response and anchors receipt batches on Monad.",
+      name: d.hostName ?? "Assay reference host",
+      description: `OpenAI-compatible proxy that signs an Assay receipt for every response and anchors receipt batches on Monad. Model: ${d.model}.`,
       services: [
         { name: "chat", endpoint: `${d.publicUrl}/v1/chat/completions` },
         { name: "jwks", endpoint: `${d.publicUrl}/.well-known/jwks.json` },
@@ -300,6 +302,7 @@ async function main() {
     chatLimitGlobal: cfg.chatLimitGlobal,
     defaultMaxTokens: cfg.defaultMaxTokens,
     maxTokensCap: cfg.maxTokensCap,
+    hostName: cfg.hostName,
     agentId: cfg.hostAgentId,
     anchor: cfg.anchorAddress,
     publicUrl: cfg.publicUrl,
