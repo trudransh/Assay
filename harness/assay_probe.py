@@ -252,7 +252,8 @@ def main(argv=None):
     ref = next((s for s in summary if a.reference and a.reference.lower() in s["tag"].lower()), None)
     for s in summary:
         s["delta_vs_reference"] = round(s["pass_rate"] - ref["pass_rate"], 3) if ref and s["pass_rate"] is not None and ref["pass_rate"] is not None else None
-        s["flag"] = "BELOW REFERENCE" if ref and s["ci_high"] < ref["ci_low"] else ""
+        # A host with no answered checks wasn't measured, so it can't be below anything.
+        s["flag"] = "BELOW REFERENCE" if ref and s["tool_n"] and s["ci_high"] < ref["ci_low"] else ""
         s["model"] = a.model; s["reference"] = s is ref  # read by export_grade.py
     with open(os.path.join(a.out, f"summary_{stamp}.csv"), "w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=list(summary[0].keys())); w.writeheader(); w.writerows(summary)
