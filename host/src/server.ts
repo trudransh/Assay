@@ -43,6 +43,10 @@ export interface AppDeps {
   /// Chat requests per client and per host per hour. Defaults: CHAT_LIMIT and CHAT_LIMIT_GLOBAL.
   chatLimit?: number;
   chatLimitGlobal?: number;
+  /// Token budget filled in when a request names none, and the most a request may ask for.
+  /// Defaults: DEFAULT_MAX_TOKENS and MAX_TOKENS_CAP. A paid upstream (Kimi) sets both lower.
+  defaultMaxTokens?: number;
+  maxTokensCap?: number;
   /// RPC printed in the reproduce line. Default: testnet's public RPC.
   publicRpc?: string;
   /// Old public keys kept so receipts they signed still verify (D22).
@@ -83,7 +87,7 @@ export const ALLOWED_PARAMS = new Set([
 ]);
 
 /// Why a chat body can't be served, or undefined when it can.
-export function chatBodyProblem(req: Record<string, unknown>): string | undefined {
+export function chatBodyProblem(req: Record<string, unknown>, cap = MAX_TOKENS_CAP): string | undefined {
   for (const k of Object.keys(req)) {
     if (k !== "messages" && k !== "model" && k !== "stream" && k !== "provider" && !ALLOWED_PARAMS.has(k)) return `field ${JSON.stringify(k.slice(0, 40))} isn't supported by this host`;
   }
@@ -91,7 +95,7 @@ export function chatBodyProblem(req: Record<string, unknown>): string | undefine
   if (msgs.length === 0 || msgs.some((m) => !isObj(m) || typeof m.role !== "string")) return "messages must be a non-empty array of objects with a role";
   for (const k of ["max_tokens", "max_completion_tokens"]) {
     const v = req[k];
-    if (v !== undefined && !(Number.isSafeInteger(v) && (v as number) > 0 && (v as number) <= MAX_TOKENS_CAP)) return `${k} must be a whole number from 1 to ${MAX_TOKENS_CAP}`;
+    if (v !== undefined && !(Number.isSafeInteger(v) && (v as number) > 0 && (v as number) <= cap)) return `${k} must be a whole number from 1 to ${cap}`;
   }
   return undefined;
 }
@@ -121,14 +125,14 @@ export function createApp(d: AppDeps): Hono {
     const req: unknown = await c.req.json().catch(() => undefined);
     if (!isObj(req) || !Array.isArray(req.messages)) return fail(c, 400, "body must be a JSON object with a messages array");
     if (req.stream) return fail(c, 400, "v0 is non-streaming: send stream false or omit it");
-    const problem = chatBodyProblem(req);
+    const problem = chatBodyProblem(req, d.maxTokensCap ?? MAX_TOKENS_CAP);
     if (problem) return fail(c, 400, problem);
 
     // `provider` is the host's choice, not the client's, so it is neither forwarded nor committed.
     const { messages, model: _model, stream: _stream, provider: _provider, ...rest } = req;
     // Some upstreams (Google's Gemma endpoint) return 500 without a token budget, so fill one in.
     // The filled value is what is forwarded, committed and signed, so the receipt matches the call.
-    const params = rest.max_tokens === undefined && rest.max_completion_tokens === undefined ? { ...rest, max_tokens: DEFAULT_MAX_TOKENS } : rest;
+    const params = rest.max_tokens === undefined && rest.max_completion_tokens === undefined ? { ...rest, max_tokens: d.defaultMaxTokens ?? DEFAULT_MAX_TOKENS } : rest;
     const up = await d.upstream({ ...params, messages, model: d.model, ...providerPin(d.provider) });
     if (up.status !== 200) return c.json(up.json as object, up.status as ContentfulStatusCode);
 
@@ -292,6 +296,10 @@ async function main() {
     upstream: openRouter(cfg.openrouterApiKey, fetch, cfg.upstreamUrl),
     model: cfg.upstreamModel,
     provider: cfg.upstreamProvider,
+    chatLimit: cfg.chatLimit,
+    chatLimitGlobal: cfg.chatLimitGlobal,
+    defaultMaxTokens: cfg.defaultMaxTokens,
+    maxTokensCap: cfg.maxTokensCap,
     agentId: cfg.hostAgentId,
     anchor: cfg.anchorAddress,
     publicUrl: cfg.publicUrl,

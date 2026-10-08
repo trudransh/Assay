@@ -55,6 +55,11 @@ export interface Config {
   batchSeconds: number;
   batchMax: number;
   port: number;
+  /// Optional per-host caps (see AppDeps). Unset means the server defaults.
+  chatLimit?: number;
+  chatLimitGlobal?: number;
+  defaultMaxTokens?: number;
+  maxTokensCap?: number;
 }
 
 /// Reads every variable and reports all problems at once. Values are never echoed, since some are secrets.
@@ -83,6 +88,8 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     if (!Number.isSafeInteger(n) || n < min) errors.push(`${name} must be an integer >= ${min}`);
     return n;
   };
+
+  const optInt = (name: string) => (get(name) === undefined ? undefined : int(name, 0, 1));
 
   const upstreamUrl = get("UPSTREAM_URL");
   if (upstreamUrl && !/^https:\/\//.test(upstreamUrl)) errors.push("UPSTREAM_URL must be an https URL");
@@ -138,6 +145,10 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     publicUrl: (get("PUBLIC_URL") ?? `http://localhost:${port}`).replace(/\/$/, ""),
     batchSeconds: int("BATCH_SECONDS", 300, 1),
     batchMax: int("BATCH_MAX", 64, 1),
+    chatLimit: optInt("CHAT_LIMIT"),
+    chatLimitGlobal: optInt("CHAT_LIMIT_GLOBAL"),
+    defaultMaxTokens: optInt("DEFAULT_MAX_TOKENS"),
+    maxTokensCap: optInt("MAX_TOKENS_CAP"),
     port,
   };
   if (errors.length) throw new Error(`host config:\n  - ${errors.join("\n  - ")}`);
