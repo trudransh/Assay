@@ -55,7 +55,9 @@ describe("vault", () => {
   it("round-trips and fails under a wrong key", async () => {
     const prf = fakePrf(VAULT_LABEL);
     const sealed = await sealVault(prf, [entry(h1), entry(h2)]);
-    expect(sealed.ct).not.toContain(bytesToHex(stringToBytes("OK")).slice(2));
+    // The salt's own bytes (66 chars) would show up if anything were stored in the clear. A short marker like
+    // "OK" (2 bytes, 4 hex digits) turns up in random ciphertext about 2% of the time, so it made this test flaky.
+    expect(sealed.ct).not.toContain(bytesToHex(stringToBytes(entry(h1).salt)).slice(2));
     expect(await openVault(prf, sealed)).toEqual([entry(h1), entry(h2)]);
     await expect(openVault(fakePrf("other passkey"), sealed)).rejects.toThrow(/Decryption failed/);
   });
