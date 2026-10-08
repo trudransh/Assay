@@ -24,6 +24,7 @@ export {
   verifierRegistryAbi,
   GRADE_MAX_AGE_SECONDS,
   GRADE_MIN_SAMPLES,
+  GRADE_FLOOR_BPS,
   type Grade,
   type GradeStatus,
 } from "./grade.js";

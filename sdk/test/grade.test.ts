@@ -18,7 +18,7 @@ const grade = (over: Partial<Grade> = {}): Grade => ({
   checks: ("0x" + "cc".repeat(32)) as Hex,
   passed: 45,
   total: 50,
-  ciLowBps: 7800,
+  ciLowBps: 8600,
   ciHighBps: 9600,
   refModel: MODEL,
   evidence: ("0x" + "ee".repeat(32)) as Hex,
@@ -66,6 +66,11 @@ describe("gradeStatus", () => {
     ["a high bound equal to the reference's low bound", grade({ ciHighBps: 7000 }), grade({ ciLowBps: 7000 }), NOW, "pass"],
     ["a below-reference grade that is stale", grade({ ciHighBps: 7000, t: 1n }), grade({ ciLowBps: 9000 }), NOW, "unknown"],
     ["a below-reference grade with few samples", grade({ ciHighBps: 7000, total: 10 }), grade({ ciLowBps: 9000 }), NOW, "fail"],
+    // Found by the 8 Oct council: without a reference, 0/32 used to read "pass".
+    ["0/32 with no reference", grade({ passed: 0, total: 32, ciLowBps: 0, ciHighBps: 1072 }), undefined, NOW, "fail"],
+    ["0/32 with a reference", grade({ passed: 0, total: 32, ciLowBps: 0, ciHighBps: 1072 }), grade({ ciLowBps: 8928 }), NOW, "fail"],
+    ["no reference, worst case under the 80% floor", grade({ passed: 28, total: 32, ciLowBps: 7193, ciHighBps: 9504 }), undefined, NOW, "warn"],
+    ["no reference, best case under the 80% floor", grade({ passed: 20, total: 32, ciLowBps: 4524, ciHighBps: 7812 }), undefined, NOW, "fail"],
   ])("%s → %s", (_, g, reference, now, expected) => {
     expect(gradeStatus(g, { now, reference })).toBe(expected);
   });

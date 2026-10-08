@@ -66,11 +66,18 @@ export type GradeStatus = "pass" | "warn" | "unknown" | "fail";
 export const GRADE_MAX_AGE_SECONDS = 7n * 24n * 60n * 60n;
 export const GRADE_MIN_SAMPLES = 30;
 
+/// Without a reference grade, a host is held to this absolute floor on its 95% interval (80%).
+export const GRADE_FLOOR_BPS = 8000;
+
 /// `now` is unix seconds. `reference` is the lab endpoint's grade for the same model.
+/// With a reference: fail when the host's best case is below the reference's worst case.
+/// Without one: fail when the host's best case is below the floor, and pass only when its worst case clears it,
+/// so a host that failed every check never reads "pass" just because nobody passed a reference.
 export function gradeStatus(grade: Grade | null | undefined, opts: { now: bigint | number; reference?: Grade | null }): GradeStatus {
   if (!grade || BigInt(opts.now) - grade.t > GRADE_MAX_AGE_SECONDS) return "unknown";
-  // Fail only when the intervals don't overlap: the host's best case is below the reference's worst case.
-  if (opts.reference && grade.ciHighBps < opts.reference.ciLowBps) return "fail";
+  const floor = opts.reference ? opts.reference.ciLowBps : GRADE_FLOOR_BPS;
+  if (grade.ciHighBps < floor) return "fail";
   if (grade.total < GRADE_MIN_SAMPLES) return "warn";
+  if (!opts.reference && grade.ciLowBps < GRADE_FLOOR_BPS) return "warn";
   return "pass";
 }
