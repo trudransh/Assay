@@ -6,11 +6,14 @@ import { keccak256, stringToBytes } from "viem";
 
 const EVIDENCE = new URL("../../docs/evidence/", import.meta.url);
 const models = new Set();
+const references = new Map(); // model id -> host-key preimage of the lab's own endpoint it was graded against
 const hosts = new Map(); // preimage -> label
 for (const f of readdirSync(EVIDENCE).filter((f) => /^grades_.*\.json$/.test(f)).sort()) {
   const run = JSON.parse(readFileSync(new URL(f, EVIDENCE), "utf8"));
   if (run.modelId) models.add(run.modelId);
   for (const g of run.grades) hosts.set(g.hostKeyPreimage, g.tag);
+  const ref = run.grades.find((g) => g.tag === run.reference);
+  if (run.modelId && ref) references.set(run.modelId, ref.hostKeyPreimage);
 }
 // Assay's reference hosts sign receipts; their grades are keyed by ERC-8004 identity (D21).
 for (const [chain, agent] of [[10143, 1962], [143, 10278]]) hosts.set(`erc8004:${chain}:${agent}`, `Assay host ${agent}`);
@@ -18,6 +21,7 @@ hosts.set("erc8004:143:10316", "Assay Kimi host 10316");
 
 const h = (s) => keccak256(stringToBytes(s));
 const modelRows = [...models].sort().map((m) => `  "${h(m)}": ${JSON.stringify(m)},`);
+const refRows = [...references].sort().map(([m, pre]) => `  ${JSON.stringify(m)}: ${JSON.stringify(pre)},`);
 const hostRows = [...hosts].sort().map(([pre, label]) => `  "${h(pre)}": { preimage: ${JSON.stringify(pre)}, label: ${JSON.stringify(label)} },`);
 writeFileSync(
   new URL("../src/lib/known.ts", import.meta.url),
@@ -30,6 +34,11 @@ ${modelRows.join("\n")}
 
 export const KNOWN_HOSTS: Record<string, { preimage: string; label: string }> = {
 ${hostRows.join("\n")}
+};
+
+/// Model id -> the lab's own endpoint each model was graded against (its host-key preimage).
+export const KNOWN_REFERENCES: Record<string, string> = {
+${refRows.join("\n")}
 };
 `,
 );

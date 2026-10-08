@@ -65,3 +65,11 @@ export const KNOWN_HOSTS: Record<string, { preimage: string; label: string }> = 
   "0xf8edc5d270db549ce3e93515dd322214466bf97ddf610fd07f0c8b4fd0369532": { preimage: "openrouter:wafer/us", label: "wafer/us" },
   "0xe62ef805f5e37ece31d01a1567ffc50f659d5abebce5dc9462568ff81241cc81": { preimage: "openrouter:z-ai/fp8", label: "z-ai/fp8" },
 };
+
+/// Model id -> the lab's own endpoint each model was graded against (its host-key preimage).
+export const KNOWN_REFERENCES: Record<string, string> = {
+  "gemma-4-31b-it": "direct:generativelanguage.googleapis.com",
+  "google/gemma-4-31b-it": "direct:generativelanguage.googleapis.com",
+  "moonshotai/kimi-k2.6": "openrouter:moonshotai/int4",
+  "z-ai/glm-5.3": "openrouter:z-ai/fp8",
+};

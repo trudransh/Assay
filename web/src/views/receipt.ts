@@ -13,7 +13,8 @@ import {
   type VerifyInput,
   type VerifyResult,
 } from "@assay/receipts";
-import type { Address, Hex } from "viem";
+import { keccak256, stringToBytes, type Address, type Hex } from "viem";
+import { KNOWN_REFERENCES } from "../lib/known.js";
 import { badge, banner, button, chip, copyButton, emptyState, errorText, h, kv, levelLadder, shortHash, skeleton, stamp, toast } from "../dom.js";
 import { chainClient } from "../lib/chain.js";
 import { CHAIN_ID, CHAINS, DEFAULT_HOST, EXTRA_HOSTS, chainConfig, chainOfAgentId } from "../lib/config.js";
@@ -354,8 +355,13 @@ export function mountReceipt(root: HTMLElement, route: Route, deps: ReceiptDeps 
       const trusted = loadTrusted();
       if (!trusted.length) return gradeSlot.replaceChildren(gradeCard(body, undefined, "unknown"));
       try {
-        const found = await chain.grade(modelKey(body.model), hostKeyForAgent(chainId, agentId), trusted);
-        const status = gradeStatus(found?.grade, { now: BigInt(Math.floor(Date.now() / 1000)) });
+        // Judge the host against the lab's own endpoint for this model when we know it; otherwise the SDK's floor applies.
+        const refPre = KNOWN_REFERENCES[body.model];
+        const [found, ref] = await Promise.all([
+          chain.grade(modelKey(body.model), hostKeyForAgent(chainId, agentId), trusted),
+          refPre ? chain.grade(modelKey(body.model), keccak256(stringToBytes(refPre)), trusted).catch(() => null) : null,
+        ]);
+        const status = gradeStatus(found?.grade, { now: BigInt(Math.floor(Date.now() / 1000)), reference: ref?.grade });
         gradeSlot.replaceChildren(gradeCard(body, found, status));
         levels[1] = !!found && status !== "unknown";
         ladder.replaceChildren(levelLadder(levels));
