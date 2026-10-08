@@ -117,4 +117,4 @@ export const QUICKSTART_URL = `${DOCS_URL}/getting-started/quickstart`;
 export const GITHUB_URL = "https://github.com/trudransh/Assay";
 // Envio Cloud GraphQL, one endpoint for every chain (ids are chain-prefixed). Public and read-only,
 // so it is safe in the bundle; never put a token in a VITE_ variable.
-export const INDEXER_URL: string = import.meta.env.VITE_INDEXER_URL ?? "https://indexer.dev.hyperindex.xyz/f15df95/v1/graphql";
+export const INDEXER_URL: string = import.meta.env.VITE_INDEXER_URL ?? "https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql";

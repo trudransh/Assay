@@ -33,7 +33,7 @@ Assay's data is spread across events in its own contracts and the ERC-8004 regis
 | Agent cards | Fetched from `agentURI` through the Effect API, with timeouts and size limits |
 | Chain-prefixed ids | `10143-…`, so a second chain is a config change and not a migration |
 | Handler tests | 22, on simulated events with no network |
-| Live | Envio Cloud dev plan, synced to the chain head: `https://indexer.dev.hyperindex.xyz/f15df95/v1/graphql` |
+| Live | Envio Cloud dev plan, synced to the chain head: `https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql` |
 
 ## How to try it
 
