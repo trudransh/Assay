@@ -35,7 +35,7 @@ The checks that exist stay where they were made. A router's grades only work ins
 
 **Assay is the part that travels.** Every response gets a receipt. Hosts can't deny what they signed, verifiers grade hosts in public against the lab's own API, and anyone can check both without trusting us.
 
-We measured one difference ourselves on 8 Oct. Sixteen hosts on OpenRouter answered our Kimi K2.6 checks, and on tool calling all of them matched Moonshot's own endpoint, 32 of 32. Then we capped the answer at 16 tokens. Three of those hosts ignored the cap in 59 of 60 trials, returned about 2,000 tokens, and were billed 70 to 126 times what Moonshot charged for the identical request. They ignored it even with OpenRouter's `require_parameters` on, so it's the provider and not the router. [Method, numbers and the sealed raw data](docs/evidence/max-tokens-kimi-k2.6.md); the hosts are named on 15 Oct, after their 7 days to reply.
+We measured one difference ourselves on 8 Oct. Sixteen hosts on OpenRouter answered our Kimi K2.6 checks, and on tool calling all of them matched Moonshot's own endpoint, 32 of 32. Then we capped the answer at 16 tokens. Three of those hosts ignored the cap in 59 of 60 trials, returned about 2,000 tokens, and were billed 70 to 126 times what Moonshot charged for the identical request. They ignored it even with OpenRouter's `require_parameters` on, so it's the provider and not the router. [Method and numbers](docs/evidence/max-tokens-kimi-k2.6.md). The repeated raw file is committed there by its sha256 and goes public on 15 Oct with the hosts' names and any replies, after the 7 days we give every host. One cap trial per host is already in our public 8 Oct grading bundle, so a reader can find the names there today; we chose not to repeat them before the hosts have replied.
 
 ### Where it stands (8 Oct)
 
@@ -69,7 +69,7 @@ Your prompt and the answer never go onchain. The receipt holds salted hashes, an
 ```mermaid
 flowchart LR
     subgraph You["👤 Requester"]
-        APP["App or agent<br/>@assay/receipts · wrap(fetch)"]
+        APP["App or agent<br/>assay-receipts · wrap(fetch)"]
         PK["Passkey<br/>Mera PRF vault + per-app keys"]
     end
     subgraph Host["🟡 Host"]
@@ -84,7 +84,7 @@ flowchart LR
     end
     subgraph Trust["🛡️ Checking"]
         V["Open verifiers<br/>host vs lab's own API"]
-        CRE["Chainlink CRE<br/>re-counts every grade"]
+        CRE["Chainlink CRE<br/>re-checks posted grades"]
         IDX["Envio HyperIndex<br/>batches · keys · grades · drift"]
     end
     APP -->|"prompt + salt"| H --> UP
@@ -108,12 +108,16 @@ flowchart LR
 ## Thirty seconds of code
 
 ```ts
-import { wrap, hostGradeCheck, verifyReceipt, GradeGateError } from "@assay/receipts";
+import { wrap, hostGradeCheck, verifyReceipt, GradeGateError } from "assay-receipts";
 
-// Refuse a host before sending (or paying) unless verifiers you trust grade it "pass"
+const HOST = "https://34-45-1-81.sslip.io/kimi";                  // Assay host 10316 (Kimi K2.6) on Monad mainnet
+const MY_VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"; // a verifier you choose to trust
+const messages = [{ role: "user", content: "Say OK" }];
+
+// Refuse a host before sending (or paying) unless verifiers you trust grade it "pass" against the lab's own endpoint
 const ask = wrap(fetch, {
   gate: {
-    check: hostGradeCheck(HOST, { model: "z-ai/glm-5.3", host: "erc8004:10143:1962", verifiers: [MY_VERIFIER], reference: "openrouter:z-ai/fp8" }),
+    check: hostGradeCheck(HOST, { model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [MY_VERIFIER], reference: "openrouter:moonshotai/int4" }),
     allow: ["pass"],
   },
 });
@@ -185,7 +189,7 @@ Proof: [`indexer/`](indexer/) · [endpoint](https://indexer.dev.hyperindex.xyz/5
 ### 🔗 Chainlink CRE
 **`grade-recheck` workflow**
 
-One verifier could lie about a grade. On every `GradePosted` (finalized), the workflow downloads the evidence, checks its sha256, recounts pass and total, and recomputes the Wilson interval, and every node must agree on the result byte for byte. Before writing, it reads `VerifierRegistry` and `CreAttestor` at the finalized block, so it never attests a claim the registry doesn't hold, or the same grade twice. On mainnet it [re-checked two real grades](docs/deployments.md) and wrote **`agree=true`**. These are simulation broadcasts: no DON ran, our key relayed the simulator's output, and anyone can re-run the same check. An inflated replay (claims 10/10, the logs say 8/10) returns **`agree=false`**.
+One verifier could lie about a grade. On every `GradePosted` (finalized), the workflow downloads the evidence, checks its sha256, recounts pass and total, and recomputes the Wilson interval. In a deployed DON every node would have to agree on that result byte for byte; these runs are one simulator. Before writing, it reads `VerifierRegistry` and `CreAttestor` at the finalized block, so it never attests a claim the registry doesn't hold, or the same grade twice. On mainnet it re-checked three real grades on CreAttestor v2 and wrote **`agree=true`** each time ([38/38](https://monadvision.com/tx/0x05c7641ad17ec675b602e4676ff7edfb2b33c7b5c70f7722ca51137775410a57), [32/32](https://monadvision.com/tx/0x2a3bc90d2007ed6d5c45e658ef8edec1fd8e5ba0863681ff6f8967d4f35c4bff), [39/39](https://monadvision.com/tx/0x78b82c530ca3c4c827a0840ee8b2ac7f7f04b813476f65d351cf91ff52b074bf)). These are simulation broadcasts: no DON ran, our key relayed the simulator's output, and anyone can re-run the same check. An inflated replay (claims 10/10, the logs say 8/10) returns **`agree=false`**.
 
 Proof: [`docs/evidence/cre-simulate-mainnet.txt`](docs/evidence/cre-simulate-mainnet.txt) · [`cre/`](cre/) · 31 tests
 
@@ -227,9 +231,9 @@ Proof: [`docs/interop/`](docs/interop/) · `sdk/test/interop.test.ts`
 <td width="50%" valign="top">
 
 ### 📜 Mandate
-**Only pay for inference from graded hosts**
+**Proposed (PR #12): only pay for inference from graded hosts**
 
-A mandate bounds how much an agent spends. [PR #12](https://github.com/aliveevie/mandate/pull/12) adds `@ibxlab/mandate/assay`, so an agent under a mandate only pays inference hosts that verifiers it trusts grade `pass`. One view call to `gradeOf`, fails closed, no new dependencies, 10 tests.
+A mandate bounds how much an agent spends. Our open [PR #12](https://github.com/aliveevie/mandate/pull/12), not merged yet, adds `@ibxlab/mandate/assay`, so an agent under a mandate only pays inference hosts that verifiers it trusts grade `pass`. One view call to `gradeOf`, fails closed, no new dependencies, 10 tests.
 
 Proof: [aliveevie/mandate#12](https://github.com/aliveevie/mandate/pull/12)
 
