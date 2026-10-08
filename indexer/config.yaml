@@ -55,7 +55,7 @@ chains:
         address: "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1"
         start_block: 110678737
       - name: CreAttestor
-        address: "0xAD9e30dcC63670E1e54f1f12468D16eC1bceDf7a"
+        address: "0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E"
         start_block: 110678745
       - name: IdentityRegistry
         address: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432"

@@ -1,7 +1,7 @@
 {
   "chainSelectorName": "monad-mainnet",
   "verifierRegistry": "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1",
-  "creAttestor": "0xAD9e30dcC63670E1e54f1f12468D16eC1bceDf7a",
+  "creAttestor": "0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E",
   "evidenceBaseUrl": "https://raw.githubusercontent.com/trudransh/Assay/main/cre/grade-recheck/fixtures/evidence",
   "assayHosts": {
     "erc8004:143:10278": "erc8004:143:10278",

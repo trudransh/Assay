@@ -58,7 +58,7 @@ export const CHAINS: Record<number, ChainConfig> = {
     explorer: "https://monadvision.com",
     receiptAnchor: "0x049A73755cA3508ef3Daa4752A3406f6e00CfB13",
     verifierRegistry: "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1",
-    creAttestor: "0xAD9e30dcC63670E1e54f1f12468D16eC1bceDf7a",
+    creAttestor: "0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E",
     identityRegistry: "0x8004A169FB4a3325136EB29fA0ceB6D2e539a432",
     reputationRegistry: "0x8004BAa17C55a88189AE136b182e5fdA19dE9b63",
     assayAccount: "0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91",
