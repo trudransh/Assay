@@ -10,7 +10,7 @@ A grade in Assay comes from one verifier. That verifier ran the harness on one m
 
 | Need | What CRE gives |
 |---|---|
-| Many independent parties recompute the grade | Every node in a DON runs the same workflow and the results go through consensus |
+| Many independent parties recompute the grade | In a deployed DON every node runs the same workflow and the results go through consensus. Our runs so far are one simulator, relayed by our key (see below) |
 | The result lands onchain with proof of who produced it | Reports are signed by the DON and delivered by the `KeystoneForwarder` |
 | Runs on our chain | Monad testnet is supported (`monad-testnet`, CLI v1.30.0+) |
 | No need to trust the Assay team | A multisig of our own servers would still be us. A dispute game needs a bond token and weeks of challenge windows |
@@ -23,7 +23,7 @@ A grade in Assay comes from one verifier. That verifier ran the harness on one m
 4. Recount: The node unpacks the bundle (gzip + ustar, as `harness/export_grade.py` writes it), reads `raw_<stamp>.jsonl` and recounts `passed/total` per endpoint with the harness rules: skip `max_tokens_16` rows and rows whose `http` is not 200.
 5. Find the host: It picks the endpoint whose D21 host key equals the event's `hostKey`: `openrouter:<tag>`, `direct:<host>`, or `erc8004:<chain>:<agent>` for Assay hosts listed in `assayHosts`.
 6. Recompute the interval: 95% Wilson interval in basis points, low rounded down and high rounded up, with the same rounding rules as `export_grade.to_bps`.
-7. Consensus: Steps 2 to 6 run on every node. The results are compared with identical aggregation, since the computation is deterministic.
+7. Consensus: In a deployed DON, steps 2 to 6 run on every node and the results are compared with identical aggregation, since the computation is deterministic. The simulator runs them once.
 8. Write: The DON signs the report and the EVM write capability sends it to `CreAttestor.onReport`.
 
 The report is `abi.encode(address verifier, bytes32 model, bytes32 hostKey, uint64 t, uint32 passed, uint32 total, uint16 ciLowBps, uint16 ciHighBps, bool agree)`, 288 bytes, the layout `CreAttestor` decodes.
@@ -125,7 +125,7 @@ Without `--broadcast` the write is a dry run and the log shows a zero tx hash. `
 
 The workflow ID changes when the workflow is redeployed with new code or config. `configure` runs only once, so a pinned ID means a new `CreAttestor` after every redeploy. Zero avoids that and still limits writers to our workflow owner.
 
-Monad mainnet is supported too (`-T mainnet-settings`, `config.mainnet.json`). It re-checks grades posted to the mainnet VerifierRegistry and writes to the mainnet `CreAttestor` `0xAD9e30dcC63670E1e54f1f12468D16eC1bceDf7a`. A dry run on host 10278's real mainnet grade (tx `0x1e0b1d63…0d50`) recounts 38/38 and agrees: `docs/evidence/cre-simulate-mainnet.txt`.
+Monad mainnet is supported too (`-T mainnet-settings`, `config.mainnet.json`). It re-checks grades posted to the mainnet VerifierRegistry and writes to the mainnet `CreAttestor` v2 `0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E`, which only accepts a report relayed by our key (`0x3F3c…a369`) and only once per grade. A dry run on host 10278's real mainnet grade (tx `0x1e0b1d63…0d50`) recounts 38/38 and agrees: `docs/evidence/cre-simulate-mainnet.txt`. The broadcasts on v2 (8 Oct, all `agree=true`): host 10278 38/38 [`0x05c7641a…`](https://monadvision.com/tx/0x05c7641ad17ec675b602e4676ff7edfb2b33c7b5c70f7722ca51137775410a57), host 10316 32/32 [`0x2a3bc90d…`](https://monadvision.com/tx/0x2a3bc90d2007ed6d5c45e658ef8edec1fd8e5ba0863681ff6f8967d4f35c4bff), Gemma reference 39/39 [`0x78b82c53…`](https://monadvision.com/tx/0x78b82c530ca3c4c827a0840ee8b2ac7f7f04b813476f65d351cf91ff52b074bf). These are simulator runs relayed by our key, not a DON. The retired v1 attestor `0xAD9e…dF7a` accepted forwarded reports from anyone.
 
 ```bash
 cre workflow simulate grade-recheck -T mainnet-settings --non-interactive \
