@@ -35,6 +35,22 @@ The checks that exist stay where they were made. A router's grades only work ins
 
 **Assay is the part that travels.** Every response gets a receipt. Hosts can't deny what they signed, verifiers grade hosts in public against the lab's own API, and anyone can check both without trusting us.
 
+We measured one difference ourselves on 8 Oct. Sixteen hosts on OpenRouter answered our Kimi K2.6 checks, and on tool calling all of them matched Moonshot's own endpoint, 32 of 32. Then we capped the answer at 16 tokens. Three of those hosts ignored the cap in 59 of 60 trials, returned about 2,000 tokens, and were billed 70 to 126 times what Moonshot charged for the identical request. They ignored it even with OpenRouter's `require_parameters` on, so it's the provider and not the router. [Method, numbers and the sealed raw data](docs/evidence/max-tokens-kimi-k2.6.md); the hosts are named on 15 Oct, after their 7 days to reply.
+
+### Where it stands (8 Oct)
+
+| | What | Evidence |
+|---|---|---|
+| ✅ | Receipts signed by two hosts and anchored on Monad mainnet (Gemma 4 31B, and Kimi K2.6 from Moonshot's own endpoint) | [`docs/deployments.md`](docs/deployments.md) |
+| ✅ | A requester's browser passkey co-sign, verified onchain by Monad's P256 precompile, and replayed byte for byte in CI | [tx `0x4377e096…`](https://monadvision.com/tx/0x4377e096251c19019852b6d5b29cef786e7dfc4a9101c3b055c2c7d1af96075c) · `MainnetReplayTest` |
+| ✅ | Grades onchain against the lab's own endpoint: 19 on mainnet (17 of them Kimi K2.6), 43 on testnet (GLM-5.3 and Gemma) | [`docs/evidence/`](docs/evidence/) |
+| ⚠️ | Every grade so far comes from Assay's own verifier. Anyone can register and post, and readers pick whose grades count, but nobody else has posted yet | `VerifierRegistry.registerVerifier` |
+| ⚠️ | Chainlink CRE re-checks real mainnet grades, but as simulation broadcasts, not a deployed DON. The first attestor accepted any simulator broadcast; its replacement only accepts our relayer and writes each grade once | [`cre/`](cre/) · `CreAttestorTest` |
+| ⚠️ | Per-app keys that never hold MON (EIP-7702 gas sponsorship) work end to end on testnet; there's no mainnet run yet | [`host/src/sponsor.ts`](host/src/sponsor.ts) |
+| ⚠️ | The tool-calling checks are easy: every host we graded passed. The token-cap test is the first one that separates hosts | [`harness/`](harness/) |
+| ❌ | Which weights ran. A receipt proves who served which bytes and what they claimed, not the model behind them | [roadmap](https://assay.gitbook.io/assay-docs/resources/roadmap) |
+| ❌ | The SDK isn't on npm yet; it will be published as `assay-receipts` | [`sdk/`](sdk/) |
+
 ## What a receipt proves
 
 | Mark | What it means | Checked by |
