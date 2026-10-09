@@ -2,7 +2,7 @@
 //   npm install assay-receipts viem && node job.mjs 10
 // Prints one line per receipt and the job's deliverableHash (the Merkle root over its receipt hashes).
 // Pay for each line with ok=true. Keep job.json private: it holds the salts that let you re-prove any line later.
-import { wrap, hostGradeCheck, verifyReceipt, buildBatch } from "assay-receipts";
+import { wrap, hostGradeCheck, verifyReceipt, buildBatch, waitForAnchor } from "assay-receipts";
 import { createPublicClient, http } from "viem";
 import { writeFileSync } from "node:fs";
 
@@ -12,7 +12,6 @@ const HOST = "https://34-45-1-81.sslip.io/kimi";
 const ANCHOR = "0x049A73755cA3508ef3Daa4752A3406f6e00CfB13"; // ReceiptAnchor, Monad mainnet
 const VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7";
 const client = createPublicClient({ transport: http("https://rpc.monad.xyz") });
-const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 // Refuse before paying unless the host is graded "pass" against Moonshot's own endpoint.
 const ask = wrap(fetch, {
@@ -38,12 +37,8 @@ const jwks = await fetch(`${HOST}/.well-known/jwks.json`).then((r) => r.json());
 console.log("waiting for the batch to be anchored on Monad (up to ~3 min)...");
 const results = [];
 for (const j of jobs) {
-  let s;
-  for (let t = 0; t < 40; t++) {
-    s = await fetch(`${HOST}/v1/receipts/${j.hash}`).then((r) => r.json());
-    if (s.status === "anchored") break;
-    await sleep(5000);
-  }
+  // Not anchored within 3 minutes (the error says when the host's next batch is): not verified, don't pay for it.
+  const s = await waitForAnchor(HOST, j.hash).catch((e) => (console.log(e.message), {}));
   const v = s.status === "anchored"
     ? await verifyReceipt({ body: j.body, jws: j.jws, jwks, proof: s.proof, root: s.root, onchain: { client, anchor: ANCHOR }, salt: j.salt, output: j.output, messages: j.messages })
     : null;
