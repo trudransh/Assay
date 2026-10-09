@@ -13,7 +13,7 @@ A receipt proves who served which bytes and what they claimed. It doesn't prove 
 [![Live app](https://img.shields.io/badge/live%20app-assay--ten--xi.vercel.app-C9A227?style=for-the-badge&logo=googlechrome&logoColor=white)](https://assay-ten-xi.vercel.app)
 [![Docs](https://img.shields.io/badge/docs-assay.gitbook.io-4FC3F7?style=for-the-badge&logo=gitbook&logoColor=white)](https://assay.gitbook.io/assay-docs)
 [![Monad mainnet](https://img.shields.io/badge/Monad-mainnet%20143-8B73FF?style=for-the-badge)](https://monadvision.com/address/0x049A73755cA3508ef3Daa4752A3406f6e00CfB13)
-[![Tests](https://img.shields.io/badge/tests-545-B8F03C?style=for-the-badge)](#security)
+[![Tests](https://img.shields.io/badge/tests-551-B8F03C?style=for-the-badge)](#security)
 [![CI](https://img.shields.io/github/actions/workflow/status/trudransh/Assay/contracts.yml?branch=main&style=for-the-badge&label=contracts)](https://github.com/trudransh/Assay/actions)
 [![License](https://img.shields.io/badge/license-MIT-EDE6D6?style=for-the-badge)](LICENSE)
 
@@ -309,14 +309,14 @@ The threat model maps every attack to the test that blocks it: [docs](https://as
 
 | Package | Tests |
 |---|---|
-| Contracts (Foundry) | 121, plus fork tests against the real ERC-8004 registries |
+| Contracts (Foundry) | 123, plus fork tests against the real ERC-8004 registries |
 | SDK `@assay/receipts` | 156, including cross-implementation checks of MonadGuard's receipts |
 | Host | 74, plus a 16/16 end-to-end run on a local chain in CI |
 | Web app | 96 |
-| Grader (Python) | 43 |
+| Grader (Python) | 47 |
 | Envio indexer | 24, plus the HyperSync stats script |
 | Chainlink CRE workflow | 31 |
-| **Total** | **545**, across 6 CI workflows |
+| **Total** | **551**, across 6 CI workflows |
 
 TypeScript and Solidity check each other: the SDK generates the signatures and Merkle proofs that the Foundry tests verify.
 
