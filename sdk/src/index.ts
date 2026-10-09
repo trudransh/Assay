@@ -17,7 +17,7 @@ export {
   type PasskeyCredentials,
   type Passkey,
 } from "./webauthn.js";
-export { wrap, type WrappedResult, hostGradeCheck, GradeGateError, type GradeGate } from "./wrap.js";
+export { wrap, type WrappedResult, hostGradeCheck, GradeGateError, type GradeGate, waitForAnchor, AnchorTimeoutError, type AnchoredReceipt } from "./wrap.js";
 export {
   gradeOf,
   gradeStatus,

@@ -45,6 +45,52 @@ export function hostGradeCheck(
   };
 }
 
+/// What GET /v1/receipts/:hash returns once the receipt's batch is anchored: everything verifyReceipt needs.
+export interface AnchoredReceipt {
+  status: "anchored";
+  body: ReceiptBody;
+  jws: string;
+  root: Hex;
+  proof: Hex[];
+  anchorTx?: Hex;
+}
+
+export class AnchorTimeoutError extends Error {
+  /// `nextBatchInMs` comes from the host's GET /health; undefined if the host didn't say.
+  constructor(readonly hash: Hex, readonly nextBatchInMs?: number) {
+    super(`receipt ${hash} not anchored yet${nextBatchInMs === undefined ? "" : `; the host's next batch is in about ${Math.ceil(nextBatchInMs / 1000)} s`}`);
+  }
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+/// Polls the host until the receipt's batch is anchored, then returns the proof and root.
+/// Throws AnchorTimeoutError (with the host's next batch time) if it isn't anchored within timeoutMs;
+/// timeoutMs 0 checks once. An unknown receipt throws at once: waiting won't help.
+export async function waitForAnchor(
+  hostUrl: string,
+  hash: Hex,
+  opts: { timeoutMs?: number; pollMs?: number; fetchImpl?: typeof fetch } = {},
+): Promise<AnchoredReceipt> {
+  assertBytes32(hash, "receipt hash");
+  const { timeoutMs = 180_000, pollMs = 3_000, fetchImpl = fetch } = opts;
+  const base = hostUrl.replace(/\/$/, "");
+  const deadline = Date.now() + timeoutMs;
+  for (;;) {
+    const res = await fetchImpl(`${base}/v1/receipts/${hash}`);
+    if (!res.ok) throw new Error(`GET /v1/receipts/${hash} returned ${res.status}`);
+    const s = (await res.json()) as { status?: string };
+    if (s.status === "anchored") return s as AnchoredReceipt;
+    const left = deadline - Date.now();
+    if (left <= 0) {
+      const h = await fetchImpl(`${base}/health`).then((r) => (r.ok ? r.json() : {})).catch(() => ({}));
+      const next = (h as { nextBatchInMs?: unknown }).nextBatchInMs;
+      throw new AnchorTimeoutError(hash, typeof next === "number" ? next : undefined);
+    }
+    await sleep(Math.min(pollMs, left));
+  }
+}
+
 /// Wraps fetch for an Assay host: sends a fresh salt (and the co-signer key hash, D19), returns the parsed receipt.
 /// With `gate`, the host's grade is checked first and the request is refused unless it is allowed.
 export function wrap(fetchImpl: typeof fetch, opts: { cosigner?: Hex; gate?: GradeGate } = {}) {
