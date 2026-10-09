@@ -8,6 +8,27 @@ The harness has three scripts, and all use only the Python 3 standard library.
 | `export_grade.py` | Turns one probe run into `VerifierRegistry` grades and an evidence bundle. |
 | `post_grade.py` | Prints the commands that post those grades onchain, holding back hosts still inside their right of reply. |
 
+## Grade a host from your own key
+
+Anyone can post grades, and readers choose which verifiers to trust. This grades our Kimi K2.6 host (agent 10316) and Moonshot's own endpoint on Monad mainnet. You need an OpenRouter key in `OPENROUTER_API_KEY` (about $0.05), Foundry, and a little MON for gas.
+
+```bash
+git clone https://github.com/trudransh/Assay && cd Assay
+python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai/int4 --repeats 8 --out og --dry-run   # prints the cost
+python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai/int4 --repeats 8 --out og
+python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --base-url https://34-45-1-81.sslip.io/kimi/v1 --tag assay-kimi-10316 --repeats 8 --out og_host   # the host bills us, not you
+# one run with both endpoints: append the host run to the Moonshot run
+S=$(ls og/summary_*.csv | sed 's/.*summary_//;s/.csv//'); cat og_host/raw_*.jsonl >> og/raw_$S.jsonl; tail -n +2 og_host/summary_*.csv >> og/summary_$S.csv
+python3 harness/export_grade.py --out og --model moonshotai/kimi-k2.6 --reference moonshotai/int4 --assay-agent 143:10316 --assay-tag assay-kimi-10316
+# once, if you have no ERC-8004 identity on Monad mainnet; the agentId is in the Transfer event
+cast send 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432 'register(string)' "<your agent card URL>" --rpc-url https://rpc.monad.xyz --account <yours>
+# once, as the owner of that agentId
+cast send 0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1 'registerVerifier(uint256)' <your agentId> --rpc-url https://rpc.monad.xyz --account <yours>
+python3 harness/post_grade.py og/grades_$S.json --registry 0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1 --rpc-url https://rpc.monad.xyz --account <yours>   # prints the cast commands; it never touches your key
+```
+
+Then publish `og/evidence_$S.tar.gz` anywhere public, named `<its sha256 without 0x>.tar.gz`. The hash is the `evidence` field of each grade, so anyone, the CRE workflow included, can download the bundle and recount it. A result that disagrees with ours counts as much as one that agrees.
+
 ## assay_probe.py
 
 It checks tool-call correctness and whether the host enforces request parameters.
