@@ -38,10 +38,12 @@ const { json, receipt, salt } = await ask(`${HOST}/v1/chat/completions`, {
 ## Verify a receipt
 
 ```ts
-import { verifyReceipt } from "assay-receipts";
+import { verifyReceipt, waitForAnchor } from "assay-receipts";
 import { createPublicClient, http } from "viem";
 
-const status = await fetch(`${HOST}/v1/receipts/${receipt.hash}`).then((r) => r.json()); // proof and root, once anchored
+// Waits until the host has anchored the receipt's batch (about every 2 minutes on mainnet), then returns proof and root.
+// If it isn't anchored within timeoutMs (default 3 minutes), it throws AnchorTimeoutError with the host's next batch time.
+const status = await waitForAnchor(HOST, receipt.hash);
 const jwks = await fetch(`${HOST}/.well-known/jwks.json`).then((r) => r.json());
 
 const result = await verifyReceipt({
@@ -62,10 +64,31 @@ result.reproduce.anchored; // the exact contract call that reproduces the check,
 
 Each check runs on its own, and each comes with the call that reproduces it, so you never have to trust this library either.
 
+## Choosing and pinning hosts
+
+Anyone can register an ERC-8004 agent and run an Assay host. A valid receipt proves that agent served those bytes. It doesn't make the agent one you should trust. So a reader decides up front which hosts it accepts and pins them:
+
+- **Pin the host by its ERC-8004 id**, written `erc8004:<chainId>:<agentId>`, for example `erc8004:143:10278`. Refuse receipts from any other host. `checkRecord` does this with `trustedHosts`.
+- **Pin the ReceiptAnchor address and chain yourself.** Never take them from the receipt or the record: a forged record can name any contract.
+- **Before you pin a host, look it up.** `ownerOf(agentId)` on the ERC-8004 IdentityRegistry gives its owner, and its agent card (`/.well-known/agent-registration.json` on the host) should list the URL you call. Then check its grade from verifiers you trust with `hostGradeCheck` or `gradeOf`.
+- **Offline (CI, no RPC), also pin the signing key.** Without the chain read nothing ties a key to the host, so pass the key's RFC 7638 thumbprint (the host's `kid`) in `pinnedKeys`. `checkRecord` refuses offline checks without it.
+
+```ts
+const pins = {
+  trustedHosts: ["erc8004:143:10278"],
+  chains: { 143: { anchor: "0x049A73755cA3508ef3Daa4752A3406f6e00CfB13", rpc: "https://rpc.monad.xyz" } },
+  pinnedKeys: ["2Jc6WJSjvNSL7jid_XaVkG4iVOIBr7HSqhk1KiF5qg0"], // only needed offline
+};
+const verdict = await checkRecord(record, pins);
+```
+
+A host can rotate its key. Onchain checks follow the rotation; pinned offline keys need updating when it happens.
+
 ## Other exports
 
 | Export | What it does |
 |---|---|
+| `waitForAnchor(host, hash)` | Waits until a receipt is anchored and returns its proof and root, or throws `AnchorTimeoutError` saying when the host's next batch is |
 | `checkRecord(record, pins)` | Checks the receipt carried with a piece of context (for example a Mida record) before an agent uses it. Fails closed |
 | `gradeOf`, `gradeStatus` | Read a host's grade from VerifierRegistry for the verifiers you trust, and turn it into pass, warn, fail or unknown |
 | `hostKeyForAgent`, `hostKeyForEndpoint`, `hostKeyForDirect` | The host keys grades are stored under: an ERC-8004 identity, an OpenRouter endpoint or a lab's own API |

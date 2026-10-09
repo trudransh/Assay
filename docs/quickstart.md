@@ -157,6 +157,7 @@ Using the reference host identity (agent 1962) instead needs the owner's keystor
 
 | To learn | Read |
 |---|---|
+| Which hosts to trust, and how to pin them | [Choosing and pinning hosts](../sdk/README.md#choosing-and-pinning-hosts) |
 | How the pieces fit | [architecture.md](architecture.md) |
 | What the receipt contains | [SPEC.md](../SPEC.md) |
 | What each defence protects against | [threat-model.md](threat-model.md) |
