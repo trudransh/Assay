@@ -277,11 +277,11 @@ Proof: [`contracts/src/AssayAccount.sol`](contracts/src/AssayAccount.sol) · a f
 <td width="50%" valign="top">
 
 ### 💸 Kanmani escrow
-**Proposed: pay a host per verified receipt**
+**Live: a host paid per verified receipt**
 
-Kanmani runs an escrow on Monad mainnet that settles metered jobs in USDC. They proposed buying responses from our host and settling one unit per receipt that verifies against our anchored batches. We agreed on the terms, but the first paid job hasn't run yet.
+Kanmani runs an escrow on Monad mainnet that settles metered jobs in USDC. On 9 Oct they bought 5 responses from host 10278 and published the Merkle root of the 5 receipt hashes in advance. We delivered that root to their escrow. Both sides checked each receipt against our anchored batches, and Kanmani settled 5 units: 0.05 USDC to the host's owner.
 
-Proof: [issue #4](https://github.com/trudransh/Assay/issues/4)
+Proof: [issue #4](https://github.com/trudransh/Assay/issues/4) · deliver [`0x9f9055ff…`](https://monadvision.com/tx/0x9f9055ff4d93857db334019de340754c945b485fafbb6efefb796a65576e6b9d) · settle [`0x69aef08c…`](https://monadvision.com/tx/0x69aef08cc9f2afcde92f80ab9b367c9e23b11ca55c0a18ee08071feabadc2ec3)
 
 </td>
 </tr>
