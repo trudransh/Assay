@@ -43,6 +43,18 @@ CreAttestor v1 trusted the CRE simulator's forwarder and its fixed workflow ids,
 
 What a CRE attestation means: every `cre workflow simulate --broadcast` stamps the same placeholder workflow owner and id, so v2 also requires that our relayer sent the transaction, and each grade can be attested once. It shows that the workflow ran on this grade, from the evidence, and that anyone can re-run it on the same transaction and get the same answer. It isn't a signature from a Chainlink DON: no DON ran, and our key relayed the simulator's output. A deployed workflow would write to a new attestor pinned to its own owner.
 
+### First paid job (Kanmani escrow, 9 Oct)
+
+Kanmani's escrow `0xd75f7786D0DD42c8F161Bd78E87D37001044Fc32` funded job `0xe658e2cb…ec49` for 5 responses from host 10278 at 0.01 USDC each, with `max_tokens` 400. Before the job ran, they published the expected deliverable: the Merkle root of the 5 receipt hashes, `0x9fb7735f813f6b90b75d834b9d3573e789033290a09a6550eb333befeead041b`. Each receipt verified under agent 10278 against ReceiptAnchor (signature, Merkle proof, anchored root), and the host's owner `0xF3Cb…18d9` delivered that root. Kanmani ran the same checks and settled all 5 units. Discussion and receipt hashes are in [issue #4](https://github.com/trudransh/Assay/issues/4).
+
+| Action | Tx | Block |
+|---|---|---|
+| Job funded | [`0xa343ddb4…`](https://monadvision.com/tx/0xa343ddb41fcde5e15118140de4203ceb57dd94cac539614d1f3237f96050c8e0) | 111664461 |
+| `deliver(jobId, root)` from the host's owner | [`0x9f9055ff…`](https://monadvision.com/tx/0x9f9055ff4d93857db334019de340754c945b485fafbb6efefb796a65576e6b9d) | 111868335 |
+| Settled 5 units, 0.05 USDC to `0xF3Cb…18d9` | [`0x69aef08c…`](https://monadvision.com/tx/0x69aef08cc9f2afcde92f80ab9b367c9e23b11ca55c0a18ee08071feabadc2ec3) | 111870492 |
+
+The job turned up one limit: on Google's endpoint, a receipt's `tokensOut` counts only the visible answer, not thinking tokens, so three receipts show `tokensOut` 0 with `finish` "length". Each receipt still signs `req.params.max_tokens` 400, the value the host passed upstream.
+
 The mainnet host runs at https://34-45-1-81.sslip.io/mainnet (the web app reaches it at `/host-mainnet`). Testnet stays live below as the place to experiment for free.
 
 ## Monad testnet (chain 10143)
