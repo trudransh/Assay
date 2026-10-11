@@ -606,7 +606,7 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
 
 /* ---------- Developers ---------- */
 .dev { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 5vw, 72px); align-items: center; }
-.dev-copy { display: grid; gap: 18px; align-content: start; }
+.dev-copy { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-content: start; }
 .npm { display: inline-flex; align-items: center; gap: 4px; justify-self: start; max-width: 100%; height: 48px; padding: 0 6px 0 16px; border-radius: 999px; background: var(--stone-1); box-shadow: inset 0 0 0 1px var(--line-strong); font: 500 14px/1 var(--font-mono); font-stretch: 87.5%; }
 .npm code { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .npm code span { color: var(--faint); }
