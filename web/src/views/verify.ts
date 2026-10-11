@@ -6,6 +6,7 @@ import { fetchJwks, fetchReceiptStatus } from "../lib/host.js";
 import { myReceipts, parseBundle, parseReceipt, parseSalt, takeVerifyPrefill, type VerifyPrefill } from "../lib/receipt.js";
 import type { Address } from "viem";
 import { receiptPaper, type PaperState } from "../ui/receipt-paper.js";
+import { stepLoader } from "../ui/step-loader.js";
 
 /// Order shown on the page, with what a pass means and what a skip is waiting for.
 export const CHECKS: { key: keyof Checks; name: string; means: string; skipped: string }[] = [
@@ -164,9 +165,14 @@ export function mountVerify(root: HTMLElement) {
     status.el,
   );
 
+  const grid = h("div", { class: "verify-grid" }, h("div", { class: "verify-main" }, form, results), preview);
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     results.replaceChildren();
+    grid.querySelector(".sl")?.remove();
+    // Each step lights when the code reaches it, not on a timer.
+    const steps = stepLoader("Checking the receipt", ["Reading the receipt", "Fetching the host's keys", "Fetching the batch proof", "Checking signatures and the chain"]);
+    grid.append(steps.el);
     try {
       const held = parseReceipt(receipt.input.value);
       const input: VerifyInput = { body: held.body, jws: held.jws, jwks: { keys: [] } };
@@ -182,11 +188,13 @@ export function mountVerify(root: HTMLElement) {
       }
       const notes: string[] = [];
       status.say("Fetching keys and proof from the host…");
+      steps.go(1);
       try {
         input.jwks = await fetchJwks(host.input.value);
       } catch (e) {
         notes.push(`Could not fetch the host's JWKS (${errorText(e)}), so the signature check fails.`);
       }
+      steps.go(2);
       try {
         const st = await fetchReceiptStatus(host.input.value, receiptHash(held.body));
         if (st.status === "anchored") Object.assign(input, { proof: st.proof, root: st.root });
@@ -196,11 +204,14 @@ export function mountVerify(root: HTMLElement) {
       }
       if (rpc.input.value.trim()) input.onchain = { client: chainClient(rpc.input.value), anchor: anchor.input.value.trim() as Address };
       status.say("Checking…");
+      steps.go(3);
       const result = await verifyReceipt(input);
+      await steps.finish(true);
       show({ hash: result.receiptHash, body: held.body, anchored: result.checks.anchored === "pass", cosigned: result.checks.cosigned === "pass", root: input.root });
       results.append(renderResult(result, { rpc: rpc.input.value.trim(), notes }));
       status.say(noFault(result) ? "Done. No check failed." : "Done. At least one check failed.", noFault(result) ? "ok" : "error");
     } catch (e) {
+      void steps.finish(false);
       status.say(errorText(e), "error");
     }
   });
@@ -219,7 +230,7 @@ export function mountVerify(root: HTMLElement) {
       "Check a receipt yourself: the host's signature, the onchain anchor, and, if you kept the salt, that the output and prompt match.",
       live,
       myReceiptsCard() ?? "",
-      h("div", { class: "verify-grid" }, h("div", { class: "verify-main" }, form, results), preview),
+      grid,
     ),
   );
   // Arriving from a receipt page with the opening in memory: run every check at once.

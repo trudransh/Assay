@@ -6,6 +6,9 @@
 
 import { initHeroDots } from "./hero-dots.js";
 import { initNet } from "./net.js";
+import { initTerminal } from "./terminal.js";
+import { initTilt } from "./tilt.js";
+import { initGlow } from "../ui/glow.js";
 import { $, $$, FINE, HASH, RM, clamp } from "./util.js";
 
 if (RM) document.documentElement.classList.remove("js-motion");
@@ -78,7 +81,7 @@ const io = new IntersectionObserver(
   },
   { threshold: 0.18, rootMargin: "0px 0px -6% 0px" },
 );
-for (const el of $$("[data-reveal],[data-pop],[data-watch],#bento,#honest,#ladder,#chips")) io.observe(el);
+for (const el of $$("[data-reveal],[data-pop],[data-watch],#bento,#honest,#ladder,#ladder-rail,#chips")) io.observe(el);
 
 /* ---------- count up ---------- */
 function countUp(el: HTMLElement) {
@@ -316,49 +319,6 @@ addEventListener("resize", onScroll);
 onScroll();
 void document.fonts?.ready.then(onScroll);
 
-/* ---------- the code card types itself once ---------- */
-{
-  const pre = $("#code");
-  const code = pre?.firstElementChild;
-  if (pre && code && !RM) {
-    const nodes: { n: Text; t: string }[] = [];
-    const walker = document.createTreeWalker(pre, NodeFilter.SHOW_TEXT);
-    while (walker.nextNode()) nodes.push({ n: walker.currentNode as Text, t: walker.currentNode.nodeValue ?? "" });
-    const total = nodes.reduce((s, x) => s + x.t.length, 0);
-    const caret = document.createElement("span");
-    caret.className = "caret";
-    caret.setAttribute("aria-hidden", "true");
-    pre.setAttribute("aria-label", nodes.map((x) => x.t).join(""));
-    for (const x of nodes) x.n.nodeValue = "";
-    code.append(caret);
-    const o = new IntersectionObserver(
-      (es) => {
-        if (!es[0].isIntersecting) return;
-        o.disconnect();
-        const t0 = performance.now();
-        const step = (t: number) => {
-          const target = Math.min(total, Math.floor(((t - t0) / 1000) * 260));
-          let acc = 0;
-          for (const x of nodes) {
-            const take = clamp(target - acc, 0, x.t.length);
-            x.n.nodeValue = x.t.slice(0, take);
-            acc += x.t.length;
-            if (take > 0) x.n.parentNode?.append(caret);
-          }
-          if (target < total) requestAnimationFrame(step);
-          else {
-            pre.removeAttribute("aria-label");
-            setTimeout(() => caret.remove(), 2400);
-          }
-        };
-        requestAnimationFrame(step);
-      },
-      { threshold: 0.35 },
-    );
-    o.observe(pre);
-  }
-}
-
 /* ---------- copy the install command ---------- */
 {
   const b = $<HTMLButtonElement>("#copy");
@@ -385,3 +345,6 @@ void document.fonts?.ready.then(onScroll);
 }
 
 initHeroDots();
+initTerminal();
+initTilt();
+initGlow("[data-glow]");

@@ -307,10 +307,8 @@ export function mountVault(root: HTMLElement) {
     section(
       "Vault",
       "One passkey, three separate keys. Each comes from the passkey's PRF output with its own salt, sha256 of the label, and none is ever stored.",
-      passkeyCard(),
-      vaultCard(),
-      requesterCard(),
-      revealCard(),
+      // Two columns: your passkey and its vault on the left, what other apps and people see on the right.
+      h("div", { class: "vault-grid" }, h("div", { class: "col" }, passkeyCard(), requesterCard()), h("div", { class: "col" }, vaultCard(), revealCard())),
     ),
   );
 }

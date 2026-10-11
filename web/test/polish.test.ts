@@ -79,6 +79,17 @@ describe("network lock on chain-pinned pages", () => {
     expect(slot.querySelector(".net-lock")).toBeNull();
     expect(slot.querySelectorAll('[role="radio"]')).toHaveLength(2);
   });
+
+  it("a route that reads no chain of its own drops the previous page's override", () => {
+    mountNetworkSwitch(document.getElementById("network-switch")!);
+    const other = CHAIN_ID === 143 ? 10143 : 143;
+    showPageChain(other);
+    unlockChain();
+    const group = document.querySelector<HTMLElement>(".net")!;
+    expect(group.classList.contains("net-override")).toBe(false);
+    expect(group.dataset.chain).toBe(String(CHAIN_ID));
+    expect(document.getElementById("network-foot")!.textContent).toContain(`chain ${CHAIN_ID}`);
+  });
 });
 
 describe("motion helpers under reduced motion", () => {

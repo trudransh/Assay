@@ -91,6 +91,10 @@ export function initHeroDots(): void {
   const canvas = $<HTMLCanvasElement>("#dots");
   const stage = $("#stage-obj");
   const hlEl = $(".h1 .hl");
+  const frameEl = $(".hero-grid .frame");
+  const tagEl = $("#stage-tag");
+  const inEl = $(".hero-in");
+  const midEls = [$("#grid-mid"), $("#plus-mid")].filter((e): e is HTMLElement => !!e);
   if (!hero || !canvas || !stage) return;
   let gl: WebGLRenderingContext | null = null;
   try {
@@ -402,23 +406,26 @@ export function initHeroDots(): void {
     }
     g.viewport(0, 0, W, Hh);
     const narrow = innerWidth <= 900;
-    let cxPx = sr.left - hr.left + sr.width * (narrow ? 0.5 : 0.6);
-    const cyPx = sr.top - hr.top + sr.height * (narrow ? 0.5 : 0.45);
-    let objPx = Math.min(sr.height * (narrow ? 0.9 : 0.66), sr.width * (narrow ? 1.15 : 0.85));
-    if (!narrow && hlEl) {
-      // Keep the widest shape clear of the headline: its left edge stays 32px right of "response.".
+    let cxPx = sr.left - hr.left + sr.width * 0.5;
+    let cyPx = sr.top - hr.top + sr.height * 0.5;
+    let objPx = Math.min(sr.height * 0.9, sr.width * 1.15);
+    if (!narrow && hlEl && frameEl) {
+      // The middle grid line sits just right of "response.", and the shape fills the space between
+      // that line and the right edge, above the caption. Widest shape spans about 0.88 * objPx.
+      const fr = frameEl.getBoundingClientRect();
       const hl = hlEl.getBoundingClientRect();
-      let half = 0.44 * objPx;
-      const minCx = hl.right - hr.left + 32 + half;
-      const maxCx = sr.right - hr.left - half;
-      if (cyPx - objPx / 2 < hl.bottom - hr.top && cxPx < minCx) {
-        if (minCx <= maxCx) cxPx = minCx;
-        else {
-          objPx = Math.max(240, (sr.right - hl.right - 32) / 0.88);
-          half = 0.44 * objPx;
-          cxPx = hl.right - hr.left + 32 + half;
-        }
-      }
+      const lineX = clamp(hl.right + 36, fr.left + fr.width * 0.416, fr.left + fr.width * 0.62);
+      for (const el of midEls) el.style.left = `${(lineX - fr.left).toFixed(1)}px`;
+      const left = lineX + 40;
+      const right = sr.right;
+      // Right of the line nothing sits above the stage, so the shape may start level with the status row.
+      const tagTop = tagEl ? tagEl.getBoundingClientRect().top - 24 : sr.bottom;
+      const top = inEl ? inEl.getBoundingClientRect().top + 8 : sr.top;
+      const bottom = Math.min(sr.bottom, tagTop);
+      // The tallest shape (the receipt, tilted) spans about 1.02 * objPx.
+      objPx = Math.max(240, Math.min((right - left) / 0.88, (bottom - top) / 1.02));
+      cxPx = (left + right) / 2 - hr.left;
+      cyPx = (top + bottom) / 2 - hr.top;
     }
     geo.cx = (cxPx / hr.width) * 2 - 1;
     geo.cy = 1 - (cyPx / hr.height) * 2;

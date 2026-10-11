@@ -142,13 +142,19 @@ export function lockToChain(id: number, what = "receipt"): void {
   if (foot) foot.textContent = `${c.name}, chain ${id}.`;
 }
 
-/// Back to the switch, for any route that isn't pinned to one chain.
+/// Back to the switch and the remembered default, for any route that isn't pinned to one chain.
+/// It also clears a page-chain override left by the previous route, so a page that reads no chain
+/// of its own never inherits "testnet" from the hosts board it came from. Views that read another
+/// chain call showPageChain after this.
 export function unlockChain(): void {
-  if (!lock || !slotEl || !group) return;
-  lock = null;
-  closeLock = null;
-  slotEl.replaceChildren(group);
+  if (!slotEl || !group) return;
+  if (lock) {
+    lock = null;
+    closeLock = null;
+    slotEl.replaceChildren(group);
+  }
   group.classList.remove("net-override");
+  group.title = "";
   setChecked(CHAIN_ID);
   const foot = document.getElementById("network-foot");
   if (foot) foot.textContent = `${CHAINS[CHAIN_ID].name}, chain ${CHAIN_ID}.`;
