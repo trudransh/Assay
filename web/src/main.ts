@@ -2,7 +2,7 @@ import { emptyState, h, section, setPageTab } from "./dom.js";
 import { CHAIN_ID, CHAINS, DOCS_URL, QUICKSTART_URL, chainConfig } from "./lib/config.js";
 import { match, parseHash, tabOf, type Route } from "./router.js";
 import { initReveal } from "./ui/motion.js";
-import { mountNetworkSwitch } from "./ui/network-switch.js";
+import { mountNetworkSwitch, unlockChain } from "./ui/network-switch.js";
 import { mountAsk } from "./views/ask.js";
 import { mountGrades } from "./views/grades.js";
 import { mountHosts } from "./views/hosts.js";
@@ -53,6 +53,8 @@ function draw(route: Route, focus: boolean) {
   const m = match(route);
   const tab = m.view === "notFound" ? "" : tabOf(route);
   setPageTab(TAB_NAMES[tab] ?? "");
+  // Only the receipt view pins the network; every other route gets the switch back.
+  unlockChain();
   main.replaceChildren();
   if (m.view === "notFound") notFound(main, route);
   else if (m.view === "planned") planned(main, m.title, m.step);
