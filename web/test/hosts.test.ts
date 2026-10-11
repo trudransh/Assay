@@ -57,6 +57,20 @@ describe("hosts leaderboard", () => {
     expect(rows[1].textContent).toContain("Not yet");
   });
 
+  it("shows five hosts per page and pages through the rest", () => {
+    const many = { ...board, hostCount: 12, entries: Array.from({ length: 12 }, (_, i) => entry(i + 1, `0x${String(i + 1).padStart(64, "0")}`, 9000 - i)) };
+    const el = renderBoard(many, data);
+    const ranks = () => [...el.querySelectorAll("tbody tr .rank-mark")].map((r) => r.textContent);
+    expect(ranks()).toEqual(["1", "2", "3", "4", "5"]);
+    expect(el.querySelector(".pager-count")!.textContent).toBe("1 to 5 of 12");
+    expect(el.querySelectorAll(".pager-btn[aria-label^='Page']")).toHaveLength(3);
+    el.querySelector<HTMLButtonElement>(".pager-btn[aria-label='Next page']")!.click();
+    expect(ranks()).toEqual(["6", "7", "8", "9", "10"]);
+    el.querySelector<HTMLButtonElement>(".pager-btn[aria-label='Page 3']")!.click();
+    expect(ranks()).toEqual(["11", "12"]);
+    expect(el.querySelector<HTMLButtonElement>(".pager-btn[aria-label='Next page']")!.disabled).toBe(true);
+  });
+
   it("filters by tag or agent id", () => {
     expect(renderBoard(board, data, "1962").querySelectorAll("tbody tr")).toHaveLength(1);
   });

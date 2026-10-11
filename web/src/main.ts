@@ -1,8 +1,10 @@
 import { emptyState, h, section, setPageTab } from "./dom.js";
 import { CHAIN_ID, CHAINS, DOCS_URL, QUICKSTART_URL, chainConfig } from "./lib/config.js";
 import { match, parseHash, tabOf, type Route } from "./router.js";
+import { initGlow } from "./ui/glow.js";
+import { initPageGrid, placePageGrid } from "./ui/page-grid.js";
 import { initReveal } from "./ui/motion.js";
-import { mountNetworkSwitch } from "./ui/network-switch.js";
+import { mountNetworkSwitch, unlockChain } from "./ui/network-switch.js";
 import { mountAsk } from "./views/ask.js";
 import { mountGrades } from "./views/grades.js";
 import { mountHosts } from "./views/hosts.js";
@@ -53,6 +55,8 @@ function draw(route: Route, focus: boolean) {
   const m = match(route);
   const tab = m.view === "notFound" ? "" : tabOf(route);
   setPageTab(TAB_NAMES[tab] ?? "");
+  // Only the receipt view pins the network; every other route gets the switch back.
+  unlockChain();
   main.replaceChildren();
   if (m.view === "notFound") notFound(main, route);
   else if (m.view === "planned") planned(main, m.title, m.step);
@@ -70,6 +74,7 @@ function draw(route: Route, focus: boolean) {
   void main.offsetWidth;
   main.classList.add("route-in");
   initReveal(main);
+  placePageGrid(location.hash.split("?")[0] || "#");
   // Move focus to the new page so keyboard and screen reader users land on it.
   if (focus) main.focus();
 }
@@ -82,6 +87,21 @@ function networkSwitch() {
   if (slot && Object.keys(CHAINS).length > 1) mountNetworkSwitch(slot);
 }
 
+/// The landing's backdrop on every app page: a faint wall of hex behind the glows. Drawn once, never moves.
+function fieldHash() {
+  const pre = document.getElementById("field-hash");
+  if (!pre) return;
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const hex = "0123456789abcdef";
+  const rows: string[] = [];
+  for (let r = 0; r < 70; r++) rows.push(Array.from({ length: 6 }, () => `0x${Array.from({ length: 16 }, () => hex[(rnd() * 16) | 0]).join("")}`).join("   "));
+  pre.textContent = rows.join("\n");
+}
+
+fieldHash();
+initPageGrid();
+initGlow(".page .card, .page .tile, .page .level, .page .check");
 networkSwitch();
 addEventListener("hashchange", () => render(parseHash(location.hash), true));
 render(parseHash(location.hash), false);

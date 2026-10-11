@@ -5,6 +5,8 @@ import { chainClient } from "../lib/chain.js";
 import { fetchJwks, fetchReceiptStatus } from "../lib/host.js";
 import { myReceipts, parseBundle, parseReceipt, parseSalt, takeVerifyPrefill, type VerifyPrefill } from "../lib/receipt.js";
 import type { Address } from "viem";
+import { receiptPaper, type PaperState } from "../ui/receipt-paper.js";
+import { stepLoader } from "../ui/step-loader.js";
 
 /// Order shown on the page, with what a pass means and what a skip is waiting for.
 export const CHECKS: { key: keyof Checks; name: string; means: string; skipped: string }[] = [
@@ -96,11 +98,33 @@ export function mountVerify(root: HTMLElement) {
   const anchor = field("ReceiptAnchor", input(RECEIPT_ANCHOR));
   const status = liveRegion();
   const results = h("div");
+  // The receipt as paper, beside the form: a ghost slip until something parses, then the real one.
+  const preview = h("aside", { class: "verify-preview", "aria-live": "polite" }, receiptPaper({}));
+  let shown: PaperState = {};
+  const show = (st: PaperState) => {
+    shown = st;
+    preview.replaceChildren(receiptPaper(st));
+  };
+  const previewFromInput = () => {
+    try {
+      const held = parseReceipt(receipt.input.value);
+      const hash = receiptHash(held.body);
+      if (hash !== shown.hash) show({ hash, body: held.body });
+    } catch {
+      if (shown.body) show({});
+    }
+  };
+  let previewTimer = 0;
+  receipt.input.addEventListener("input", () => {
+    clearTimeout(previewTimer);
+    previewTimer = window.setTimeout(previewFromInput, 150);
+  });
   const fill = (p: VerifyPrefill) => {
     receipt.input.value = p.receipt;
     if (p.salt) salt.input.value = p.salt;
     if (p.output !== undefined) output.input.value = p.output;
     if (p.messages !== undefined) messages.input.value = JSON.stringify(p.messages);
+    previewFromInput();
   };
   const bundle = field("Bundle file (optional)", h("input", { type: "file", accept: "application/json,.json" }) as HTMLInputElement, "The bundle from Ask or a receipt page fills every field. It's read here and never uploaded.");
   bundle.input.addEventListener("change", async () => {
@@ -109,10 +133,24 @@ export function mountVerify(root: HTMLElement) {
     try {
       const b = parseBundle(await file.text());
       fill({ receipt: JSON.stringify({ body: b.body, jws: b.jws }), ...b });
-      status.say(b.salt ? "Bundle loaded with its salt. Press Verify." : "Bundle loaded. It has no salt, so the prompt and output checks will be skipped.", "ok");
+      status.say(b.salt ? "Bundle loaded with its salt. Press Verify receipt." : "Bundle loaded. It has no salt, so the prompt and output checks will be skipped.", "ok");
     } catch (e) {
       status.say(`That file isn't a receipt bundle (${errorText(e)}).`, "error");
     }
+  });
+  // The bundle row doubles as a drop zone: drop a .json bundle anywhere on it.
+  bundle.row.classList.add("dropzone");
+  bundle.row.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    bundle.row.classList.add("drag");
+  });
+  bundle.row.addEventListener("dragleave", () => bundle.row.classList.remove("drag"));
+  bundle.row.addEventListener("drop", (e) => {
+    e.preventDefault();
+    bundle.row.classList.remove("drag");
+    if (!e.dataTransfer?.files.length) return;
+    bundle.input.files = e.dataTransfer.files;
+    bundle.input.dispatchEvent(new Event("change"));
   });
   const form = h(
     "form",
@@ -123,13 +161,18 @@ export function mountVerify(root: HTMLElement) {
     output.row,
     messages.row,
     h("details", {}, h("summary", {}, "Host and chain settings"), host.row, rpc.row, anchor.row),
-    h("button", { type: "submit" }, "Verify"),
+    h("button", { type: "submit" }, "Verify receipt"),
     status.el,
   );
 
+  const grid = h("div", { class: "verify-grid" }, h("div", { class: "verify-main" }, form, results), preview);
   form.addEventListener("submit", async (ev) => {
     ev.preventDefault();
     results.replaceChildren();
+    grid.querySelector(".sl")?.remove();
+    // Each step lights when the code reaches it, not on a timer.
+    const steps = stepLoader("Checking the receipt", ["Reading the receipt", "Fetching the host's keys", "Fetching the batch proof", "Checking signatures and the chain"]);
+    grid.append(steps.el);
     try {
       const held = parseReceipt(receipt.input.value);
       const input: VerifyInput = { body: held.body, jws: held.jws, jwks: { keys: [] } };
@@ -145,11 +188,13 @@ export function mountVerify(root: HTMLElement) {
       }
       const notes: string[] = [];
       status.say("Fetching keys and proof from the host…");
+      steps.go(1);
       try {
         input.jwks = await fetchJwks(host.input.value);
       } catch (e) {
         notes.push(`Could not fetch the host's JWKS (${errorText(e)}), so the signature check fails.`);
       }
+      steps.go(2);
       try {
         const st = await fetchReceiptStatus(host.input.value, receiptHash(held.body));
         if (st.status === "anchored") Object.assign(input, { proof: st.proof, root: st.root });
@@ -159,10 +204,14 @@ export function mountVerify(root: HTMLElement) {
       }
       if (rpc.input.value.trim()) input.onchain = { client: chainClient(rpc.input.value), anchor: anchor.input.value.trim() as Address };
       status.say("Checking…");
+      steps.go(3);
       const result = await verifyReceipt(input);
+      await steps.finish(true);
+      show({ hash: result.receiptHash, body: held.body, anchored: result.checks.anchored === "pass", cosigned: result.checks.cosigned === "pass", root: input.root });
       results.append(renderResult(result, { rpc: rpc.input.value.trim(), notes }));
       status.say(noFault(result) ? "Done. No check failed." : "Done. At least one check failed.", noFault(result) ? "ok" : "error");
     } catch (e) {
+      void steps.finish(false);
       status.say(errorText(e), "error");
     }
   });
@@ -176,7 +225,13 @@ export function mountVerify(root: HTMLElement) {
     h("a", { class: "btn btn-primary btn-sm", href: `#r/${sample.sampleReceipt}` }, "Open a live receipt"),
   );
   root.append(
-    section("Verify a receipt", "Check a receipt yourself: the host's signature, the onchain anchor, and, if you kept the salt, that the output and prompt match.", live, myReceiptsCard() ?? "", form, results),
+    section(
+      "Verify a receipt",
+      "Check a receipt yourself: the host's signature, the onchain anchor, and, if you kept the salt, that the output and prompt match.",
+      live,
+      myReceiptsCard() ?? "",
+      grid,
+    ),
   );
   // Arriving from a receipt page with the opening in memory: run every check at once.
   const pre = takeVerifyPrefill();
