@@ -17,12 +17,6 @@
   --hair: color-mix(in srgb, var(--bone) 12%, transparent);
 }
 
-/* ---------- field: glows plus a fine grain, never moves with the cursor ---------- */
-.ambient::after {
-  content: ""; position: absolute; inset: 0; opacity: 0.05;
-  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-}
-
 /* ---------- top bar: a floating glass pill, like the landing nav ---------- */
 .top {
   position: sticky; top: calc(env(safe-area-inset-top, 0px) + 14px);
@@ -207,15 +201,49 @@ a.rp-bar:hover { color: var(--ink); }
   .btn-primary::after, button[type="submit"]:not([aria-busy="true"])::after { display: none; }
 }
 
-/* ---------- backdrop on every app page: hex wall and the column frame ---------- */
-.field-hash {
-  position: fixed; inset: 0; z-index: -1; margin: 0; padding: 24px; pointer-events: none;
-  font: 400 11px/2 var(--font-mono); font-stretch: 87.5%; letter-spacing: 0.08em; white-space: pre; overflow: hidden;
-  color: var(--bone); opacity: 0.032;
-  -webkit-mask-image: radial-gradient(60% 55% at 70% 30%, #000, transparent); mask-image: radial-gradient(60% 55% at 70% 30%, #000, transparent);
+/* ---------- backdrop on every app page: the landing's field, column frame and head grid ---------- */
+/* Same layers and values as .field on the landing (landing.css): glows that drift, a hex wall, grain. */
+.bg { position: fixed; inset: 0; z-index: -1; pointer-events: none; overflow: hidden; }
+.bg-glow {
+  position: absolute; inset: -10%;
+  background:
+    radial-gradient(38% 34% at 76% 26%, rgba(139, 115, 255, 0.13), transparent 70%),
+    radial-gradient(34% 30% at 14% 72%, rgba(201, 162, 39, 0.10), transparent 70%),
+    radial-gradient(30% 26% at 58% 96%, rgba(255, 139, 207, 0.07), transparent 70%);
+  animation: bg-drift 52s ease-in-out infinite alternate;
 }
+@keyframes bg-drift { to { transform: translate3d(-2.5%, 1.5%, 0) scale(1.06); } }
+.bg-hash {
+  position: absolute; inset: 0; width: auto; height: auto; max-height: none; margin: 0; padding: 24px; border: 0; border-radius: 0; background: none;
+  font: 400 11px/2 var(--font-mono); font-stretch: 87.5%; letter-spacing: 0.08em; white-space: pre; overflow: hidden;
+  color: var(--bone); opacity: 0.024;
+  -webkit-mask-image: radial-gradient(60% 55% at 30% 75%, #000, transparent); mask-image: radial-gradient(60% 55% at 30% 75%, #000, transparent);
+}
+.bg-grain {
+  position: absolute; inset: 0; opacity: 0.05;
+  background-image: url("data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .6 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+/* The hairline under each page head, with a plus on each column line (ui/page-grid.ts). */
+.page-grid { position: absolute; left: 0; right: 0; top: var(--y, -100px); height: 0; z-index: -1; pointer-events: none; }
+.page-grid[hidden] { display: none; }
+.pg-line {
+  position: absolute; left: 0; right: 0; top: 0; height: 1px; background: rgba(237, 230, 214, 0.06); transform-origin: left;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent); mask-image: linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+}
+.pg-plus { position: absolute; top: 0; width: 11px; height: 11px; transform: translate(-50%, -50%); }
+.pg-plus::before, .pg-plus::after { content: ""; position: absolute; background: rgba(237, 230, 214, 0.55); }
+.pg-plus::before { left: 0; right: 0; top: 5px; height: 1px; }
+.pg-plus::after { top: 0; bottom: 0; left: 5px; width: 1px; }
+.page-grid.in .pg-line { animation: pg-wipe 1.2s var(--ease-expo) 150ms backwards; }
+.page-grid.in .pg-plus { animation: pg-pop 600ms var(--ease-expo) backwards; animation-delay: calc(450ms + var(--i, 0) * 80ms); }
+@keyframes pg-wipe { from { transform: scaleX(0); opacity: 0; } }
+@keyframes pg-pop { from { opacity: 0; transform: translate(-50%, -50%) scale(0.4); } }
+@media (max-width: 640px) { .page-grid { display: none; } }
+@media (prefers-reduced-motion: reduce) { .bg-glow, .app-frame span, .page-grid.in .pg-line, .page-grid.in .pg-plus { animation: none !important; } }
 .app-frame { position: fixed; inset: 0; z-index: -1; pointer-events: none; }
-.app-frame span { position: absolute; top: 0; bottom: 0; width: 1px; background: color-mix(in srgb, var(--bone) 6%, transparent); }
+.app-frame span { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(237, 230, 214, 0.06); transform-origin: top; animation: pg-wipe-v 1.2s var(--ease-expo) 300ms backwards; }
+.app-frame span:last-child { animation-delay: 400ms; }
+@keyframes pg-wipe-v { from { transform: scaleY(0); opacity: 0; } }
 .app-frame span:first-child { left: max(var(--space-5), calc((100% - var(--max-app)) / 2 + var(--space-5))); }
 .app-frame span:last-child { right: max(var(--space-5), calc((100% - var(--max-app)) / 2 + var(--space-5))); }
 @media (max-width: 640px) { .app-frame { display: none; } }
@@ -268,7 +296,8 @@ a.rp-bar:hover { color: var(--ink); }
 .board-table tbody tr:nth-child(3) { animation-delay: 80ms; }
 .board-table tbody tr:nth-child(4) { animation-delay: 120ms; }
 .board-table tbody tr:nth-child(5) { animation-delay: 160ms; }
-@keyframes row-in { from { opacity: 0; transform: translateY(8px); } }
+@keyframes row-in { from { opacity: 0; } }
+.board-paged .table-wrap { overflow-y: hidden; scrollbar-width: thin; scrollbar-color: var(--line-strong, #3a3832) transparent; }
 
 /* ---------- alignment: one rhythm for every form and card ---------- */
 .page-head { margin-bottom: clamp(28px, 4vw, 44px); }
