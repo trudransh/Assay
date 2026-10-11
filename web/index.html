@@ -1,361 +1,434 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="js-motion">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="dark" />
     <meta name="theme-color" content="#0C0C0B" />
-    <title>Assay: proof of who served every AI response</title>
-    <meta name="description" content="Assay gives every AI response a signed receipt. The host signs it and anchors it in a batch on Monad, and you can co-sign it with your passkey." />
-    <meta property="og:title" content="Assay: proof of who served every AI response" />
-    <meta property="og:description" content="Signed receipts for AI responses, anchored on Monad. Co-sign with a passkey, check grades from open verifiers." />
+    <title>Assay: proof of response</title>
+    <meta name="description" content="Assay gives every open-weight AI response a receipt. It names the model and the host, the host signs it and anchors it on Monad, and you can co-sign it with your passkey." />
+    <meta property="og:title" content="Assay: proof of response" />
+    <meta property="og:description" content="Signed receipts for AI responses, anchored on Monad. It proves who served which bytes and what they claimed, not which weights ran." />
     <meta property="og:image" content="/og.png" />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" type="image/png" href="/favicon-32.png" />
     <link rel="preload" href="/fonts/archivo-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/martian-mono-latin-wdth-normal.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="stylesheet" href="/src/tokens.css" />
-    <link rel="stylesheet" href="/src/style.css" />
     <link rel="stylesheet" href="/src/landing.css" />
-    <link rel="stylesheet" href="/src/polish.css" />
+    <script type="module" src="/src/landing/main.ts"></script>
   </head>
-  <body class="landing">
-    <div class="ambient" aria-hidden="true"></div>
-    <a class="skip" href="#top">Skip to content</a>
+  <body>
+    <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-mark" viewBox="6 6 128 148">
+    <polygon fill="none" stroke="#C9A227" stroke-width="7" points="38,14 102,14 126,38 126,122 102,146 38,146 14,122 14,38" />
+    <polygon fill="none" stroke="#C9A227" stroke-width="2.6" points="42,24 98,24 116,42 116,118 98,136 42,136 24,118 24,42" />
+    <line stroke="#C9A227" stroke-width="5" x1="48" y1="114" x2="92" y2="114" />
+    <path fill="#C9A227" d="M42.52 98.0V92.64L50.84 92.0H52.52L60.28 92.64V98.0ZM46.36 98.0 64.6 45.6H75.96000000000001L94.44 98.0H78.6L64.76 54.96H65.08L63.480000000000004 63.199999999999996L52.44 98.0ZM55.24 83.52V78.24H80.84V83.52ZM70.6 98.0V92.72L79.96000000000001 92.16H87.4L97.48 92.72V98.0Z" />
+  </symbol>
+  <symbol id="i-mark-ink" viewBox="6 6 128 148">
+    <polygon fill="none" stroke="currentColor" stroke-width="8" points="38,14 102,14 126,38 126,122 102,146 38,146 14,122 14,38" />
+    <polygon fill="none" stroke="currentColor" stroke-width="2.6" points="42,24 98,24 116,42 116,118 98,136 42,136 24,118 24,42" />
+    <line stroke="currentColor" stroke-width="5" x1="48" y1="114" x2="92" y2="114" />
+    <path fill="currentColor" d="M42.52 98.0V92.64L50.84 92.0H52.52L60.28 92.64V98.0ZM46.36 98.0 64.6 45.6H75.96000000000001L94.44 98.0H78.6L64.76 54.96H65.08L63.480000000000004 63.199999999999996L52.44 98.0ZM55.24 83.52V78.24H80.84V83.52ZM70.6 98.0V92.72L79.96000000000001 92.16H87.4L97.48 92.72V98.0Z" />
+  </symbol>
+  <symbol id="i-word" viewBox="154 46 374 68"><path fill="#EDE6D6" d="M159.13702623906707 106.0 184.75801749271136 53.84839650145772H201.96501457725947L227.5860058309038 106.0H210.8338192419825L206.8921282798834 97.66180758017492H178.99708454810497L175.05539358600583 106.0ZM184.15160349854227 86.36734693877551H201.73760932944606L197.03790087463557 75.75510204081633Q196.73469387755102 75.07288629737609 196.20408163265307 73.74635568513119Q195.67346938775512 72.4198250728863 195.06705539358603 70.94169096209913Q194.46064139941691 69.46355685131195 194.00583090379007 68.21282798833819Q193.55102040816325 66.96209912536443 193.2478134110787 66.35568513119533H192.71720116618076Q192.1865889212828 67.72011661807579 191.42857142857144 69.53935860058309Q190.67055393586006 71.35860058309038 190.02623906705537 73.0262390670554Q189.38192419825072 74.6938775510204 188.85131195335276 75.75510204081633ZM269.04956268221576 106.90962099125365Q262.6822157434402 106.90962099125365 257.14868804664724 106.15160349854227Q251.61516034985425 105.3935860058309 247.4460641399417 103.49854227405248Q243.27696793002917 101.60349854227405 240.92711370262393 98.19241982507289Q238.57725947521868 94.78134110787173 238.57725947521868 89.55102040816327Q238.57725947521868 89.39941690962098 238.57725947521868 89.17201166180757Q238.57725947521868 88.94460641399417 238.65306122448982 88.71720116618076H253.81341107871722Q253.7376093294461 89.0204081632653 253.69970845481052 89.32361516034985Q253.66180758017495 89.6268221574344 253.66180758017495 90.00583090379008Q253.66180758017495 92.35568513119533 255.44314868804668 93.68221574344022Q257.2244897959184 95.00874635568513 260.40816326530614 95.53935860058309Q263.5918367346939 96.06997084548105 267.9125364431487 96.06997084548105Q269.65597667638485 96.06997084548105 271.51311953352774 95.95626822157435Q273.3702623906706 95.84256559766764 275.11370262390676 95.57725947521865Q276.8571428571429 95.31195335276968 278.2594752186589 94.78134110787173Q279.6618075801749 94.25072886297376 280.4577259475219 93.45481049562682Q281.25364431486884 92.65889212827989 281.25364431486884 91.44606413994168Q281.25364431486884 89.85422740524781 279.5481049562683 88.9067055393586Q277.84256559766766 87.95918367346938 274.8483965014577 87.39067055393585Q271.85422740524785 86.82215743440233 268.1778425655977 86.36734693877551Q264.50145772594755 85.91253644314868 260.5597667638484 85.26822157434401Q256.6180758017493 84.62390670553935 252.90379008746356 83.52478134110787Q249.18950437317787 82.42565597667638 246.23323615160353 80.60641399416909Q243.27696793002917 78.78717201166181 241.53352769679302 75.9067055393586Q239.79008746355686 73.0262390670554 239.79008746355686 68.932944606414Q239.79008746355686 64.76384839650146 241.87463556851313 61.76967930029154Q243.9591836734694 58.77551020408163 247.74927113702626 56.80466472303206Q251.5393586005831 54.8338192419825 256.6938775510204 53.886297376093296Q261.8483965014577 52.93877551020408 267.9125364431487 52.93877551020408Q274.12827988338194 52.93877551020408 279.1690962099126 53.924198250728864Q284.2099125364432 54.90962099125364 287.8104956268222 56.84256559766763Q291.4110787172012 58.77551020408163 293.34402332361515 61.69387755102041Q295.2769679300292 64.61224489795919 295.2769679300292 68.55393586005832V69.61516034985422H280.3440233236152V69.00874635568513Q280.3440233236152 67.41690962099125 278.9795918367347 66.16618075801749Q277.61516034985425 64.91545189504373 275.0 64.19533527696792Q272.3848396501458 63.475218658892125 268.6705539358601 63.475218658892125Q264.198250728863 63.475218658892125 261.3177842565598 64.04373177842565Q258.4373177842566 64.61224489795919 257.07288629737616 65.5597667638484Q255.70845481049565 66.50728862973762 255.70845481049565 67.72011661807579Q255.70845481049565 69.23615160349854 257.45189504373184 70.10787172011662Q259.19533527696797 70.9795918367347 262.1516034985423 71.51020408163265Q265.10787172011663 72.0408163265306 268.7842565597668 72.49562682215743Q272.46064139941694 72.95043731778426 276.44023323615164 73.55685131195335Q280.41982507288634 74.16326530612244 284.09620991253644 75.22448979591836Q287.7725947521866 76.28571428571428 290.72886297376095 78.067055393586Q293.6851311953353 79.84839650145773 295.42857142857144 82.61516034985422Q297.1720116618076 85.38192419825073 297.1720116618076 89.39941690962098Q297.1720116618076 95.69096209912536 293.53352769679304 99.55685131195335Q289.89504373177846 103.42274052478135 283.5655976676385 105.1661807580175Q277.23615160349857 106.90962099125365 269.04956268221576 106.90962099125365ZM340.83381924198255 106.90962099125365Q334.46647230320707 106.90962099125365 328.932944606414 106.15160349854227Q323.39941690962104 105.3935860058309 319.2303206997085 103.49854227405248Q315.06122448979596 101.60349854227405 312.7113702623907 98.19241982507289Q310.36151603498547 94.78134110787173 310.36151603498547 89.55102040816327Q310.36151603498547 89.39941690962098 310.36151603498547 89.17201166180757Q310.36151603498547 88.94460641399417 310.4373177842566 88.71720116618076H325.597667638484Q325.52186588921285 89.0204081632653 325.4839650145773 89.32361516034985Q325.4460641399417 89.6268221574344 325.4460641399417 90.00583090379008Q325.4460641399417 92.35568513119533 327.2274052478134 93.68221574344022Q329.00874635568516 95.00874635568513 332.19241982507293 95.53935860058309Q335.3760932944607 96.06997084548105 339.6967930029155 96.06997084548105Q341.44023323615164 96.06997084548105 343.2973760932945 95.95626822157435Q345.15451895043736 95.84256559766764 346.8979591836735 95.57725947521865Q348.6413994169097 95.31195335276968 350.0437317784257 94.78134110787173Q351.4460641399417 94.25072886297376 352.24198250728864 93.45481049562682Q353.0379008746356 92.65889212827989 353.0379008746356 91.44606413994168Q353.0379008746356 89.85422740524781 351.332361516035 88.9067055393586Q349.62682215743445 87.95918367346938 346.6326530612246 87.39067055393585Q343.63848396501464 86.82215743440233 339.9620991253645 86.36734693877551Q336.28571428571433 85.91253644314868 332.3440233236152 85.26822157434401Q328.4023323615161 84.62390670553935 324.68804664723035 83.52478134110787Q320.97376093294463 82.42565597667638 318.0174927113703 80.60641399416909Q315.06122448979596 78.78717201166181 313.3177842565598 75.9067055393586Q311.57434402332365 73.0262390670554 311.57434402332365 68.932944606414Q311.57434402332365 64.76384839650146 313.65889212827994 61.76967930029154Q315.7434402332362 58.77551020408163 319.53352769679304 56.80466472303206Q323.3236151603499 54.8338192419825 328.4781341107872 53.886297376093296Q333.6326530612245 52.93877551020408 339.6967930029155 52.93877551020408Q345.9125364431487 52.93877551020408 350.9533527696793 53.924198250728864Q355.99416909620993 54.90962099125364 359.59475218658895 56.84256559766763Q363.19533527696797 58.77551020408163 365.128279883382 61.69387755102041Q367.06122448979596 64.61224489795919 367.06122448979596 68.55393586005832V69.61516034985422H352.128279883382V69.00874635568513Q352.128279883382 67.41690962099125 350.76384839650154 66.16618075801749Q349.39941690962104 64.91545189504373 346.78425655976685 64.19533527696792Q344.1690962099126 63.475218658892125 340.4548104956269 63.475218658892125Q335.9825072886298 63.475218658892125 333.10204081632656 64.04373177842565Q330.22157434402334 64.61224489795919 328.8571428571429 65.5597667638484Q327.49271137026244 66.50728862973762 327.49271137026244 67.72011661807579Q327.49271137026244 69.23615160349854 329.23615160349857 70.10787172011662Q330.97959183673476 70.9795918367347 333.9358600583091 71.51020408163265Q336.8921282798834 72.0408163265306 340.5685131195336 72.49562682215743Q344.24489795918373 72.95043731778426 348.22448979591843 73.55685131195335Q352.20408163265313 74.16326530612244 355.8804664723033 75.22448979591836Q359.5568513119534 76.28571428571428 362.51311953352774 78.067055393586Q365.4693877551021 79.84839650145773 367.2128279883383 82.61516034985422Q368.9562682215744 85.38192419825073 368.9562682215744 89.39941690962098Q368.9562682215744 95.69096209912536 365.31778425655983 99.55685131195335Q361.67930029154525 103.42274052478135 355.34985422740533 105.1661807580175Q349.02040816326536 106.90962099125365 340.83381924198255 106.90962099125365ZM379.49271137026244 106.0 405.11370262390676 53.84839650145772H422.32069970845487L447.9416909620992 106.0H431.1895043731779L427.24781341107877 97.66180758017492H399.35276967930037L395.41107871720124 106.0ZM404.5072886297377 86.36734693877551H422.09329446064146L417.39358600583097 75.75510204081633Q417.0903790087464 75.07288629737609 416.5597667638485 73.74635568513119Q416.0291545189505 72.4198250728863 415.4227405247814 70.94169096209913Q414.8163265306123 69.46355685131195 414.36151603498547 68.21282798833819Q413.90670553935865 66.96209912536443 413.6034985422741 66.35568513119533H413.07288629737616Q412.5422740524782 67.72011661807579 411.78425655976685 69.53935860058309Q411.0262390670555 71.35860058309038 410.3819241982508 73.0262390670554Q409.7376093294461 74.6938775510204 409.20699708454816 75.75510204081633ZM482.20408163265313 106.0V85.23032069970846L456.43148688046654 53.84839650145772H474.6997084548106L489.9358600583091 73.40524781341108H490.61807580174934L506.0058309037902 53.84839650145772H523.4402332361517L497.6676384839651 85.23032069970846V106.0Z" /></symbol>
+  <symbol id="i-oct" viewBox="0 0 100 100"><polygon points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /></symbol>
+  <symbol id="i-go" viewBox="0 0 16 16"><path d="M4.5 11.5l7-7M6 4.5h5.5V10" /></symbol>
+</svg>
 
-    <header class="l-nav">
-      <div class="l-wrap l-navin">
-        <a class="l-logo" href="/"><img src="/assay-logo-dark.svg" alt="Assay home" width="135" height="40" /></a>
-        <nav class="l-links" aria-label="Sections">
-          <a href="#problem">The problem</a>
-          <a href="#marks">What you get</a>
-          <a href="#how">How it works</a>
-          <a href="https://assay.gitbook.io/assay-docs">Docs</a>
-          <a href="https://github.com/trudransh/Assay">GitHub</a>
-        </nav>
-        <div class="l-navcta">
-          <span class="chip chip-violet l-navchip"><span class="dot" aria-hidden="true"></span>Monad mainnet</span>
-          <a class="btn btn-primary" href="/app/#verify"><span class="l-long">Verify a receipt</span><span class="l-short">Verify</span></a>
-          <button class="l-menu" type="button" aria-expanded="false" aria-controls="l-sheet" aria-label="Open menu">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10" /></svg>
-          </button>
-        </div>
-      </div>
-    </header>
+<a class="skip" href="#main">Skip to content</a>
+<div class="field" aria-hidden="true">
+  <div class="field-glow"></div>
+  <pre class="field-hash" id="field-hash"></pre>
+  <div class="field-grain"></div>
+</div>
 
-    <div class="l-sheet" id="l-sheet" role="dialog" aria-modal="true" aria-label="Menu" hidden>
-      <div class="l-sheet-top">
-        <a class="l-logo" href="/"><img src="/assay-logo-dark.svg" alt="Assay home" width="135" height="40" /></a>
-        <button class="l-menu l-close" type="button" aria-label="Close menu">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
-        </button>
-      </div>
-      <nav class="l-sheet-links" aria-label="Sections">
-        <a href="#problem">The problem<span aria-hidden="true">›</span></a>
-        <a href="#marks">What you get<span aria-hidden="true">›</span></a>
-        <a href="#how">How it works<span aria-hidden="true">›</span></a>
-        <a href="https://assay.gitbook.io/assay-docs">Docs<span aria-hidden="true">↗</span></a>
-        <a href="https://github.com/trudransh/Assay">GitHub<span aria-hidden="true">↗</span></a>
-      </nav>
-      <div class="l-sheet-foot">
-        <span class="chip chip-violet"><span class="dot" aria-hidden="true"></span>Monad mainnet · chain 143</span>
-        <a class="btn btn-primary" href="/app/#verify">Verify a receipt</a>
-        <a class="btn btn-secondary" href="/app/#ask">Ask and co-sign</a>
+<header class="nav" id="nav">
+  <a class="brand" href="#top" aria-label="Assay home">
+    <svg class="brand-mark" aria-hidden="true"><use href="#i-mark" /></svg>
+    <svg class="brand-word" aria-hidden="true"><use href="#i-word" /></svg>
+  </a>
+  <nav class="nav-links" aria-label="Sections">
+    <span class="nav-ind" aria-hidden="true"></span>
+    <a href="#how" style="--i:0">How it works</a>
+    <a href="#problem" style="--i:1">Problem</a>
+    <a href="#proof" style="--i:2">Proof</a>
+    <a href="#dev" style="--i:3">Developers</a>
+    <a href="https://assay.gitbook.io/assay-docs" target="_blank" rel="noopener" style="--i:4">Docs</a>
+  </nav>
+  <div class="nav-right">
+    <div class="net" role="radiogroup" aria-label="Network" data-net-switch>
+      <span class="net-thumb" aria-hidden="true"></span>
+      <button type="button" role="radio" aria-checked="true" tabindex="0" data-net="mainnet"><i aria-hidden="true"></i>Mainnet</button>
+      <button type="button" role="radio" aria-checked="false" tabindex="-1" data-net="testnet"><i aria-hidden="true"></i>Testnet</button>
+    </div>
+    <a class="btn btn-gold btn-sm" data-magnetic href="/app/#verify">Verify a receipt</a>
+    <button class="nav-menu" id="nav-menu" type="button" aria-expanded="false" aria-controls="sheet" aria-label="Open menu">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path class="m1" d="M4 7h16" /><path class="m2" d="M4 12h16" /><path class="m3" d="M4 17h16" /></svg>
+    </button>
+  </div>
+</header>
+<nav class="sheet" id="sheet" aria-label="Menu" hidden>
+  <div class="sheet-net"><div class="net" role="radiogroup" aria-label="Network" data-net-switch>
+    <span class="net-thumb" aria-hidden="true"></span>
+    <button type="button" role="radio" aria-checked="true" tabindex="0" data-net="mainnet"><i aria-hidden="true"></i>Mainnet</button>
+    <button type="button" role="radio" aria-checked="false" tabindex="-1" data-net="testnet"><i aria-hidden="true"></i>Testnet</button>
+  </div></div>
+  <a href="#how" style="--i:0">How it works</a>
+  <a href="#problem" style="--i:1">Problem</a>
+  <a href="#proof" style="--i:2">Proof</a>
+  <a href="#dev" style="--i:3">Developers</a>
+  <a href="https://assay.gitbook.io/assay-docs" target="_blank" rel="noopener" style="--i:4">Docs</a>
+  <a class="btn btn-gold" href="/app/#verify" style="--i:5">Verify a receipt</a>
+</nav>
+
+<main id="main" tabindex="-1">
+  <section class="hero" id="top" aria-labelledby="hero-title">
+    <div class="hero-grid" aria-hidden="true">
+      <div class="frame">
+        <span class="v" style="left:0;--i:0"></span>
+        <span class="v v-mid" style="left:41.6%;--i:1"></span>
+        <span class="v" style="left:100%;--i:2"></span>
+        <span class="h" style="bottom:28px;--i:0"></span>
+        <span class="plus" style="left:0;top:calc(100% - 28px);--i:0"></span>
+        <span class="plus" style="left:41.6%;top:calc(100% - 28px);--i:1"></span>
+        <span class="plus" style="left:100%;top:calc(100% - 28px);--i:2"></span>
       </div>
     </div>
+    <canvas class="dots" id="dots" aria-hidden="true"></canvas>
 
-    <main id="top" tabindex="-1">
-      <section class="l-wrap l-hero" aria-labelledby="hero-title">
-        <div class="l-hero-copy">
-          <div class="l-chips">
-            <span class="chip chip-lime"><span class="dot" aria-hidden="true"></span>Live on Monad mainnet</span>
-            <span class="chip chip-muted">3 contracts verified on Sourcify</span>
-          </div>
-          <h1 class="l-h1" id="hero-title">Proof of<br /> <span class="l-hl">who served</span><br /> every<br /> AI response.</h1>
-          <p class="l-lede">Assay gives every AI response a signed receipt. The host signs it and anchors it in a batch on Monad, and you can co-sign it with your passkey.</p>
-          <div class="l-row">
-            <a class="btn btn-primary" href="/app/#r/0x1b443b455e55360cec874215c9d1ae3113794f6d3a6c2a0c480387b12e35c5f2">See a live receipt</a>
-            <a class="btn btn-line" href="/app/#ask">Ask and get one</a>
-          </div>
-          <p class="l-small">Prompts and outputs never go onchain. Only salted hashes do, and you keep the salt.</p>
+    <div class="wrap hero-in">
+      <ul class="status" aria-label="Status">
+        <li style="--i:0"><i aria-hidden="true"></i>Live on Monad mainnet</li>
+        <li style="--i:1">4 contracts verified on Sourcify</li>
+        <li style="--i:2"><a href="https://github.com/trudransh/Assay/issues/4" target="_blank" rel="noopener">Paid per verified receipt</a></li>
+      </ul>
+
+      <h1 class="h1" id="hero-title">
+        <span class="ln"><span>Proof of</span></span>
+        <span class="ln"><span class="hl">response.</span></span>
+      </h1>
+
+      <div class="hero-copy">
+        <p class="lede">Assay gives every open-weight AI response a receipt. It names the model and the host, the host signs it and anchors it on Monad, and you can co-sign it with your passkey.</p>
+        <p class="limit">It proves who served which bytes and what they claimed. Not which weights ran.</p>
+        <div class="ctas">
+          <a class="btn btn-gold" data-magnetic href="/app/#r/0x1b443b455e55360cec874215c9d1ae3113794f6d3a6c2a0c480387b12e35c5f2">See a live receipt</a>
+          <a class="btn btn-glass" data-magnetic href="/app/#ask"><svg class="oct" viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg>Ask and get one</a>
         </div>
+        <p class="privacy" data-watch>
+          <svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3.5" y="8.5" width="13" height="9" rx="2" /><path d="M6.5 8.5V6a3.5 3.5 0 0 1 7 0v2.5" /></svg>
+          <span>Your prompt and answer <mark>never go onchain</mark>. Only salted hashes do, and you keep the salt.</span>
+        </p>
+      </div>
 
-        <div class="l-art">
-          <svg class="l-streaks" viewBox="0 0 640 620" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <defs>
-              <filter id="lRough" x="-20%" y="-60%" width="140%" height="220%">
-                <feTurbulence type="fractalNoise" baseFrequency="0.02 0.35" numOctaves="2" seed="4" result="warp" />
-                <feDisplacementMap in="SourceGraphic" in2="warp" scale="16" xChannelSelector="R" yChannelSelector="G" result="rough" />
-                <feTurbulence type="fractalNoise" baseFrequency="0.004 0.55" numOctaves="1" seed="9" result="lines" />
-                <feColorMatrix in="lines" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2.4 0 0 0 -0.45" result="mask" />
-                <feComposite in="rough" in2="mask" operator="in" />
-              </filter>
-            </defs>
-            <g transform="rotate(-24 320 310)">
-              <g filter="url(#lRough)" stroke-linecap="round">
-                <line class="s-gold" x1="40" y1="150" x2="560" y2="150" stroke-width="64" />
-                <line class="s-violet" x1="130" y1="240" x2="620" y2="240" stroke-width="50" />
-                <line class="s-pink" x1="10" y1="322" x2="470" y2="322" stroke-width="40" />
-                <line class="s-lime" x1="90" y1="402" x2="600" y2="402" stroke-width="56" />
-                <line class="s-sky" x1="170" y1="482" x2="520" y2="482" stroke-width="34" />
-              </g>
-            </g>
-          </svg>
-
-          <span class="chip l-solid l-bg-violet l-float l-float-1">Checked by P256VERIFY 0x0100</span>
-
-          <figure class="l-card">
-            <div class="l-card-top">
-              <img src="/assay-mark.svg" alt="" class="l-card-mark" width="22" height="26" />
-              <span class="l-card-title">Assay receipt</span>
-              <span class="chip chip-muted">Example</span>
-            </div>
-            <dl class="l-fields mono">
-              <div><dt>model</dt><dd>gemma-4-31b-it</dd></div>
-              <div><dt>host</dt><dd>erc8004:143:10278</dd></div>
-              <div><dt>alg</dt><dd>ES256</dd></div>
-              <div><dt>req</dt><dd>sha256(salt ‖ prompt)</dd></div>
-              <div><dt>res</dt><dd>sha256(salt ‖ output)</dd></div>
-            </dl>
-            <div class="l-perf" aria-hidden="true"></div>
-            <div class="l-stamps">
-              <span class="l-stamp l-r1 k-gold"><svg viewBox="0 0 100 100" role="img" aria-label="Host mark: agent 10278"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-big" x="50" y="48">HOST</text><text class="st-small" x="50" y="66">10278</text></svg></span>
-              <span class="l-stamp l-r2 k-bone"><svg viewBox="0 0 100 100" role="img" aria-label="Model mark: claimed model"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-big st-sm" x="50" y="48">MODEL</text><text class="st-small" x="50" y="66">claimed</text></svg></span>
-              <span class="l-stamp l-r3 k-violet"><svg viewBox="0 0 100 100" role="img" aria-label="Anchor mark: anchored on Monad"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-big st-xs" x="50" y="48">ANCHOR</text><text class="st-small" x="50" y="66">monad</text></svg></span>
-              <span class="l-stamp l-r4 k-pink"><svg viewBox="0 0 100 100" role="img" aria-label="Your mark: passkey co-signature"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-big" x="50" y="48">YOU</text><text class="st-small" x="50" y="66">passkey</text></svg></span>
-            </div>
-            <figcaption class="l-card-foot">Your prompt and output stay with you. The receipt only carries their salted hashes.</figcaption>
-          </figure>
-
-          <span class="chip l-solid l-bg-pink l-float l-float-2">Co-signed with a passkey</span>
-        </div>
-      </section>
-
-      <div class="l-tapes" aria-hidden="true">
-        <div class="l-tape l-tape-v">
-          <div class="l-ticker l-rev">
-            <span>Host signs</span><i></i><span>Monad anchors</span><i></i><span>You co-sign</span><i></i><span>Verifiers grade</span><i></i><span>Anyone checks</span><i></i>
-            <span>Host signs</span><i></i><span>Monad anchors</span><i></i><span>You co-sign</span><i></i><span>Verifiers grade</span><i></i><span>Anyone checks</span><i></i>
-          </div>
-        </div>
-        <div class="l-tape l-tape-g">
-          <div class="l-ticker">
-            <span>Receipts for AI responses</span><i></i><span>Signed by the host</span><i></i><span>Anchored on Monad</span><i></i><span>Co-signed by you</span><i></i>
-            <span>Receipts for AI responses</span><i></i><span>Signed by the host</span><i></i><span>Anchored on Monad</span><i></i><span>Co-signed by you</span><i></i>
+      <div class="stage" id="stage">
+        <div class="stage-obj" id="stage-obj" aria-hidden="true"></div>
+        <svg class="stage-fallback" aria-hidden="true"><use href="#i-mark" /></svg>
+        <p class="sr" id="stage-desc">An animation of dots: a printed receipt becomes a Merkle batch, then a passkey fingerprint, then the Assay mark.</p>
+        <div class="stage-tag" id="stage-tag" style="--c:var(--gold)">
+          <svg class="tag-wire" viewBox="0 0 120 90" aria-hidden="true"><path d="M120 86 H74 L10 10" /><circle cx="10" cy="10" r="3" /></svg>
+          <span class="tag-k" id="tag-k">[ SIGNED ]</span>
+          <span class="tag-t" id="tag-t">The host signs every response it serves.</span>
+          <span class="tag-m" id="tag-m">X-Assay-Receipt: ES256 JWS</span>
+          <div class="pips" role="group" aria-label="Receipt life cycle">
+            <button class="pip" type="button" style="--c:var(--gold)" aria-pressed="true" aria-label="Show signed"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg></button>
+            <button class="pip" type="button" style="--c:var(--violet)" aria-pressed="false" aria-label="Show anchored"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg></button>
+            <button class="pip" type="button" style="--c:var(--pink)" aria-pressed="false" aria-label="Show co-signed"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg></button>
+            <button class="pip" type="button" style="--c:var(--gold-high)" aria-pressed="false" aria-label="Show checked"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg></button>
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <section class="l-wrap l-sec l-live" id="live" aria-labelledby="live-title">
-        <div class="l-sec-head" data-reveal>
-          <span class="chip chip-lime"><span class="dot" aria-hidden="true"></span>Live now</span>
-          <h2 class="l-h2" id="live-title">Don't take our word for it. Open the real thing.</h2>
-          <p class="l-sub">Everything below is live data: onchain on Monad, read through our Envio indexer, or produced by our grader. Nothing is a mockup.</p>
-        </div>
-        <ul class="l-live-grid" data-reveal-group>
-          <li><a class="l-live-card k-violet" href="/app/#r/0x1b443b455e55360cec874215c9d1ae3113794f6d3a6c2a0c480387b12e35c5f2">
-            <span class="l-live-tag">Receipt · Monad mainnet</span>
-            <b>The first mainnet receipt</b>
-            <p>Gemma 4 31B answered through our host. The batch is on Monad and <code>verifyReceipt</code> returns true. Every check runs in your browser.</p>
-            <span class="l-live-go">Open the receipt →</span></a></li>
-          <li><a class="l-live-card k-gold" href="/app/#hosts/10278">
-            <span class="l-live-tag">Host · ERC-8004 agent 10278</span>
-            <b>Every batch it anchored</b>
-            <p>Batches, receipts and the key that signed each one, built from one query to our Envio indexer.</p>
-            <span class="l-live-go">Open the host →</span></a></li>
-          <li><a class="l-live-card k-lime" href="/app/#grades?model=z-ai/glm-5.3&amp;host=openrouter:inference-net&amp;ref=openrouter:z-ai/fp8&amp;chain=10143&amp;v=0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7">
-            <span class="l-live-tag">Grades · 39 hosts</span>
-            <b>GLM-5.3, every OpenRouter host</b>
-            <p>Graded against Z.ai's own endpoint on 5 Oct. On these four tool-call checks every host matched the reference. Measuring is how you find that out.</p>
-            <span class="l-live-go">Look up a grade →</span></a></li>
-          <li><a class="l-live-card k-pink" href="https://github.com/trudransh/Assay/tree/main/docs/interop">
-            <span class="l-live-tag">Interop · MonadGuard</span>
-            <b>Same receipt format, both ways</b>
-            <p>MonadGuard checks the tool, Assay checks the model host that answered. Each verifies the other's receipts, 10 of 10 checks.</p>
-            <span class="l-live-go">See the results →</span></a></li>
-        </ul>
-      </section>
-
-      <section class="l-wrap l-sec" id="problem" aria-labelledby="problem-title">
-        <div class="l-sec-head" data-reveal>
-          <span class="chip chip-coral">The problem</span>
-          <h2 class="l-h2" id="problem-title">One model, served 37 different ways.</h2>
-          <p class="l-sub">On 26 Sep 2026, OpenRouter's public API listed 37 endpoints for GLM-5.3. They share a model name, but not the precision, the price or the context window, and the text you get back carries no proof of who served it.</p>
-        </div>
-        <div class="l-bento">
-          <div class="l-tile l-ink l-bg-gold l-span2 l-tall">
-            <span class="l-tile-tag">GLM-5.3 on OpenRouter</span>
-            <span data-count class="l-num l-num-xl">37</span>
-            <p>distinct endpoints serving one open-weight model, from different providers.</p>
-          </div>
-          <div class="l-tile l-ink l-bg-coral"><span data-count class="l-num">16</span><p>of them don't state their precision at all.</p></div>
-          <div class="l-tile l-ink l-bg-violet"><span data-count class="l-num">8</span><p>declare a 4-bit format.</p></div>
-          <div class="l-tile l-ink l-bg-lime l-span2"><span class="l-num">$1.19 to $8.80</span><p>per million output tokens, from the cheapest endpoint to the priciest.</p></div>
-          <div class="l-tile l-surface l-span2"><span class="l-num k-pink l-c">90% vs 75%</span><p>DeepSeek V4 Flash on GPQA through the lab's own API, and through one third-party host. Measured by Olly.</p></div>
-          <div class="l-tile l-surface l-span2"><span data-count class="l-num k-sky l-c">39%</span><p>of 735 endpoints across 140 open-weight models list their precision as unknown.</p></div>
-        </div>
-        <p class="l-small l-source">Source: the Assay hosting report v0, built from OpenRouter's public endpoints API on 26 Sep 2026. <a href="https://github.com/trudransh/Assay/blob/main/report/REPORT_v0.md">Read the report</a></p>
-      </section>
-
-      <section class="l-wrap l-sec" id="marks" aria-labelledby="marks-title">
-        <div class="l-sec-head" data-reveal>
-          <span class="chip chip-gold">What you get</span>
-          <h2 class="l-h2" id="marks-title">Every response gets four marks.</h2>
-          <p class="l-sub">An assay office stamps metal after it tests it. Assay stamps each AI response with who served it, what they claimed, where it's anchored and who asked.</p>
-        </div>
-        <div class="l-marks" data-reveal-group>
-          <article class="l-mark k-gold">
-            <svg viewBox="0 0 100 100" aria-hidden="true"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-num" x="50" y="58">01</text></svg>
-            <div class="l-mark-body"><span class="l-mark-tag">Host mark</span><h3 class="l-h3">Who served it</h3><p>The host signs every receipt with its ES256 key, tied to an ERC-8004 identity anyone can look up.</p><code class="l-code">alg ES256 · agent 10278</code></div>
-          </article>
-          <article class="l-mark k-bone">
-            <svg viewBox="0 0 100 100" aria-hidden="true"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-num" x="50" y="58">02</text></svg>
-            <div class="l-mark-body"><span class="l-mark-tag">Model mark</span><h3 class="l-h3">What they claimed</h3><p>The model name sits inside the signed body. It's a claim, and the host can't take it back later.</p><code class="l-code">model: z-ai/glm-5.3</code></div>
-          </article>
-          <article class="l-mark k-violet">
-            <svg viewBox="0 0 100 100" aria-hidden="true"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-num" x="50" y="58">03</text></svg>
-            <div class="l-mark-body"><span class="l-mark-tag">Anchor mark</span><h3 class="l-h3">Where it's anchored</h3><p>Receipts go into a Merkle batch. Monad's P256 precompile checks the host's signature on the root.</p><code class="l-code">ReceiptAnchor · 0x0100</code></div>
-          </article>
-          <article class="l-mark k-pink">
-            <svg viewBox="0 0 100 100" aria-hidden="true"><polygon class="st-fill" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="st-ring" points="32,13 68,13 87,32 87,68 68,87 32,87 13,68 13,32" /><text class="st-num" x="50" y="58">04</text></svg>
-            <div class="l-mark-body"><span class="l-mark-tag">Your mark</span><h3 class="l-h3">Who asked</h3><p>Co-sign with a passkey. Only the key the host signed into the receipt counts, so nobody else can co-sign as the asker.</p><code class="l-code">WebAuthn · cosign()</code></div>
-          </article>
-        </div>
-
-        <div class="l-grade">
-          <div class="l-grade-copy">
-            <span class="l-mark-tag k-lime">Plus one grade for the host</span>
-            <h3 class="l-h2 l-h2-sm">Open verifiers. You pick who counts.</h3>
-            <p class="l-sub">Anyone with an ERC-8004 identity can test hosts against the lab's own endpoint and post a pass count with a 95% interval and the hash of the raw logs. Your app only listens to the verifiers it trusts.</p>
-            <code class="l-code k-lime">gradeOf(model, hostKey, trusted[])</code>
-          </div>
-          <div>
-            <div class="l-ci" aria-hidden="true">
-              <div class="l-ci-row"><span>Lab's own endpoint</span><span class="l-ci-bar"><span class="l-ci-band l-ci-ref"></span></span></div>
-              <div class="l-ci-row"><span>Host A <em class="k-lime">overlaps</em></span><span class="l-ci-bar"><span class="l-ci-band l-ci-a"></span></span></div>
-              <div class="l-ci-row"><span>Host B <em class="k-coral">below</em></span><span class="l-ci-bar"><span class="l-ci-band l-ci-b"></span></span></div>
-              <div class="l-ci-axis"><span>0% pass</span><span>100% pass</span></div>
+  <section class="sec" id="how" aria-labelledby="how-title">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2 class="h2" id="how-title">Every answer comes with a receipt.</h2>
+        <p class="pin-note" data-only="testnet"><svg viewBox="0 0 20 20" aria-hidden="true"><rect x="3.5" y="8.5" width="13" height="9" rx="2" /><path d="M6.5 8.5V6a3.5 3.5 0 0 1 7 0v2.5" /></svg>This receipt lives on mainnet. A receipt never moves between chains, so it looks the same on either network.</p>
+        <p class="sub">This is the first receipt Assay anchored on Monad mainnet, on 5 Oct 2026. Every value on it is real. Scroll, and each part is stamped as it's explained.</p>
+      </div>
+      <div class="scene-body" id="scene">
+        <div class="printer-col">
+          <div class="printer-sticky">
+            <div class="printer" data-reveal>
+              <div class="feed">
+                <div class="rwrap" id="rwrap">
+                  <figure class="receipt" aria-labelledby="rc-cap">
+                    <div class="rc-head">
+                      <svg aria-hidden="true"><use href="#i-mark-ink" /></svg>
+                      <span class="rc-title">ASSAY RECEIPT</span>
+                      <span class="rc-no">No. 0x1b44…c5f2</span>
+                      <span>Monad mainnet, chain 143</span>
+                      <span>2026-10-05 06:46:51 UTC</span>
+                    </div>
+                    <div class="rc-stamps">
+                      <span class="stamp k-host" data-stamp="host"><svg viewBox="0 0 100 100" role="img" aria-label="Host stamp, agent 10278"><polygon class="sf" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="sr2" points="32,14 68,14 86,32 86,68 68,86 32,86 14,68 14,32" /><text class="t1" x="50" y="50">HOST</text><text class="t2" x="50" y="66">10278</text></svg></span>
+                      <span class="stamp k-model" data-stamp="model"><svg viewBox="0 0 100 100" role="img" aria-label="Model stamp, claimed model"><polygon class="sf" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="sr2" points="32,14 68,14 86,32 86,68 68,86 32,86 14,68 14,32" /><text class="t1" x="50" y="50" style="font-size:14px">MODEL</text><text class="t2" x="50" y="66">claimed</text></svg></span>
+                      <span class="stamp k-anchor" data-stamp="anchor"><svg viewBox="0 0 100 100" role="img" aria-label="Anchor stamp, anchored on Monad"><polygon class="sf" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="sr2" points="32,14 68,14 86,32 86,68 68,86 32,86 14,68 14,32" /><text class="t1" x="50" y="50" style="font-size:12.5px">ANCHOR</text><text class="t2" x="50" y="66">monad</text></svg></span>
+                      <span class="stamp k-you" data-stamp="you"><svg viewBox="0 0 100 100" role="img" aria-label="You stamp, empty: this receipt was not co-signed"><polygon class="sf" points="29,4 71,4 96,29 96,71 71,96 29,96 4,71 4,29" /><polygon class="sr2" points="32,14 68,14 86,32 86,68 68,86 32,86 14,68 14,32" /><text class="t1" x="50" y="50">YOU</text><text class="t2" x="50" y="66">not yet</text></svg></span>
+                    </div>
+                    <hr class="rule" />
+                    <dl class="rc-rows">
+                      <div data-line="model"><dt>MODEL</dt><dd>gemma-4-31b-it</dd></div>
+                      <div data-line="host"><dt>HOST</dt><dd>erc8004:143:10278</dd></div>
+                      <div data-line="host"><dt>SIGNED</dt><dd>ES256, key 2Jc6…qg0</dd></div>
+                      <div><dt>PROMPT</dt><dd>0xdc6d…6e23<small>sha256(salt ‖ prompt)</small></dd></div>
+                      <div><dt>ANSWER</dt><dd>0xdd16…b6dd<small>sha256(salt ‖ output)</small></dd></div>
+                      <div><dt>TOKENS</dt><dd>in 8, out 1, stop</dd></div>
+                      <div><dt>MAX TOKENS</dt><dd>256</dd></div>
+                    </dl>
+                    <hr class="rule" />
+                    <dl class="rc-rows">
+                      <div data-line="anchor"><dt>BATCH ROOT</dt><dd>0x4066…60cb<small>1 receipt</small></dd></div>
+                      <div data-line="anchor"><dt>ANCHORED</dt><dd>block 110,684,366</dd></div>
+                      <div data-line="anchor"><dt>TX</dt><dd>0x48bc…a9a4</dd></div>
+                      <div data-line="you"><dt>CO-SIGNED</dt><dd>not co-signed</dd></div>
+                    </dl>
+                    <hr class="rule rule-2" />
+                    <a class="rc-bar" href="/app/#r/0x1b443b455e55360cec874215c9d1ae3113794f6d3a6c2a0c480387b12e35c5f2" aria-label="Open this receipt in the Assay app">
+                      <svg id="barcode" viewBox="0 0 300 40" preserveAspectRatio="none" aria-hidden="true"></svg>
+                      <span>0x1b443b45…2e35c5f2</span>
+                    </a>
+                    <div class="rc-terms" data-line="terms">
+                      <b>TERMS</b>
+                      <p>This receipt proves which host served these bytes and what it claimed. It does not prove which weights ran. Your prompt and answer never go onchain. Only salted hashes do.</p>
+                    </div>
+                    <p class="rc-foot"><b>KEEP YOUR SALT</b>assay-ten-xi.vercel.app</p>
+                    <figcaption class="sr" id="rc-cap">Assay receipt for response 0x1b44…c5f2: model gemma-4-31b-it, served by host erc8004:143:10278, signed ES256, anchored on Monad mainnet in block 110,684,366, not co-signed.</figcaption>
+                  </figure>
+                </div>
+              </div>
+              <p class="printer-cap">Read from the host's public API, 11 Oct 2026</p>
             </div>
-            <p class="l-small l-ci-note">Illustration only. A host counts as below reference when its whole interval sits under the lab's.</p>
           </div>
         </div>
-      </section>
 
-      <section class="l-wrap l-sec" id="limits" aria-labelledby="limits-title">
-        <div class="l-sec-head" data-reveal>
-          <span class="chip chip-sky">Honest limits</span>
-          <h2 class="l-h2" id="limits-title">What a receipt proves, and what it doesn't.</h2>
-        </div>
-        <div class="l-honest">
-          <div class="l-panel l-panel-yes">
-            <h3 class="l-h3 k-lime l-c">A receipt proves</h3>
-            <ul class="l-list">
-              <li><svg viewBox="0 0 24 24" class="l-yes" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>Which host served these exact bytes.</li>
-              <li><svg viewBox="0 0 24 24" class="l-yes" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>Which model the host claimed, signed so it can't be denied later.</li>
-              <li><svg viewBox="0 0 24 24" class="l-yes" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>That it sits in a batch the host anchored on Monad.</li>
-              <li><svg viewBox="0 0 24 24" class="l-yes" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>Who asked, if you co-signed with your passkey.</li>
-            </ul>
-          </div>
-          <div class="l-panel l-panel-no">
-            <h3 class="l-h3 k-coral l-c">It doesn't prove</h3>
-            <ul class="l-list">
-              <li><svg viewBox="0 0 24 24" class="l-no" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>Which weights actually ran. A host can still sign a claim it didn't keep.</li>
-            </ul>
-            <p>That gap is why hosts get graded against the lab's own endpoint, with the raw logs published. Hosts that sign from inside a TEE, with a model hash in the attestation, are next on the roadmap.</p>
-            <a href="https://assay.gitbook.io/assay-docs/security/threat-model">Read the threat model</a>
-          </div>
-        </div>
-        <ol class="l-ladder" data-reveal-group>
-          <li class="k-lime"><span class="l-lv">Level 0 · Live on mainnet</span><b>Signed and anchored</b><p>The host signed what it served and the batch is on Monad.</p></li>
-          <li class="k-lime"><span class="l-lv">Level 1 · Live on mainnet</span><b>Host graded</b><p>Open verifiers test the host against the lab's own endpoint.</p></li>
-          <li class="l-road"><span class="l-lv">Level 2 · Roadmap</span><b>Re-executable</b><p>A deterministic runtime lets anyone re-run a revealed request.</p></li>
-          <li class="l-road"><span class="l-lv">Level 3 · Roadmap</span><b>TEE attested</b><p>The host signs from an enclave whose attestation names the model.</p></li>
+        <ol class="beats" id="beats">
+          <li class="beat" data-beat="host" style="--c:var(--gold)">
+            <span class="beat-k"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg>HOST</span>
+            <h3>Signed by the host.</h3>
+            <p>Host <b>10278</b> signed these exact bytes with an ES256 key tied to its ERC-8004 identity. Your browser checks the signature against the host's published key.</p>
+          </li>
+          <li class="beat" data-beat="model" style="--c:var(--bone)">
+            <span class="beat-k"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg>MODEL</span>
+            <h3>The model it claimed.</h3>
+            <p><code>gemma-4-31b-it</code> sits inside the signed body. If the claim were false, it would be a signed false claim the host can't take back.</p>
+          </li>
+          <li class="beat" data-beat="anchor" style="--c:var(--violet)">
+            <span class="beat-k"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg>ANCHOR</span>
+            <h3>Anchored on Monad.</h3>
+            <p>The receipt sits in a batch whose root landed in block <b>110,684,366</b>. Monad's P256 precompile checked the host's signature on that root.</p>
+          </li>
+          <li class="beat" data-beat="you" style="--c:var(--pink)">
+            <span class="beat-k"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg>YOU</span>
+            <h3>Co-signed by you, when you ask.</h3>
+            <p>Nobody co-signed this one, so its YOU stamp stays empty. When you ask through Assay, your passkey can add the fourth mark. No wallet needed.</p>
+          </li>
+          <li class="beat" data-beat="terms" style="--c:var(--sky)">
+            <span class="beat-k"><svg viewBox="0 0 100 100" aria-hidden="true"><use href="#i-oct" /></svg>TERMS</span>
+            <h3>The limits are printed on it.</h3>
+            <p>It proves who served which bytes and what they claimed. It doesn't prove which weights ran. That gap is why hosts also get graded against the lab's own endpoint.</p>
+          </li>
         </ol>
-      </section>
+      </div>
+    </div>
+  </section>
 
-      <section class="l-wrap l-sec" id="how" aria-labelledby="how-title">
-        <div class="l-sec-head" data-reveal>
-          <span class="chip chip-violet">How it works</span>
-          <h2 class="l-h2" id="how-title">From question to stamped answer.</h2>
+  <section class="sec" id="problem" aria-labelledby="problem-title">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2 class="h2" id="problem-title">Same model. Different hosts. Different bills.</h2>
+        <p class="sub">The text you get back from an open-weight model carries no proof of who served it, or of what they did with your request.</p>
+      </div>
+
+      <article class="cap" data-reveal>
+        <div class="cap-copy">
+          <div class="cap-big"><span data-count data-to="126">126</span><small>×</small></div>
+          <p>I asked 16 hosts serving Kimi K2.6 for at most 16 tokens. Thirteen stopped at 16. Three kept going in 59 of 60 tries, and billed up to 126 times what Moonshot's own endpoint charged.</p>
+          <p class="note">One model, one prompt, one day: 8 Oct 2026, 350 requests. Hosts are named on 15 Oct, after their 7 days to reply. <a href="https://github.com/trudransh/Assay/blob/main/docs/evidence/max-tokens-kimi-k2.6.md" target="_blank" rel="noopener">Read the write-up</a></p>
         </div>
-        <ol class="l-steps" data-reveal-group>
-          <li class="l-step k-pink"><span class="l-step-n">1</span><div><h3 class="l-h3">Pick a passkey</h3><p>Its key hash goes out with your request, so the host signs it into the receipt.</p></div></li>
-          <li class="l-step k-gold"><span class="l-step-n">2</span><div><h3 class="l-h3">Ask the host</h3><p>A normal OpenAI-compatible call. A fresh salt rides along in a header.</p></div></li>
-          <li class="l-step k-gold"><span class="l-step-n">3</span><div><h3 class="l-h3">Get a receipt</h3><p>The answer comes back with a signed receipt. Keep the salt: it proves the text later.</p></div></li>
-          <li class="l-step k-violet"><span class="l-step-n">4</span><div><h3 class="l-h3">Anchored on Monad</h3><p>The host anchors the batch root, and the P256 precompile checks its signature.</p></div></li>
-          <li class="l-step k-lime"><span class="l-step-n">5</span><div><h3 class="l-h3">Co-sign and verify</h3><p>Co-sign with your passkey. After that, anyone can check the receipt in a browser.</p></div></li>
-        </ol>
-      </section>
+        <div>
+          <div class="meter" id="meter" role="img" aria-label="Tokens returned per host with max_tokens set to 16. Thirteen hosts stopped at 16 tokens. Three returned about 1,750 to 2,160 tokens.">
+            <div class="meter-cap"><span>max_tokens: 16</span></div>
+          </div>
+          <div class="meter-axis" aria-hidden="true"><span>0</span><span>500</span><span>1,000</span><span>1,500</span><span>2,000 tokens</span></div>
+          <div class="meter-key">
+            <span><i style="background:var(--lime)"></i>13 hosts stopped at 16</span>
+            <span><i style="background:var(--coral)"></i>3 hosts returned about 1,750 to 2,160</span>
+          </div>
+        </div>
+      </article>
 
-      <section class="l-wrap l-sec l-dev" id="dev" aria-labelledby="dev-title">
-        <div class="l-dev-copy">
-          <span class="chip chip-lime">For developers</span>
-          <h2 class="l-h2" id="dev-title">Wrap fetch. Keep the receipt.</h2>
-          <p class="l-sub">The SDK sends the salt and your co-signer key with each request, parses the receipt from the response and checks that the output commit matches what you received.</p>
-          <ul class="l-tech" aria-label="Built with">
-            <li class="chip chip-muted">Monad P256VERIFY</li>
-            <li class="chip chip-muted">ERC-8004</li>
-            <li class="chip chip-muted">OpenZeppelin WebAuthn</li>
-            <li class="chip chip-muted">Envio HyperIndex</li>
-            <li class="chip chip-muted">Mera passkeys</li>
-            <li class="chip chip-muted">Chainlink CRE</li>
+      <div class="tiles">
+        <div class="tile t-gold t-big" data-pop style="--i:0"><span class="tile-tag">GLM-5.3 on OpenRouter, 26 Sep 2026</span><span class="tile-n" data-count data-to="37">37</span><p>endpoints serving one open-weight model, from different providers.</p></div>
+        <div class="tile t-coral" data-pop style="--i:1"><span class="tile-n" data-count data-to="16">16</span><p>of them don't state their precision at all.</p></div>
+        <div class="tile t-violet" data-pop style="--i:2"><span class="tile-n" data-count data-to="8">8</span><p>declare a 4-bit format.</p></div>
+        <div class="tile t-lime t-wide" data-pop style="--i:3"><span class="tile-n">$1.19 to $8.80</span><p>per million output tokens, cheapest endpoint to priciest.</p></div>
+        <div class="tile t-dark t-wide" data-pop style="--i:4"><span class="tile-n k-pink-t">90% vs 75%</span><p>DeepSeek V4 Flash on GPQA through the lab's own API, and through one third-party host. Measured by Olly.</p></div>
+        <div class="tile t-dark t-wide" data-pop style="--i:5"><span class="tile-n k-sky-t"><span data-count data-to="39">39</span>%</span><p>of 735 endpoints across 140 open-weight models list their precision as unknown.</p></div>
+      </div>
+      <p class="note src">Source: the Assay hosting report v0, built from OpenRouter's public endpoints API on 26 Sep 2026. <a href="https://github.com/trudransh/Assay/blob/main/report/REPORT_v0.md" target="_blank" rel="noopener">Read the report</a></p>
+    </div>
+  </section>
+
+  <section class="sec" id="proof" aria-labelledby="proof-title">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2 class="h2" id="proof-title">Don't take our word for it.</h2>
+        <p class="sub" data-m="Open the real thing. These values were read from Monad mainnet and the Envio indexer on 11 Oct 2026." data-t="Testnet (chain 10143) is where we run demos and experiments. These values were read from Monad testnet and the Envio indexer on 11 Oct 2026.">Open the real thing. These values were read from Monad mainnet and the Envio indexer on 11 Oct 2026.</p>
+      </div>
+      <div class="bento" id="bento">
+        <a class="card card-lg" data-tilt style="--c:var(--gold);--i:0" href="https://github.com/trudransh/Assay/issues/4" target="_blank" rel="noopener">
+          <span class="card-tag"><i aria-hidden="true"></i>Paid on mainnet<b class="pin" data-only="testnet">Mainnet only</b></span>
+          <h3>Paid per verified receipt.</h3>
+          <p>Kanmani's USDC escrow on Monad bought 5 answers from host 10278. It published the Merkle root of the receipt hashes in advance, both sides checked each receipt against the anchored batches, and then the escrow settled.</p>
+          <div class="facts">
+            <div class="fact"><b data-count data-to="5">5</b><span>receipts bought</span></div>
+            <div class="fact"><b>0.05</b><span>USDC settled</span></div>
+            <div class="fact"><b>9 Oct</b><span>settled on mainnet</span></div>
+          </div>
+          <span class="tx">deliver 0x9f9055ff… settle 0x69aef08c…</span>
+          <span class="go">See the job<svg aria-hidden="true"><use href="#i-go" /></svg></span>
+        </a>
+        <a class="card" data-tilt style="--c:var(--violet);--i:1" href="/app/#r/0x1b443b455e55360cec874215c9d1ae3113794f6d3a6c2a0c480387b12e35c5f2">
+          <span class="card-tag"><i aria-hidden="true"></i>Receipt<b class="pin" data-only="testnet">Mainnet only</b></span>
+          <h3>The first mainnet receipt</h3>
+          <div class="checks"><span>✓ Signed</span><span>✓ Anchored</span></div>
+          <p>Every check runs in your browser.</p>
+          <span class="go">Open it<svg aria-hidden="true"><use href="#i-go" /></svg></span>
+        </a>
+        <a class="card" data-tilt style="--c:var(--gold);--i:2" href="/app/#hosts/10278" data-hm="/app/#hosts/10278" data-ht="/app/#hosts/1962?chain=10143" target="_blank" rel="noopener">
+          <span class="card-tag"><i aria-hidden="true"></i><span data-m="Hosts on mainnet" data-t="Hosts on testnet">Hosts on mainnet</span></span>
+          <div class="card-num"><span data-count data-live="receipts" data-to="105" data-to-m="105" data-to-t="52">105</span><small>receipts in <span data-count data-live="anchors" data-to="58" data-to-m="58" data-to-t="51">58</span> anchors</small></div>
+          <p data-m="Two hosts: Gemma 4 31B, and Kimi K2.6 from Moonshot's own endpoint." data-t="One test host, agent 1962. Try Ask here without spending a mainnet anchor.">Two hosts: Gemma 4 31B, and Kimi K2.6 from Moonshot's own endpoint.</p>
+          <span class="go">Open a host<svg aria-hidden="true"><use href="#i-go" /></svg></span>
+        </a>
+        <a class="card" data-tilt style="--c:var(--lime);--i:3" href="/app/#grades">
+          <span class="card-tag"><i aria-hidden="true"></i><span data-m="Grades on mainnet" data-t="Grades on testnet">Grades on mainnet</span></span>
+          <div class="card-num"><span data-count data-live="grades" data-to="17" data-to-m="17" data-to-t="43">17</span><small data-m="Kimi K2.6 hosts graded" data-t="grades posted">Kimi K2.6 hosts graded</small></div>
+          <p data-m="Against Moonshot's own endpoint, with the hash of the raw logs posted onchain." data-t="For GLM-5.3 and Gemma hosts, each posted with the hash of its raw logs.">Against Moonshot's own endpoint, with the hash of the raw logs posted onchain.</p>
+          <span class="go">Look up a grade<svg aria-hidden="true"><use href="#i-go" /></svg></span>
+        </a>
+        <a class="card" data-tilt style="--c:var(--pink);--i:4" href="https://github.com/trudransh/Assay/tree/main/docs/interop" target="_blank" rel="noopener">
+          <span class="card-tag"><i aria-hidden="true"></i>Built on by other teams</span>
+          <div class="teams">
+            <div><b>Mida</b><span>merged into the repo</span></div>
+            <div><b>MonadGuard</b><span>pins receipts in CI</span></div>
+          </div>
+          <span class="go">See the integrations<svg aria-hidden="true"><use href="#i-go" /></svg></span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="limits" aria-labelledby="limits-title">
+    <div class="wrap">
+      <div class="sec-head" data-reveal>
+        <h2 class="h2" id="limits-title">What a receipt proves, and what it doesn't.</h2>
+      </div>
+      <div class="honest" id="honest">
+        <div class="panel p-left">
+          <h3>A receipt proves</h3>
+          <ul>
+            <li><svg class="yes" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>Which host served these exact bytes.</li>
+            <li><svg class="yes" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>Which model the host claimed, signed so it can't be denied later.</li>
+            <li><svg class="yes" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>That it sits in a batch the host anchored on Monad.</li>
+            <li><svg class="yes" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12.5l5.5 5.5L20 6" /></svg>Who asked, if you co-signed with your passkey.</li>
           </ul>
-          <div class="l-row">
-            <a class="btn btn-line" href="https://assay.gitbook.io/assay-docs/getting-started/quickstart">Quickstart</a>
-            <a class="btn btn-line" href="https://github.com/trudransh/Assay">GitHub</a>
-          </div>
         </div>
-        <div class="l-codewin">
-          <div class="l-codebar"><span class="mono">ask.ts</span><span class="chip chip-violet">assay-receipts</span></div>
-<pre class="l-pre"><code><span class="sk">import</span> { <span class="sf">wrap</span> } <span class="sk">from</span> <span class="ss">"assay-receipts"</span>;
+        <div class="panel p-right">
+          <h3>It doesn't prove</h3>
+          <ul>
+            <li><svg class="no" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>Which weights actually ran. A host can still sign a claim it didn't keep.</li>
+          </ul>
+          <p>That gap is why hosts get graded against the lab's own endpoint, with the raw logs published. Hosts that sign from inside a TEE, with a model hash in the attestation, are next on the roadmap.</p>
+          <a href="https://assay.gitbook.io/assay-docs/security/threat-model" target="_blank" rel="noopener">Read the threat model</a>
+        </div>
+      </div>
+      <ol class="ladder" id="ladder">
+        <li class="rung live" style="--i:0"><span class="lv">Level 0, live on mainnet</span><b>Signed and anchored</b><p>The host signed what it served and the batch is on Monad.</p></li>
+        <li class="rung live" style="--i:1"><span class="lv">Level 1, live on mainnet</span><b>Host graded</b><p>Open verifiers test the host against the lab's own endpoint.</p></li>
+        <li class="rung road" style="--i:2"><span class="lv">Level 2, roadmap</span><b>Re-executable</b><p>A deterministic runtime lets anyone re-run a revealed request.</p></li>
+        <li class="rung road" style="--i:3"><span class="lv">Level 3, roadmap</span><b>TEE attested</b><p>The host signs from an enclave whose attestation names the model.</p></li>
+      </ol>
+    </div>
+  </section>
 
-<span class="sk">const</span> ask = <span class="sf">wrap</span>(fetch, { cosigner }); <span class="sc">// your passkey's key hash</span>
+  <section class="sec" id="dev" aria-labelledby="dev-title">
+    <div class="wrap dev">
+      <div class="dev-copy" data-reveal>
+        <h2 class="h2" id="dev-title">Wrap fetch. Keep the receipt.</h2>
+        <p class="sub">The SDK sends the salt and your co-signer key with each request, parses the receipt from the response and checks that the output commit matches what you received.</p>
+        <div class="npm"><code><span>$ </span>npm install assay-receipts</code><button class="copy" id="copy" type="button">Copy</button></div>
+        <p class="speed">From an empty folder, it verifies the first mainnet receipt in about <b>350 ms</b>.</p>
+        <ul class="chips" id="chips" aria-label="Built with">
+          <li style="--i:0">Monad P256VERIFY</li>
+          <li style="--i:1">ERC-8004</li>
+          <li style="--i:2">OpenZeppelin WebAuthn</li>
+          <li style="--i:3">Envio HyperIndex</li>
+          <li style="--i:4">Mera passkeys</li>
+          <li style="--i:5">Chainlink CRE</li>
+        </ul>
+      </div>
+      <div class="codewin">
+        <div class="codebar"><span>ask.ts</span><em>assay-receipts</em></div>
+<pre class="code" id="code"><code><span class="k">import</span> { <span class="f">wrap</span> } <span class="k">from</span> <span class="s">"assay-receipts"</span>;
 
-<span class="sk">const</span> { json, <span class="sp">receipt</span>, <span class="sp">salt</span> } = <span class="sk">await</span> <span class="sf">ask</span>(
-  <span class="ss">`${HOST}/v1/chat/completions`</span>,
-  { method: <span class="ss">"POST"</span>, body: JSON.<span class="sf">stringify</span>({ model, messages }) },
+<span class="k">const</span> ask = <span class="f">wrap</span>(fetch, { cosigner }); <span class="c">// your passkey's key hash</span>
+
+<span class="k">const</span> { json, <span class="p">receipt</span>, <span class="p">salt</span> } = <span class="k">await</span> <span class="f">ask</span>(
+  <span class="s">`${HOST}/v1/chat/completions`</span>,
+  { method: <span class="s">"POST"</span>, body: JSON.<span class="f">stringify</span>({ model, messages }) },
 );
 
-<span class="sc">// receipt.hash lands in a Merkle batch on Monad.</span>
-<span class="sc">// Keep salt: it opens the commits later.</span></code></pre>
-        </div>
-      </section>
-
-      <section class="l-wrap" id="verify" aria-labelledby="cta-title">
-        <div class="l-cta">
-          <svg class="l-cta-art" viewBox="0 0 520 420" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
-            <g transform="rotate(-24 260 210)" stroke-linecap="round">
-              <line class="s-ink" x1="60" y1="120" x2="520" y2="120" stroke-width="56" />
-              <line class="s-violet" x1="140" y1="210" x2="560" y2="210" stroke-width="40" />
-              <line class="s-ink" x1="40" y1="290" x2="470" y2="290" stroke-width="34" />
-            </g>
-          </svg>
-          <span class="chip l-chip-ink">Try it live</span>
-          <h2 class="l-h2" id="cta-title">Got an AI answer? Check where it came from.</h2>
-          <p>Paste a receipt, and the salt and output if you kept them. Every check runs in your browser or as a free onchain read. No wallet needed.</p>
-          <div class="l-row">
-            <a class="btn l-btn-ink" href="/app/#verify">Verify a receipt</a>
-            <a class="btn l-btn-inkline" href="https://assay.gitbook.io/assay-docs">Read the docs</a>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="l-foot">
-      <div class="l-wrap">
-        <div class="l-foot-grid">
-          <div class="l-foot-brand">
-            <a class="l-logo" href="/"><img src="/assay-logo-dark.svg" alt="Assay home" width="135" height="40" /></a>
-            <p class="l-small">Receipts for AI responses, anchored on Monad.</p>
-            <dl class="l-addr mono" id="l-addr"></dl>
-          </div>
-          <div><h2 class="l-foot-h">App</h2><ul><li><a href="/app/#verify">Verify</a></li><li><a href="/app/#ask">Ask and co-sign</a></li><li><a href="/app/#grades">Grades</a></li><li><a href="/app/#vault">Vault</a></li></ul></div>
-          <div><h2 class="l-foot-h">Docs</h2><ul><li><a href="https://assay.gitbook.io/assay-docs/getting-started/quickstart">Quickstart</a></li><li><a href="https://assay.gitbook.io/assay-docs/getting-started/core-concepts">Core concepts</a></li><li><a href="https://assay.gitbook.io/assay-docs/security/threat-model">Threat model</a></li><li><a href="https://assay.gitbook.io/assay-docs/resources/hosting-report">Hosting report</a></li></ul></div>
-          <div><h2 class="l-foot-h">Code</h2><ul><li><a href="https://github.com/trudransh/Assay">GitHub</a></li><li><a href="https://github.com/trudransh/Assay/blob/main/SPEC.md">Receipt spec</a></li><li><a href="https://assay.gitbook.io/assay-docs/getting-started/network-and-contracts">Contracts</a></li></ul></div>
-        </div>
-        <div class="l-legal"><span>MIT licensed. Built for Monad Metropolis.</span><span>Monad mainnet, chain 143. Testnet (10143) stays live for experiments.</span></div>
+<span class="c">// receipt.hash lands in a Merkle batch on Monad.</span>
+<span class="c">// Keep salt: it opens the commits later.</span></code></pre>
       </div>
-    </footer>
-    <script type="module" src="/src/landing/main.ts"></script>
+    </div>
+  </section>
+
+  <section class="sec" id="verify" aria-labelledby="cta-title">
+    <div class="wrap">
+      <div class="cta" data-reveal>
+        <h2 class="h2" id="cta-title">Got an AI answer? Check where it came from.</h2>
+        <p>Paste a receipt, and the salt and output if you kept them. Every check runs in your browser or as a free onchain read. No wallet needed.</p>
+        <div class="ctas">
+          <a class="btn btn-ink" data-magnetic href="/app/#verify">Verify a receipt</a>
+          <a class="btn btn-inkline" href="https://assay.gitbook.io/assay-docs" target="_blank" rel="noopener">Read the docs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <svg viewBox="0 0 538 160" aria-label="Assay" role="img"><use href="#i-mark" x="0" y="0" width="140" height="160" /><use href="#i-word" x="154" y="46" width="374" height="68" /></svg>
+        <p class="note">Receipts prove who served which bytes, not which weights ran.</p>
+        <dl class="addr" data-only="testnet">
+          <dt>ReceiptAnchor</dt><dd><a href="https://testnet.monadvision.com/address/0x63e4F42E6d254ed6aAE735F9F4169BbFd12c1a24" target="_blank" rel="noopener">0x63e4…1a24</a></dd>
+          <dt>VerifierRegistry</dt><dd><a href="https://testnet.monadvision.com/address/0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91" target="_blank" rel="noopener">0x7755…5C91</a></dd>
+          <dt>CreAttestor</dt><dd><a href="https://testnet.monadvision.com/address/0xB4A1CB9e40aDa44570Ae790430C23876d460deDC" target="_blank" rel="noopener">0xB4A1…eDC</a></dd>
+        </dl>
+        <dl class="addr" data-only="mainnet">
+          <dt>ReceiptAnchor</dt><dd><a href="https://monadvision.com/address/0x049A73755cA3508ef3Daa4752A3406f6e00CfB13" target="_blank" rel="noopener">0x049A…FB13</a></dd>
+          <dt>VerifierRegistry</dt><dd><a href="https://monadvision.com/address/0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1" target="_blank" rel="noopener">0x0C86…a9a1</a></dd>
+          <dt>CreAttestor</dt><dd><a href="https://monadvision.com/address/0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E" target="_blank" rel="noopener">0x71ED…915E</a></dd>
+          <dt>AssayAccount</dt><dd><a href="https://monadvision.com/address/0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91" target="_blank" rel="noopener">0x7755…5C91</a></dd>
+        </dl>
+      </div>
+      <div><h2>App</h2><ul><li><a href="/app/#verify">Verify</a></li><li><a href="/app/#ask">Ask and co-sign</a></li><li><a href="/app/#grades">Grades</a></li><li><a href="/app/#vault">Vault</a></li></ul></div>
+      <div><h2>Docs</h2><ul><li><a href="https://assay.gitbook.io/assay-docs/getting-started/quickstart" target="_blank" rel="noopener">Quickstart</a></li><li><a href="https://assay.gitbook.io/assay-docs/security/threat-model" target="_blank" rel="noopener">Threat model</a></li><li><a href="https://assay.gitbook.io/assay-docs/resources/hosting-report" target="_blank" rel="noopener">Hosting report</a></li></ul></div>
+      <div><h2>Code</h2><ul><li><a href="https://github.com/trudransh/Assay" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://github.com/trudransh/Assay/blob/main/SPEC.md" target="_blank" rel="noopener">Receipt spec</a></li><li><a href="https://www.npmjs.com/package/assay-receipts" target="_blank" rel="noopener">npm</a></li></ul></div>
+    </div>
+    <div class="legal"><span>MIT licensed. Built for Monad Metropolis.</span><span data-m="Showing Monad mainnet, chain 143. Testnet (10143) stays live for experiments." data-t="Showing Monad testnet, chain 10143. The receipts above live on mainnet, chain 143.">Showing Monad mainnet, chain 143. Testnet (10143) stays live for experiments.</span></div>
+  </div>
+</footer>
   </body>
 </html>
