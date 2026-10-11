@@ -87,7 +87,31 @@ button.copy.copy-icon { border-radius: 999px; }
 @media (hover: hover) {
   a.card:hover { box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--c, var(--gold)) 60%, transparent), 0 20px 50px -24px color-mix(in srgb, var(--c, var(--gold)) 50%, transparent); }
 }
-input, textarea, select { border-radius: 14px; }
+/* Fields sit as dark wells below the card surface, not as a warmer grey on top of it. */
+input, textarea, select {
+  border-radius: 14px; background: rgba(8, 8, 7, 0.55); border: 1px solid rgba(237, 230, 214, 0.1); color: var(--bone);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35);
+  transition: border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out);
+}
+input:hover:not(:disabled), textarea:hover:not(:disabled), select:hover:not(:disabled) { border-color: rgba(237, 230, 214, 0.2); }
+input:focus-visible, textarea:focus-visible, select:focus-visible {
+  outline: none; border-color: color-mix(in srgb, var(--gold-high) 80%, transparent); background: rgba(8, 8, 7, 0.7);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.35), 0 0 0 4px color-mix(in srgb, var(--gold) 16%, transparent);
+}
+input::placeholder, textarea::placeholder { color: #8A8577; opacity: 1; }
+input:disabled, textarea:disabled, select:disabled { opacity: 0.55; }
+select { cursor: pointer; }
+select option { background: var(--stone-1); color: var(--bone); }
+[aria-invalid="true"], [aria-invalid="true"]:hover { border-color: var(--coral); }
+/* File picker: a pill like the secondary buttons, not the system's grey box. */
+input[type="file"] { color: var(--muted); font: 500 13px/1.4 var(--font-sans); cursor: pointer; }
+input[type="file"]::file-selector-button {
+  margin-right: 14px; height: 34px; padding: 0 16px; border: 0; border-radius: 999px; cursor: pointer;
+  background: rgba(237, 230, 214, 0.1); color: var(--bone); font: 650 13px/1 var(--font-sans); font-stretch: 104%;
+  transition: background var(--dur-2) var(--ease-out);
+}
+input[type="file"]:hover::file-selector-button { background: rgba(237, 230, 214, 0.16); }
+.field.dropzone input[type="file"] { background: transparent; border: 0; box-shadow: none; padding: 0; min-height: 40px; }
 
 /* ---------- the paper receipt (shared by #r and #verify) ---------- */
 .rp {
@@ -180,6 +204,14 @@ a.rp-bar:hover { color: var(--ink); }
 .field.dropzone::after { content: "or drop the .json bundle here"; display: block; margin-top: 8px; color: var(--muted); font-size: var(--fs-small); }
 .live-sample { border-radius: 999px; padding: 10px 10px 10px 20px; }
 .live-sample p { margin: 0; }
+@media (max-width: 640px) {
+  .live-sample { border-radius: 20px; padding: 16px; flex-direction: column; align-items: stretch; gap: 12px; }
+  .live-sample .btn { width: 100%; justify-content: center; }
+}
+/* The receipt's four levels: two by two until there is room for four across. */
+@media (max-width: 1100px) and (min-width: 641px) {
+  .ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
 
 /* ---------- footer and phone bar ---------- */
 .foot { border-top: 0; }
@@ -187,9 +219,23 @@ a.rp-bar:hover { color: var(--ink); }
   .tabs, .top-link { display: none; }
   .bottom-bar { margin: 0 12px calc(env(safe-area-inset-bottom, 0px) + 12px); padding-bottom: 4px !important; border-radius: 24px; border: 0 !important; box-shadow: inset 0 0 0 1px var(--hair), 0 14px 40px rgba(0, 0, 0, 0.5); }
 }
+/* Tablet: keep the two columns and shrink the slip (it is sized in em). */
 @media (max-width: 1100px) {
+  .verify-preview { font-size: 8.6px; }
+}
+/* Below that the form comes first; the slip follows it once there is a receipt to show. */
+@media (max-width: 900px) {
   .verify-grid { grid-template-columns: minmax(0, 1fr); }
-  .verify-preview { position: relative; top: 0; order: -1; }
+  .verify-preview { position: relative; top: 0; font-size: clamp(8.4px, 2.6vw, 10px); }
+  .verify-preview:has(.rp-ghost) { display: none; }
+}
+/* Top bar between phone and wide desktop: one line, no wrapping tab labels. Developers and Docs
+   stay in the footer. */
+.tabs a, .top-link { white-space: nowrap; }
+@media (max-width: 1180px) and (min-width: 901px) {
+  .top-link { display: none; }
+  .tabs a { padding: 0 11px; }
+  .top-inner { gap: 10px; }
 }
 @media (max-width: 860px) {
   .receipt-head { grid-template-columns: minmax(0, 1fr); }
