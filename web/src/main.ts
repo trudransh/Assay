@@ -2,6 +2,7 @@ import { emptyState, h, section, setPageTab } from "./dom.js";
 import { CHAIN_ID, CHAINS, DOCS_URL, QUICKSTART_URL, chainConfig } from "./lib/config.js";
 import { match, parseHash, tabOf, type Route } from "./router.js";
 import { initGlow } from "./ui/glow.js";
+import { initPageGrid, placePageGrid } from "./ui/page-grid.js";
 import { initReveal } from "./ui/motion.js";
 import { mountNetworkSwitch, unlockChain } from "./ui/network-switch.js";
 import { mountAsk } from "./views/ask.js";
@@ -73,6 +74,7 @@ function draw(route: Route, focus: boolean) {
   void main.offsetWidth;
   main.classList.add("route-in");
   initReveal(main);
+  placePageGrid(location.hash.split("?")[0] || "#");
   // Move focus to the new page so keyboard and screen reader users land on it.
   if (focus) main.focus();
 }
@@ -98,6 +100,7 @@ function fieldHash() {
 }
 
 fieldHash();
+initPageGrid();
 initGlow(".page .card, .page .tile, .page .level, .page .check");
 networkSwitch();
 addEventListener("hashchange", () => render(parseHash(location.hash), true));
