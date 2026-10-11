@@ -2,7 +2,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { CHAIN_ID } from "../src/lib/config.js";
 import { countUp, initReveal, typewrite } from "../src/ui/motion.js";
-import { mountNetworkSwitch, showPageChain } from "../src/ui/network-switch.js";
+import { lockToChain, mountNetworkSwitch, showPageChain, unlockChain } from "../src/ui/network-switch.js";
 
 const reduce = (on: boolean) => {
   (window as any).matchMedia = (q: string) => ({ matches: on && q.includes("reduce"), media: q, addEventListener() {}, removeEventListener() {} });
@@ -37,6 +37,47 @@ describe("network switch", () => {
     expect(document.getElementById("network-foot")!.textContent).toContain(`chain ${other}`);
     showPageChain(CHAIN_ID);
     expect(group.classList.contains("net-override")).toBe(false);
+  });
+});
+
+describe("network lock on chain-pinned pages", () => {
+  beforeEach(() => {
+    document.body.innerHTML = `<span id="network-switch"></span><span id="network-foot"></span>`;
+    reduce(true);
+  });
+
+  it("a receipt route shows a locked chip for its chain and no radio inputs", () => {
+    mountNetworkSwitch(document.getElementById("network-switch")!);
+    lockToChain(143);
+    const slot = document.getElementById("network-switch")!;
+    expect(slot.querySelectorAll('[role="radio"]')).toHaveLength(0);
+    const chip = slot.querySelector<HTMLButtonElement>(".net-lock")!;
+    expect(chip.textContent).toContain("Monad mainnet");
+    expect(document.getElementById("network-foot")!.textContent).toContain("chain 143");
+  });
+
+  it("clicking the chip opens an explanation with a way to the other network, and Escape closes it", () => {
+    mountNetworkSwitch(document.getElementById("network-switch")!);
+    lockToChain(143);
+    const chip = document.querySelector<HTMLButtonElement>(".net-lock")!;
+    const pop = document.querySelector<HTMLElement>(".net-pop")!;
+    expect(pop.hidden).toBe(true);
+    chip.click();
+    expect(pop.hidden).toBe(false);
+    expect(chip.getAttribute("aria-expanded")).toBe("true");
+    expect(pop.textContent).toContain("lives on one chain");
+    expect(pop.querySelector("button")!.textContent).toBe("Go to Verify on testnet");
+    pop.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    expect(pop.hidden).toBe(true);
+  });
+
+  it("unpinned routes get the radiogroup back", () => {
+    mountNetworkSwitch(document.getElementById("network-switch")!);
+    lockToChain(10143);
+    unlockChain();
+    const slot = document.getElementById("network-switch")!;
+    expect(slot.querySelector(".net-lock")).toBeNull();
+    expect(slot.querySelectorAll('[role="radio"]')).toHaveLength(2);
   });
 });
 

@@ -26,7 +26,8 @@ import type { Route } from "../router.js";
 import { CHECKS, NOT_YET_COSIGNED, notYetCosigned } from "./verify.js";
 import { ASSAY_VERIFIER } from "./grades.js";
 import { decode } from "../ui/motion.js";
-import { showPageChain } from "../ui/network-switch.js";
+import { lockToChain } from "../ui/network-switch.js";
+import { receiptPaper } from "../ui/receipt-paper.js";
 
 type Found = { grade: Grade; by: Address } | null;
 
@@ -195,28 +196,19 @@ function gradeCard(body: ReceiptBody, found: Found | undefined, status: GradeSta
   return card("Host grade", badge(status, status), h("p", {}, scope), h("p", {}, `Passed ${g.passed} of ${g.total}, 95% interval ${pct(g.ciLowBps)} to ${pct(g.ciHighBps)}.`), open);
 }
 
-function head(hash: Hex, body: ReceiptBody | undefined, anchored: boolean | undefined, cosigned: boolean, actions: HTMLElement | null, settled = false): HTMLElement {
+function head(hash: Hex, body: ReceiptBody | undefined, anchored: boolean | undefined, cosigned: boolean, actions: HTMLElement | null, settled = false, batch: { root?: string; tx?: string } = {}): HTMLElement {
   const agent = body ? parseAgentId(body.host.agentId).toString() : undefined;
   const title = body ? `Served by agent ${agent}, claiming ${body.model}` : "Receipt";
   const hashEl = shortHash(hash);
   decode(hashEl);
   const lede = h("p", { class: "lede" }, "Receipt ", hashEl, " ", copyButton(hash, "Copy hash", { iconOnly: true }), " ", anchored === undefined ? "" : anchored ? "Anchored in a batch on Monad." : "Signed, not anchored yet.", cosigned ? " Co-signed by the requester." : "");
-  const stamps = body
-    ? h(
-        "div",
-        // A head rebuilt with new results shows its stamps settled: the punch-in plays once per page.
-        { class: settled ? "stamps settled" : "stamps" },
-        h("a", { href: `#hosts/${agent}?chain=${chainOfAgentId(body.host.agentId) ?? CHAIN_ID}`, class: "stamp-link", "aria-label": `Host agent ${agent}: open its profile` }, stamp("host", agent!, true, `Host mark: agent ${agent}`)),
-        stamp("model", "claimed", true, `Model mark: claims ${body.model}`),
-        stamp("anchor", anchored ? "monad" : "waiting", !!anchored, anchored ? "Anchor mark: anchored on Monad" : "Anchor mark: waiting for the batch"),
-        stamp("you", "co-sign", cosigned, cosigned ? "Your mark: requester co-signed" : "Your mark: not co-signed"),
-      )
-    : null;
+  const hostLink = body ? h("a", { href: `#hosts/${agent}?chain=${chainOfAgentId(body.host.agentId) ?? CHAIN_ID}`, class: "chip chip-gold host-chip", "aria-label": `Host agent ${agent}: open its profile` }, `Host ${agent}`) : null;
   return h(
     "header",
     { class: "receipt-head" },
-    h("div", { class: "receipt-head-text" }, h("div", { class: "row" }, chip("Receipt", "gold")), h("h1", { id: "page-title" }, title), lede, actions),
-    stamps,
+    h("div", { class: "receipt-head-text" }, h("div", { class: "row" }, chip("Receipt", "gold"), hostLink), h("h1", { id: "page-title" }, title), lede, actions, limits()),
+    // The receipt itself, as paper: the same slip the landing page prints. Stamps light only when earned.
+    h("aside", { class: "receipt-paper" }, receiptPaper({ hash, body, anchored, cosigned, settled, root: batch.root, tx: batch.tx })),
   );
 }
 
@@ -301,7 +293,7 @@ export function mountReceipt(root: HTMLElement, route: Route, deps: ReceiptDeps 
     if (!held) return;
     const jwks = await deps.jwks().catch(() => ({ keys: [] }));
     const result = await verifyReceipt({ ...held, jwks });
-    page.append(h("div", { class: "receipt-grid" }, h("div", { class: "col" }, bodyCard(held.body), rawCard(held.body)), h("div", { class: "col" }, card("Checks", "Run in your browser", renderChecks(result)), limits())));
+    page.append(h("div", { class: "receipt-grid" }, h("div", { class: "col" }, bodyCard(held.body), rawCard(held.body)), h("div", { class: "col" }, card("Checks", "Run in your browser", renderChecks(result)))));
   }
 
   async function anchored(st: Extract<ReceiptStatus, { status: "anchored" }>) {
@@ -312,12 +304,13 @@ export function mountReceipt(root: HTMLElement, route: Route, deps: ReceiptDeps 
       page.replaceChildren(head(hash, body, undefined, false, null), banner("coral", `This receipt was anchored on chain ${chainId}, which this app doesn't know yet, so it can't be checked here.`));
       return;
     }
-    showPageChain(chainId);
+    lockToChain(chainId);
     const chain = deps.chain(chainId);
     const acts = actions(hash, { body, jws }, { root: batchRoot, proof, anchorTx });
 
     // Show everything the host returned right away; each check fills in when its own read finishes.
-    const headSlot = h("div", {}, head(hash, body, undefined, false, acts));
+    const batchInfo = { root: batchRoot, tx: anchorTx };
+    const headSlot = h("div", {}, head(hash, body, undefined, false, acts, false, batchInfo));
     const levels: [boolean, boolean] = [false, false];
     const ladder = h("div", {}, levelLadder(levels));
     const checksSlot = h("div", {}, card("Checks", "Run in your browser", skeleton(8, 44)));
@@ -328,7 +321,7 @@ export function mountReceipt(root: HTMLElement, route: Route, deps: ReceiptDeps 
       headSlot,
       h("div", { class: "ladder-head" }, h("h2", {}, "How far this receipt was checked"), h("span", { class: "hint" }, "Levels 2 and 3 are on the roadmap, not built")),
       ladder,
-      h("div", { class: "receipt-grid" }, h("div", { class: "col" }, bodyCard(body), cosignSlot, rawCard(body)), h("div", { class: "col" }, checksSlot, anchorSlot, gradeSlot, limits())),
+      h("div", { class: "receipt-grid" }, h("div", { class: "col" }, bodyCard(body), cosignSlot, rawCard(body)), h("div", { class: "col" }, checksSlot, anchorSlot, gradeSlot)),
     );
 
     const checks = deps
@@ -338,7 +331,7 @@ export function mountReceipt(root: HTMLElement, route: Route, deps: ReceiptDeps 
       .then((result) => {
         levels[0] = result.checks.anchored === "pass";
         ladder.replaceChildren(levelLadder(levels));
-        headSlot.replaceChildren(head(hash, body, levels[0], result.checks.cosigned === "pass", acts, true));
+        headSlot.replaceChildren(head(hash, body, levels[0], result.checks.cosigned === "pass", acts, true, batchInfo));
         checksSlot.replaceChildren(card("Checks", "Run in your browser", renderChecks(result)));
       })
       .catch((e) => checksSlot.replaceChildren(banner("coral", `Couldn't run the checks (${errorText(e)}).`, again())));
