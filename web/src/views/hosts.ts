@@ -49,6 +49,8 @@ export function creCell(a: Attestation | undefined): Node {
   return a.agree ? chip("Agrees", "lime", { dot: true }) : chip("Disagrees", "coral", { dot: true });
 }
 
+export const PER_PAGE = 5;
+
 export function renderBoard(b: Board, data: Data, query = ""): HTMLElement {
   const byGrade = new Map(data.attestations.map((a) => [a.grade_id, a]));
   const drifts = data.drifts.filter((d) => d.stats_id.startsWith(`${b.chainId}-`) && d.model === b.model);
@@ -86,10 +88,44 @@ export function renderBoard(b: Board, data: Data, query = ""): HTMLElement {
       day(e.latestT),
     ];
   });
-  const body = rows.length
-    ? table(["Rank", "Host", "Latest 95% interval", "Pass rate, all grades", "Grades", "Drift", "CRE re-check", "Last graded"], rows)
-    : emptyState({ title: "No host matches", text: "Try an agent id, an OpenRouter tag or part of a host key.", tone: "muted" });
-  body.classList.add("board-table");
+  // Five hosts per page, so a 39-host board reads as a card, not a wall. Search still covers every host.
+  const head = ["Rank", "Host", "Latest 95% interval", "Pass rate, all grades", "Grades", "Drift", "CRE re-check", "Last graded"];
+  const pages = Math.max(1, Math.ceil(rows.length / PER_PAGE));
+  const tableSlot = h("div", { class: "board-page" });
+  const pager = h("nav", { class: "pager", "aria-label": "Leaderboard pages" });
+  const show = (p: number, focus = false) => {
+    const page = Math.min(Math.max(p, 0), pages - 1);
+    const from = page * PER_PAGE;
+    const t = table(head, rows.slice(from, from + PER_PAGE));
+    t.classList.add("board-table");
+    tableSlot.replaceChildren(t);
+    if (pages === 1) return pager.replaceChildren();
+    const btn = (label: string, to: number, opts: { current?: boolean; disabled?: boolean; aria?: string } = {}) => {
+      const b = h("button", { type: "button", class: `pager-btn${opts.current ? " current" : ""}`, ...(opts.aria ? { "aria-label": opts.aria } : {}), ...(opts.current ? { "aria-current": "page" } : {}) }, label);
+      b.disabled = !!opts.disabled;
+      b.addEventListener("click", () => show(to, true));
+      return b;
+    };
+    pager.replaceChildren(
+      h("span", { class: "pager-count" }, `${from + 1} to ${Math.min(from + PER_PAGE, rows.length)} of ${rows.length}`),
+      h(
+        "span",
+        { class: "pager-btns" },
+        btn("Prev", page - 1, { disabled: page === 0, aria: "Previous page" }),
+        ...Array.from({ length: pages }, (_, i) => btn(String(i + 1), i, { current: i === page, aria: `Page ${i + 1}` })),
+        btn("Next", page + 1, { disabled: page === pages - 1, aria: "Next page" }),
+      ),
+    );
+    if (focus) pager.querySelector<HTMLButtonElement>(".pager-btn.current")?.focus();
+  };
+  let body: HTMLElement;
+  if (rows.length) {
+    show(0);
+    body = h("div", { class: "board-paged" }, tableSlot, pager);
+  } else {
+    body = emptyState({ title: "No host matches", text: "Try an agent id, an OpenRouter tag or part of a host key.", tone: "muted" });
+    body.classList.add("board-table");
+  }
   const tieNote = tied
     ? h("p", { class: "banner banner-sky board-tie", role: "note" }, `Every host on this board has the same interval (${pct(b.entries[0].latestCiLowBps)} to ${pct(b.entries[0].latestCiHighBps)}): they all passed every check. The order among them is only the order the grades were posted, not a ranking. Harder checks are what separate hosts.`)
     : null;

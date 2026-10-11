@@ -537,6 +537,73 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
 .js-motion .ladder .rung { opacity: 0.15; transition: opacity 500ms var(--ease-out); transition-delay: calc(200ms + var(--i, 0) * 140ms); }
 .js-motion .ladder.is-in .rung { opacity: 1; }
 
+/* ---------- cursor glow ring on cards (mouse only, see ui/glow.ts) ---------- */
+.glow-on [data-glow] { position: relative; }
+.glow-on [data-glow]::after {
+  content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1.5px; pointer-events: none;
+  background: conic-gradient(from calc(var(--ga, 0) * 1deg - 70deg), transparent 0deg, var(--g1, var(--gold-high)) 50deg, var(--g2, var(--violet)) 95deg, transparent 140deg);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+  opacity: var(--go, 0); transition: opacity 260ms var(--ease-out);
+}
+.glow-on .tile:not(.t-dark)[data-glow] { --g1: rgba(12, 12, 11, 0.85); --g2: rgba(12, 12, 11, 0.4); }
+.glow-on .rung.road[data-glow] { --g1: var(--sky); --g2: var(--violet); }
+.glow-on .rung.live[data-glow] { --g1: var(--lime); --g2: var(--gold-high); }
+
+/* ---------- the proves / doesn't-prove marks draw themselves ---------- */
+.js-motion .honest .panel li path { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset 640ms var(--ease-expo); }
+.js-motion .honest.is-in .panel li path { stroke-dashoffset: 0; }
+.js-motion .honest .panel li:nth-child(1) path { transition-delay: 420ms; }
+.js-motion .honest .panel li:nth-child(2) path { transition-delay: 540ms; }
+.js-motion .honest .panel li:nth-child(3) path { transition-delay: 660ms; }
+.js-motion .honest .panel li:nth-child(4) path { transition-delay: 780ms; }
+.js-motion .honest .panel li { opacity: 0; transform: translateY(6px); transition: opacity 500ms var(--ease-out), transform 600ms var(--ease-spring); }
+.js-motion .honest.is-in .panel li { opacity: 1; transform: none; }
+.js-motion .honest .panel li:nth-child(1) { transition-delay: 340ms; }
+.js-motion .honest .panel li:nth-child(2) { transition-delay: 460ms; }
+.js-motion .honest .panel li:nth-child(3) { transition-delay: 580ms; }
+.js-motion .honest .panel li:nth-child(4) { transition-delay: 700ms; }
+
+/* ---------- ladder rail: filled through the live levels, dashed for the roadmap ---------- */
+.ladder-rail { --c: calc((100% - 42px) / 4); position: relative; height: 22px; margin-top: 36px; }
+.ladder-rail + .ladder { margin-top: 10px; }
+.lr-track, .lr-fill { position: absolute; top: 10px; height: 2px; border-radius: 2px; }
+.lr-track { left: calc(var(--c) / 2); right: calc(var(--c) / 2); background: repeating-linear-gradient(90deg, rgba(79, 195, 247, 0.5) 0 6px, transparent 6px 12px); }
+.lr-fill { left: calc(var(--c) / 2); width: calc(var(--c) + 14px); background: linear-gradient(90deg, var(--lime), color-mix(in srgb, var(--lime) 70%, var(--gold-high))); box-shadow: 0 0 12px rgba(184, 240, 60, 0.45); transform-origin: left; }
+.lr-node { position: absolute; top: 4px; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: var(--stone-0); box-shadow: inset 0 0 0 2px rgba(79, 195, 247, 0.7); }
+.lr-node:nth-of-type(1) { left: calc(var(--c) * 0.5); }
+.lr-node:nth-of-type(2) { left: calc(var(--c) * 1.5 + 14px); }
+.lr-node:nth-of-type(3) { left: calc(var(--c) * 2.5 + 28px); }
+.lr-node:nth-of-type(4) { left: calc(var(--c) * 3.5 + 42px); }
+.lr-node.live { background: var(--lime); box-shadow: 0 0 0 4px rgba(184, 240, 60, 0.16); }
+.js-motion .lr-fill { transform: scaleX(0); transition: transform 1100ms var(--ease-expo) 250ms; }
+.js-motion .ladder-rail.is-in .lr-fill { transform: none; }
+.js-motion .lr-node { opacity: 0; transform: scale(0.4); transition: opacity 400ms var(--ease-out), transform 600ms var(--ease-spring); }
+.js-motion .ladder-rail.is-in .lr-node { opacity: 1; transform: none; }
+.js-motion .lr-node:nth-of-type(1) { transition-delay: 200ms; }
+.js-motion .lr-node:nth-of-type(2) { transition-delay: 900ms; }
+.js-motion .lr-node:nth-of-type(3) { transition-delay: 1100ms; }
+.js-motion .lr-node:nth-of-type(4) { transition-delay: 1250ms; }
+.js-motion .ladder-rail.is-in .lr-node.live { animation: railPing 2.6s var(--ease-out) 1.6s infinite; }
+@keyframes railPing { 0% { box-shadow: 0 0 0 0 rgba(184, 240, 60, 0.5); } 70%, 100% { box-shadow: 0 0 0 10px rgba(184, 240, 60, 0); } }
+.js-motion .ladder .rung { transform: translateY(14px); transition: opacity 500ms var(--ease-out), transform 700ms var(--ease-spring); transition-delay: calc(200ms + var(--i, 0) * 140ms); }
+.js-motion .ladder.is-in .rung { transform: none; }
+
+/* ---------- app screenshot that tilts flat on scroll (landing/tilt.ts) ---------- */
+.tilt-sec { padding-bottom: clamp(24px, 4vw, 48px); }
+.tilt { --rx: 0deg; --sc: 1; --ty: 0px; perspective: 1000px; }
+.tilt-head { max-width: 760px; margin: 0 auto clamp(28px, 4vw, 48px); text-align: center; display: grid; gap: 14px; justify-items: center; transform: translateY(var(--ty)); }
+.tilt-head .sub { margin: 0; }
+.tilt-frame {
+  max-width: 1080px; margin: 0 auto; padding: clamp(6px, 1.2vw, 14px); border-radius: clamp(18px, 2.6vw, 30px);
+  background: #1A1A18; box-shadow: inset 0 0 0 1px rgba(237, 230, 214, 0.16), 0 9px 20px #0000004a, 0 37px 37px #00000042, 0 84px 50px #00000026, 0 149px 60px #0000000a;
+  transform: rotateX(var(--rx)) scale(var(--sc)); transform-origin: 50% 0; will-change: transform;
+}
+.tilt-screen { display: block; overflow: hidden; border-radius: clamp(12px, 1.8vw, 18px); background: var(--stone-0); box-shadow: inset 0 0 0 1px var(--line); }
+.tilt-screen img { display: block; width: 100%; height: auto; transition: transform 700ms var(--ease-out); }
+.tilt-screen:hover img { transform: scale(1.012); }
+.tilt-screen:focus-visible { outline: 2px solid var(--gold-high); outline-offset: 4px; }
+
 /* ---------- Developers ---------- */
 .dev { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(24px, 5vw, 72px); align-items: center; }
 .dev-copy { display: grid; gap: 18px; align-content: start; }
@@ -552,17 +619,39 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
 .chips li { height: 30px; display: inline-flex; align-items: center; padding: 0 12px; border-radius: 999px; font: 600 12.5px/1 var(--font-sans); font-stretch: 108%; color: var(--muted); box-shadow: inset 0 0 0 1px var(--line-strong); }
 .js-motion .chips li { opacity: 0; transform: translateY(8px); transition: opacity 400ms var(--ease-out), transform 500ms var(--ease-spring); transition-delay: calc(var(--i, 0) * 45ms); }
 .js-motion .chips.is-in li { opacity: 1; transform: none; }
-.codewin { border-radius: 22px; background: #0F0F0D; box-shadow: inset 0 0 0 1px var(--line), 0 30px 80px -30px rgba(0, 0, 0, 0.8); overflow: hidden; min-width: 0; }
-.codebar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--line); font: 500 12.5px/1 var(--font-mono); font-stretch: 87.5%; color: var(--muted); }
-.codebar i { display: inline-flex; gap: 6px; }
-.codebar i::before, .codebar i::after, .codebar i span { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--line-strong); display: inline-block; }
-.codebar em { font-style: normal; color: var(--violet); }
-.code { margin: 0; padding: 20px 20px 24px; overflow-x: auto; font: 400 13.5px/1.75 var(--font-mono); font-stretch: 87.5%; color: var(--bone); min-height: 15em; }
 .code .k { color: var(--violet); }
 .code .f { color: var(--gold-high); }
 .code .s { color: var(--lime); }
 .code .p { color: var(--pink); }
 .code .c { color: var(--faint); }
+.code .n { color: var(--sky); }
+
+/* ---------- terminal (landing/terminal.ts) ---------- */
+.term { position: relative; min-width: 0; border-radius: 22px; background: #0F0F0D; box-shadow: inset 0 0 0 1px var(--line), 0 30px 80px -30px rgba(0, 0, 0, 0.8); overflow: hidden; }
+.term-bar { display: flex; align-items: center; gap: 14px; padding: 10px 14px; background: rgba(237, 230, 214, 0.035); border-bottom: 1px solid var(--line); }
+.term-dots { display: inline-flex; gap: 7px; flex: none; }
+.term-dots i { width: 11px; height: 11px; border-radius: 50%; }
+.term-dots i:nth-child(1) { background: var(--coral); }
+.term-dots i:nth-child(2) { background: var(--gold); }
+.term-dots i:nth-child(3) { background: var(--lime); }
+.term-tabs { display: flex; gap: 4px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
+.term-tabs button { height: 28px; padding: 0 11px; border: 0; border-radius: 8px; background: none; cursor: pointer; color: var(--faint); font: 500 12.5px/1 var(--font-mono); font-stretch: 87.5%; white-space: nowrap; transition: color var(--dur-2), background var(--dur-2); }
+.term-tabs button:hover { color: var(--bone); }
+.term-tabs button[aria-selected="true"] { color: var(--bone); background: rgba(237, 230, 214, 0.08); box-shadow: inset 0 0 0 1px var(--line); }
+.term-tag { margin-left: auto; font: 500 12px/1 var(--font-mono); font-stretch: 87.5%; font-style: normal; color: var(--violet); white-space: nowrap; }
+.term-body { box-sizing: border-box; margin: 0; height: calc(13 * 1.75em + 44px); padding: 20px 20px 24px; overflow: auto; font: 400 13.5px/1.75 var(--font-mono); font-stretch: 87.5%; color: var(--bone); }
+.term-body:focus-visible { outline: 2px solid var(--gold-high); outline-offset: -4px; }
+.term-body[hidden] { display: none; }
+.t-line { white-space: pre; min-height: 1.75em; }
+.t-path { color: var(--sky); }
+.t-dim { color: var(--faint); }
+.t-note { color: var(--faint); }
+.t-pass { color: var(--lime); }
+.t-skip { color: var(--faint); }
+.t-caret { display: inline-block; width: 0.6em; height: 1.15em; margin-left: 1px; vertical-align: -0.2em; background: var(--bone); }
+.js-motion .t-caret { animation: blink 1.05s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+.js-motion .t-line { animation: liftIn 260ms var(--ease-out) backwards; }
 .caret { display: inline-block; width: 0.55em; height: 1.1em; vertical-align: -0.2em; background: var(--gold-high); margin-left: 1px; }
 .js-motion .caret { animation: blink 1s steps(1) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
@@ -599,6 +688,8 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
   .bento { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ladder-rail { display: none; }
+  .ladder-rail + .ladder { margin-top: 14px; }
 }
 @media (max-width: 900px) {
   .nav { height: 56px; padding-left: 16px; }
@@ -632,6 +723,8 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
   .tiles { grid-template-columns: minmax(0, 1fr); }
   .t-big, .t-wide { grid-column: auto; grid-row: auto; }
   .ladder { grid-template-columns: minmax(0, 1fr); }
+  .term-tag { display: none; }
+  .term-body { font-size: 12.5px; padding: 16px; }
   .ctas .btn { flex: 1 1 auto; }
   .status li:nth-child(2) { display: none; }
   .fact { padding: 12px 10px; }
@@ -651,9 +744,10 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
 
 /* Scripting off: the start states never get their end state, so show everything. */
 @media (scripting: none) {
-  .js-motion [data-reveal], .js-motion [data-pop], .js-motion .bento .card, .js-motion .panel, .js-motion .ladder .rung, .js-motion .chips li { opacity: 1 !important; transform: none !important; translate: none !important; scale: none !important; }
+  .js-motion [data-reveal], .js-motion [data-pop], .js-motion .bento .card, .js-motion .panel, .js-motion .ladder .rung, .js-motion .chips li, .js-motion .honest .panel li, .js-motion .lr-fill, .js-motion .lr-node { opacity: 1 !important; transform: none !important; translate: none !important; scale: none !important; }
   .js-motion .beat { opacity: 1; }
   .js-motion .beat h3 { filter: none; }
   .js-motion .rc-stamps .stamp svg { opacity: 0.92 !important; transform: rotate(var(--rot)) !important; }
   .js-motion .privacy mark::after { transform: none !important; }
+  .js-motion .honest .panel li path { stroke-dashoffset: 0 !important; }
 }

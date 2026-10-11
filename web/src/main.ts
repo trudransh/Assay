@@ -1,6 +1,7 @@
 import { emptyState, h, section, setPageTab } from "./dom.js";
 import { CHAIN_ID, CHAINS, DOCS_URL, QUICKSTART_URL, chainConfig } from "./lib/config.js";
 import { match, parseHash, tabOf, type Route } from "./router.js";
+import { initGlow } from "./ui/glow.js";
 import { initReveal } from "./ui/motion.js";
 import { mountNetworkSwitch, unlockChain } from "./ui/network-switch.js";
 import { mountAsk } from "./views/ask.js";
@@ -84,6 +85,20 @@ function networkSwitch() {
   if (slot && Object.keys(CHAINS).length > 1) mountNetworkSwitch(slot);
 }
 
+/// The landing's backdrop on every app page: a faint wall of hex behind the glows. Drawn once, never moves.
+function fieldHash() {
+  const pre = document.getElementById("field-hash");
+  if (!pre) return;
+  let seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const hex = "0123456789abcdef";
+  const rows: string[] = [];
+  for (let r = 0; r < 70; r++) rows.push(Array.from({ length: 6 }, () => `0x${Array.from({ length: 16 }, () => hex[(rnd() * 16) | 0]).join("")}`).join("   "));
+  pre.textContent = rows.join("\n");
+}
+
+fieldHash();
+initGlow(".page .card, .page .tile, .page .level, .page .check");
 networkSwitch();
 addEventListener("hashchange", () => render(parseHash(location.hash), true));
 render(parseHash(location.hash), false);
