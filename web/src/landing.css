@@ -684,6 +684,16 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
 .addr a:hover { text-decoration: underline; }
 .legal { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); font-size: 13px; color: var(--faint); }
 
+/* Phones: a scrim behind the floating nav, so text scrolling under the notch and around the pill
+   fades out instead of showing through. */
+@media (max-width: 900px) {
+  body::before {
+    content: ""; position: fixed; z-index: 45; top: 0; left: 0; right: 0; pointer-events: none;
+    height: calc(var(--nav-top) + 52px);
+    background: linear-gradient(to bottom, var(--stone-0) 0, var(--stone-0) calc(var(--nav-top) + 8px), rgba(12, 12, 11, 0.85) calc(var(--nav-top) + 30px), rgba(12, 12, 11, 0));
+  }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 1080px) {
   .nav-links a { padding: 0 10px; font-size: 13.5px; }

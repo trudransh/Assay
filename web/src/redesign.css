@@ -226,6 +226,15 @@ a.rp-bar:hover { color: var(--ink); }
   .ladder { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
+/* Phones: a scrim behind the floating top bar (same idea as the landing nav). */
+@media (max-width: 900px) {
+  body::before {
+    content: ""; position: fixed; z-index: 9; top: 0; left: 0; right: 0; pointer-events: none;
+    height: calc(env(safe-area-inset-top, 0px) + 66px);
+    background: linear-gradient(to bottom, var(--stone-0) 0, var(--stone-0) calc(env(safe-area-inset-top, 0px) + 22px), rgba(12, 12, 11, 0.85) calc(env(safe-area-inset-top, 0px) + 44px), rgba(12, 12, 11, 0));
+  }
+}
+
 /* ---------- footer and phone bar ---------- */
 .foot { border-top: 0; }
 @media (max-width: 900px) {
