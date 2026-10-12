@@ -79,7 +79,9 @@ const io = new IntersectionObserver(
       io.unobserve(e.target);
     }
   },
-  { threshold: 0.18, rootMargin: "0px 0px -6% 0px" },
+  // Threshold 0 with a bottom margin: tall blocks (the stacked cards on a phone) start as soon as
+  // their top is 12% into the screen, not once 18% of their whole height is visible.
+  { threshold: 0, rootMargin: "0px 0px -12% 0px" },
 );
 for (const el of $$("[data-reveal],[data-pop],[data-watch],#bento,#honest,#ladder,#ladder-rail,#chips")) io.observe(el);
 
