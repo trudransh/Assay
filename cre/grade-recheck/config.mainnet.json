@@ -5,6 +5,7 @@
   "evidenceBaseUrl": "https://raw.githubusercontent.com/trudransh/Assay/main/cre/grade-recheck/fixtures/evidence",
   "assayHosts": {
     "erc8004:143:10278": "erc8004:143:10278",
+    "assay-gemma-10278": "erc8004:143:10278",
     "assay-kimi-10316": "erc8004:143:10316"
   },
   "gasLimit": "300000",
