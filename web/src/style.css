@@ -2,6 +2,10 @@
 
 * { box-sizing: border-box; }
 
+/* In-app browsers (WeChat, some others) scale text by writing text-size-adjust onto <body>. Larger
+   text overflows the phone width, the browser then widens the layout and desktop rules kick in. */
+html, body { -webkit-text-size-adjust: 100% !important; text-size-adjust: 100% !important; }
+
 body {
   margin: 0;
   background: var(--stone-0);
