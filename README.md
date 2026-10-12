@@ -279,9 +279,9 @@ Proof: [`contracts/src/AssayAccount.sol`](contracts/src/AssayAccount.sol) · a f
 ### 💸 Kanmani escrow
 **Live: a host paid per verified receipt**
 
-Kanmani runs an escrow on Monad mainnet that settles metered jobs in USDC. On 9 Oct they bought 5 responses from host 10278 and published the Merkle root of the 5 receipt hashes in advance. We delivered that root to their escrow. Both sides checked each receipt against our anchored batches, and Kanmani settled 5 units: 0.05 USDC to the host's owner.
+Kanmani runs an escrow on Monad mainnet that settles metered jobs in USDC. On 9 Oct they bought 5 responses from host 10278 and published the Merkle root of the 5 receipt hashes in advance. We delivered that root to their escrow. Both sides checked each receipt against our anchored batches, and Kanmani settled 5 units: 0.05 USDC to the host's owner. On 12 Oct a second job (5 responses at `max_tokens` 1,500) settled the same way, so 10 receipts and 0.10 USDC so far.
 
-Proof: [issue #4](https://github.com/trudransh/Assay/issues/4) · deliver [`0x9f9055ff…`](https://monadvision.com/tx/0x9f9055ff4d93857db334019de340754c945b485fafbb6efefb796a65576e6b9d) · settle [`0x69aef08c…`](https://monadvision.com/tx/0x69aef08cc9f2afcde92f80ab9b367c9e23b11ca55c0a18ee08071feabadc2ec3)
+Proof: [issue #4](https://github.com/trudransh/Assay/issues/4) · job 1 deliver [`0x9f9055ff…`](https://monadvision.com/tx/0x9f9055ff4d93857db334019de340754c945b485fafbb6efefb796a65576e6b9d) · job 1 settle [`0x69aef08c…`](https://monadvision.com/tx/0x69aef08cc9f2afcde92f80ab9b367c9e23b11ca55c0a18ee08071feabadc2ec3) · job 2 settle [`0xd74d97dc…`](https://monadvision.com/tx/0xd74d97dc3de0a489767f5750a6e58dfe95793654791fa819f20d80fa937a46c3)
 
 </td>
 </tr>

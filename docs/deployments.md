@@ -55,6 +55,15 @@ Kanmani's escrow `0xd75f7786D0DD42c8F161Bd78E87D37001044Fc32` funded job `0xe658
 
 The job turned up one limit: on Google's endpoint, a receipt's `tokensOut` counts only the visible answer, not thinking tokens, so three receipts show `tokensOut` 0 with `finish` "length". Each receipt still signs `req.params.max_tokens` 400, the value the host passed upstream.
 
+### Second paid job (12 Oct)
+
+Same escrow, job `0x1ee5059b…8738`: 5 responses from host 10278 at `max_tokens` 1,500, temperature 0. Kanmani published the expected root `0xccca912252d181cd8de379cc865b702e4d2032a8a8dabb346009e8c7ff4b0cbc` in advance. All 5 receipts verified under agent 10278 (`tokensOut` 68 to 117, finish "stop"), the host's owner delivered that root, and Kanmani settled 5 units after running the same checks. Two jobs, 10 receipts, 0.10 USDC in total.
+
+| Action | Tx | Block |
+|---|---|---|
+| `deliver(jobId, root)` from the host's owner | [`0x8b6f4e54…`](https://monadvision.com/tx/0x8b6f4e5481e452f44c8a43009fa7b04653734b369b10ca67091f64028dad050f) | 112650052 |
+| Settled 5 units, 0.05 USDC to `0xF3Cb…18d9` | [`0xd74d97dc…`](https://monadvision.com/tx/0xd74d97dc3de0a489767f5750a6e58dfe95793654791fa819f20d80fa937a46c3) | 112681861 |
+
 The mainnet host runs at https://34-45-1-81.sslip.io/mainnet (the web app reaches it at `/host-mainnet`). Testnet stays live below as the place to experiment for free.
 
 ## Monad testnet (chain 10143)
