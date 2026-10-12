@@ -39,19 +39,20 @@ The checks that exist stay where they were made. A router's grades only work ins
 
 We measured one difference ourselves on 8 Oct. Sixteen hosts on OpenRouter answered our Kimi K2.6 checks, and on tool calling all of them matched Moonshot's own endpoint, 32 of 32. Then we capped the answer at 16 tokens. Three of those hosts ignored the cap in 59 of 60 trials, returned about 2,000 tokens, and were billed 70 to 126 times what Moonshot charged for the identical request. They ignored it even with OpenRouter's `require_parameters` on, so it's the provider and not the router. [Method and numbers](docs/evidence/max-tokens-kimi-k2.6.md). The raw file isn't public yet. Its sha256 is in that write-up, and the file itself goes public on 15 Oct with the hosts' names and any replies, after the 7 days we give every host. One cap trial per host is already in our public 8 Oct grading bundle, so a reader can find the names there today; we chose not to repeat them before the hosts have replied.
 
-### Where it stands (8 Oct)
+### Where it stands (12 Oct)
 
 | | What | Evidence |
 |---|---|---|
 | ✅ | Receipts signed by two hosts and anchored on Monad mainnet (Gemma 4 31B, and Kimi K2.6 from Moonshot's own endpoint) | [`docs/deployments.md`](docs/deployments.md) |
 | ✅ | A requester's browser passkey co-sign, verified onchain by Monad's P256 precompile, and replayed byte for byte in CI | [tx `0x4377e096…`](https://monadvision.com/tx/0x4377e096251c19019852b6d5b29cef786e7dfc4a9101c3b055c2c7d1af96075c) · `MainnetReplayTest` |
-| ✅ | Grades onchain against the lab's own endpoint: 19 on mainnet (17 of them Kimi K2.6), 43 on testnet (GLM-5.3 and Gemma) | [`docs/evidence/`](docs/evidence/) |
+| ✅ | Grades onchain against the lab's own endpoint: 21 on mainnet (17 of them Kimi K2.6; Gemma re-graded 12 Oct), 43 on testnet (GLM-5.3 and Gemma) | [`docs/evidence/`](docs/evidence/) |
+| ✅ | Paid use: Kanmani's escrow paid host 10278 per verified receipt for two jobs on mainnet (10 receipts, 0.10 USDC). MonadGuard verifies our mainnet receipts in its nightly CI; Mida built and merged their integration | [issue #4](https://github.com/trudransh/Assay/issues/4) · [`docs/interop/`](docs/interop/) · [PR #6](https://github.com/trudransh/Assay/pull/6) |
 | ⚠️ | Every grade so far comes from Assay's own verifier. Anyone can register and post, and readers pick whose grades count, but nobody else has posted yet | `VerifierRegistry.registerVerifier` |
 | ⚠️ | Chainlink CRE re-checks real mainnet grades, but as simulation broadcasts, not a deployed DON. The first attestor accepted any simulator broadcast, so it's retired; v2 only accepts reports sent by our relayer and writes each grade once | [`cre/`](cre/) · `CreAttestorTest` |
 | ⚠️ | Per-app keys that never hold MON (EIP-7702 gas sponsorship) work end to end on testnet; there's no mainnet run yet | [`host/src/sponsor.ts`](host/src/sponsor.ts) |
 | ⚠️ | The tool-calling checks are easy: every host we graded passed. The token-cap test is the first one that separates hosts | [`harness/`](harness/) |
 | ❌ | Which weights ran. A receipt proves who served which bytes and what they claimed, not the model behind them | [roadmap](https://assay.gitbook.io/assay-docs/resources/roadmap) |
-| ✅ | The SDK is on npm as [`assay-receipts`](https://www.npmjs.com/package/assay-receipts) (0.1.0) | [`sdk/`](sdk/) |
+| ✅ | The SDK is on npm as [`assay-receipts`](https://www.npmjs.com/package/assay-receipts) (0.1.1) | [`sdk/`](sdk/) |
 
 ## What a receipt proves
 
@@ -147,9 +148,9 @@ result.reproduce.anchored;  // { kind: "contract-call", address, function, args 
 | **CreAttestor** v2 | [`0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E`](https://monadvision.com/address/0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E) | [tx](https://monadvision.com/tx/0x3d477d634db1a72bd58d215733ee96e14f3a8be0df70fc10761c265e92344bcd) |
 | **AssayAccount** (EIP-7702 delegate) | [`0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91`](https://monadvision.com/address/0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91) | [tx](https://monadvision.com/tx/0x0ed03b802f4b6a254445965401bd606d5ae0ed0ff4b98b41aab36b2c0ce057f2) |
 
-Verified on Sourcify (exact match). Host agent **10278** and verifier agent **10279** are registered on the mainnet ERC-8004 registry. ⛓️ The [first mainnet receipt](https://monadvision.com/tx/0x48bcf6abe5914a1a8aee3678a6f84eeb2773c4131bd670e995e44e34dd49a9a4) is anchored, and `verifyReceipt` returns true onchain. The [first mainnet grade](https://monadvision.com/tx/0x1e0b1d63984ff0140e675c116003fd36968816ffbc30d6040fb2c2defb980d50) is posted too: host 10278 scored 38/38 against Google's own API. It's a plumbing check, because the host relays that same API, so it shows the loop works on mainnet rather than measuring host quality.
+Verified on Sourcify (exact match). Host agent **10278** and verifier agent **10279** are registered on the mainnet ERC-8004 registry. ⛓️ The [first mainnet receipt](https://monadvision.com/tx/0x48bcf6abe5914a1a8aee3678a6f84eeb2773c4131bd670e995e44e34dd49a9a4) is anchored, and `verifyReceipt` returns true onchain. The [first mainnet grade](https://monadvision.com/tx/0x1e0b1d63984ff0140e675c116003fd36968816ffbc30d6040fb2c2defb980d50) is posted too: host 10278 scored 38/38 against Google's own API. The latest, on 12 Oct, is 37/37, with Google's endpoint at 40/40 in the same run ([`0x91af734c…`](https://monadvision.com/tx/0x91af734ca94c4a8761855ad376299e79101bc5b71c1feaf7e8602ea7d9dbde92)). It's a plumbing check, because the host relays that same API, so it shows the loop works on mainnet rather than measuring host quality.
 
-A second mainnet host, agent **10316**, serves Kimi K2.6 from Moonshot's own endpoint. Its grade is 32/32 against Moonshot's endpoint, and a Chainlink CRE re-check of that grade [agrees onchain](https://monadvision.com/tx/0x7b7c9eebd185972218932b5224da77cd8c68139ffb4c2ec3485cb6305e5af753) (a simulation broadcast, not a DON).
+A second mainnet host, agent **10316**, serves Kimi K2.6 from Moonshot's own endpoint. Its grade is 32/32 against Moonshot's endpoint, and a Chainlink CRE re-check of that grade [agrees onchain](https://monadvision.com/tx/0x7b7c9eebd185972218932b5224da77cd8c68139ffb4c2ec3485cb6305e5af753) (a simulation broadcast, not a DON). This is a plumbing check too: the host relays the endpoint it's graded against.
 
 ## Also on Monad testnet (chain 10143)
 
@@ -159,9 +160,9 @@ Testnet stays live as the free place to try things. The app has a network switch
 |---|---|---|
 | **ReceiptAnchor** | [`0x63e4F42E6d254ed6aAE735F9F4169BbFd12c1a24`](https://testnet.monadvision.com/address/0x63e4F42E6d254ed6aAE735F9F4169BbFd12c1a24) | [tx](https://testnet.monadvision.com/tx/0x32d12f86ec3dca22d7b25ec33985eeda69f94e7299592728b16b2896715a1022) |
 | **VerifierRegistry** | [`0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91`](https://testnet.monadvision.com/address/0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91) | [tx](https://testnet.monadvision.com/tx/0x246d2ef1d317d9ef4dc21318ef16a60f50bc1e4818685058228669f0b48abfd8) |
-| **CreAttestor** | [`0xB4A1CB9e40aDa44570Ae790430C23876d460deDC`](https://testnet.monadvision.com/address/0xB4A1CB9e40aDa44570Ae790430C23876d460deDC) | [tx](https://testnet.monadvision.com/tx/0x0d2dc7b2fc51c718226a28bc2b0027a94d74409b1060f47b795d9582ab6bb00a) |
+| **CreAttestor** (v1 design, demo only) | [`0xB4A1CB9e40aDa44570Ae790430C23876d460deDC`](https://testnet.monadvision.com/address/0xB4A1CB9e40aDa44570Ae790430C23876d460deDC) | [tx](https://testnet.monadvision.com/tx/0x0d2dc7b2fc51c718226a28bc2b0027a94d74409b1060f47b795d9582ab6bb00a) |
 
-All three are verified on Sourcify (exact match).
+All three are verified on Sourcify (exact match). The testnet CreAttestor predates v2, so like the retired mainnet v1 it accepts any simulator broadcast; treat its attestations as demos.
 
 | Onchain so far | Proof |
 |---|---|
@@ -255,7 +256,7 @@ Proof: [PR #6](https://github.com/trudransh/Assay/pull/6) · [`examples/mida-con
 <td width="50%" valign="top">
 
 ### 🌙 Kimi K2.6
-**A Kimi host, and every Kimi host graded**
+**A Kimi host, and 16 Kimi hosts graded**
 
 Host agent 10316 serves Kimi K2.6 on mainnet from Moonshot's own endpoint, and every answer gets a receipt. We graded all 17 OpenRouter endpoints for Kimi K2.6, plus our host, against Moonshot's endpoint: 16 graded hosts and ours passed 32/32 tool-calling checks, whatever precision they claim (int4, fp4, fp8, bf16 or none). Three of them ignored the token limit set in the request. One rate-limited every request, so it got no grade.
 
