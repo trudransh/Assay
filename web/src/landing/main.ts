@@ -164,6 +164,8 @@ function onScrollNav() {
     const set = (open: boolean) => {
       menuOpen = open;
       sheet.hidden = !open;
+      // Dims and locks the page behind the sheet, so it no longer shows through below it.
+      document.documentElement.classList.toggle("menu-open", open);
       btn.setAttribute("aria-expanded", String(open));
       btn.setAttribute("aria-label", open ? "Close menu" : "Open menu");
       nav.classList.remove("is-hidden");

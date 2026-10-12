@@ -174,6 +174,14 @@ main, footer { position: relative; z-index: 1; }
   .sheet { background: rgba(16, 16, 14, 0.86); -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%); }
 }
 .sheet[hidden] { display: none; }
+/* Behind the open sheet: the page dims and stops scrolling. A tap on the dimmed page closes it. */
+html.menu-open { overflow: hidden; }
+html.menu-open body::after {
+  content: ""; position: fixed; inset: 0; z-index: 48;
+  background: rgba(8, 8, 7, 0.62); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.js-motion.menu-open body::after { animation: fadeIn 220ms var(--ease-out) backwards; }
+@keyframes fadeIn { from { opacity: 0; } }
 .sheet a { display: flex; align-items: center; min-height: 48px; padding: 0 16px; border-radius: 14px; text-decoration: none; font: 600 18px/1 var(--font-sans); font-stretch: 108%; }
 .sheet a:hover { background: rgba(237, 230, 214, 0.06); }
 .js-motion .sheet:not([hidden]) { animation: sheetIn 260ms var(--ease-expo) backwards; }
