@@ -347,7 +347,9 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
 .scene-body { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: clamp(24px, 6vw, 96px); }
 .printer-col { position: relative; }
 .printer-sticky { position: sticky; top: calc(var(--nav-top) + 72px); height: calc(100vh - var(--nav-top) - 96px); display: flex; flex-direction: column; justify-content: center; align-items: center; }
-.printer { position: relative; font-size: clamp(8px, 1.1vh, 11px); display: flex; flex-direction: column; align-items: center; }
+/* The receipt is sized in em: scale it to the screen height so the whole slip, terms included, fits
+   in the sticky area on short laptop screens (it is about 76em tall with its slot and caption). */
+.printer { position: relative; font-size: clamp(6.6px, calc((100vh - 170px) / 76), 11px); display: flex; flex-direction: column; align-items: center; }
 .feed { position: relative; }
 .slot {
   position: relative; z-index: 2; width: calc(31em + 4em); height: 1.9em; margin-top: -0.4em; border-radius: 1em;
