@@ -408,7 +408,10 @@ export function initHeroDots(): void {
     const narrow = innerWidth <= 900;
     let cxPx = sr.left - hr.left + sr.width * 0.5;
     let cyPx = sr.top - hr.top + sr.height * 0.5;
-    let objPx = Math.min(sr.height * 0.9, sr.width * 1.15);
+    let objPx = Math.min(sr.height * 0.82, sr.width * 1.0);
+    // Phones: the stage sits under the copy, so keep every dot (including the scatter between
+    // shapes) inside the stage box instead of drifting over the text above and the caption below.
+    cvs.style.clipPath = narrow ? `inset(${Math.max(0, sr.top - hr.top - 12).toFixed(0)}px 0 ${Math.max(0, hr.bottom - sr.bottom - 4).toFixed(0)}px 0)` : "";
     if (!narrow && hlEl && frameEl) {
       // The middle grid line sits just right of "response.", and the shape fills the space between
       // that line and the right edge, above the caption. Widest shape spans about 0.88 * objPx.
