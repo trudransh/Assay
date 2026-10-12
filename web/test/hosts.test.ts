@@ -75,6 +75,16 @@ describe("hosts leaderboard", () => {
     expect(renderBoard(board, data, "1962").querySelectorAll("tbody tr")).toHaveLength(1);
   });
 
+  it("opens on a board from the reader's network, not just the first board", async () => {
+    const { CHAIN_ID } = await import("../src/lib/config.js");
+    const other = CHAIN_ID === 143 ? 10143 : 143;
+    const here = { ...board, id: `${CHAIN_ID}-${V}-${GLM}`, chainId: CHAIN_ID };
+    const there = { ...board, id: `${other}-${V}-${GLM}`, chainId: other };
+    const root = document.createElement("main");
+    mountHosts(root, parseHash("#hosts"), async () => ({ ...data, boards: [there, here] }));
+    await vi.waitFor(() => expect(root.querySelector<HTMLSelectElement>("select")?.value).toBe(here.id));
+  });
+
   it("shows the indexer state, not an error stack, when the indexer is down", async () => {
     const root = document.createElement("main");
     mountHosts(root, parseHash("#hosts"), async () => {

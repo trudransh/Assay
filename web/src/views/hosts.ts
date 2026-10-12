@@ -1,5 +1,5 @@
 import { chip, emptyState, field, h, section, shortHash, skeleton } from "../dom.js";
-import { CHAINS, chainConfig } from "../lib/config.js";
+import { CHAIN_ID, CHAINS, chainConfig } from "../lib/config.js";
 import { fetchBoards, type Attestation, type Board, type BoardEntry, type Drift } from "../lib/indexer.js";
 import { KNOWN_HOSTS, KNOWN_MODELS } from "../lib/known.js";
 import type { Route } from "../router.js";
@@ -175,7 +175,9 @@ export function mountHosts(root: HTMLElement, route: Route, load: typeof fetchBo
       }
       const picker = h("select", {}, ...data.boards.map((b) => h("option", { value: b.id }, boardLabel(b)))) as HTMLSelectElement;
       const wanted = route.params.get("board");
-      picker.value = data.boards.some((b) => b.id === wanted) ? wanted! : data.boards[0].id;
+      // Open on the network the reader picked; a board on the other network only when this one has none.
+      const first = data.boards.find((b) => b.chainId === CHAIN_ID) ?? data.boards[0];
+      picker.value = data.boards.some((b) => b.id === wanted) ? wanted! : first.id;
       const find = h("input", { type: "search", placeholder: "Agent id, OpenRouter tag or host key", autocomplete: "off" }) as HTMLInputElement;
       const boardSlot = h("div");
       const draw = () => {
