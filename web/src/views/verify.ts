@@ -233,10 +233,11 @@ export function mountVerify(root: HTMLElement) {
       grid,
     ),
   );
-  // Arriving from a receipt page with the opening in memory: run every check at once.
+  // Arriving from a receipt page: fill the form and wait for the reader to press Verify, so the
+  // checks run on their click, not on page load.
   const pre = takeVerifyPrefill();
   if (pre) {
     fill(pre);
-    if (pre.salt) form.requestSubmit();
+    form.querySelector<HTMLButtonElement>('button[type="submit"]')?.focus();
   }
 }
