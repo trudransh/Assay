@@ -235,6 +235,14 @@ a.rp-bar:hover { color: var(--ink); }
   }
 }
 
+/* Narrow phones (320 to 360px): the Mainnet | Testnet switch pushed 27px past the screen. */
+@media (max-width: 360px) {
+  .top-inner { padding: 0 6px 0 14px; gap: 8px; }
+  .brand img { height: 22px; }
+  .net { height: 40px; padding: 3px; }
+  .net-opt { padding: 0 9px; gap: 5px; font-size: 10.5px; letter-spacing: 0.05em; }
+}
+
 /* ---------- footer and phone bar ---------- */
 .foot { border-top: 0; }
 @media (max-width: 900px) {
