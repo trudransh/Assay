@@ -45,7 +45,7 @@
 
   --max: 1240px;
   --gutter: clamp(16px, 4vw, 40px);
-  --sec: clamp(56px, 7vw, 96px);
+  --sec: clamp(44px, 5.5vw, 80px);
   --nav-top: calc(env(safe-area-inset-top, 0px) + 14px);
   color-scheme: dark;
 }
@@ -422,9 +422,9 @@ html[data-net="testnet"] .pin-note[data-only="testnet"] { display: inline-flex !
 .rc-foot b { display: block; font: 800 1.15em/1.3 var(--font-sans); font-stretch: 125%; letter-spacing: 0.14em; }
 
 .beats { list-style: none; margin: 0; padding: 0; }
-.beats { padding-bottom: 16vh; }
-.beat { min-height: 58vh; display: grid; align-content: center; gap: 14px; padding-block: 24px; opacity: 0.14; transition: opacity 480ms var(--ease-out); }
-.beat:first-child { min-height: 46vh; }
+.beats { padding-bottom: min(16vh, 120px); }
+.beat { min-height: min(58vh, 520px); display: grid; align-content: center; gap: 14px; padding-block: 24px; opacity: 0.14; transition: opacity 480ms var(--ease-out); }
+.beat:first-child { min-height: min(46vh, 400px); }
 .beat.is-on { opacity: 1; }
 .beat-k { display: flex; align-items: center; gap: 12px; font: 600 12.5px/1 var(--font-mono); font-stretch: 87.5%; color: var(--c); }
 .beat-k svg { width: 34px; height: 34px; fill: transparent; stroke: currentColor; stroke-width: 7; transition: fill var(--dur-4) var(--ease-out); }
