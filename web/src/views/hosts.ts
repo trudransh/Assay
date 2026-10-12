@@ -175,8 +175,10 @@ export function mountHosts(root: HTMLElement, route: Route, load: typeof fetchBo
       }
       const picker = h("select", {}, ...data.boards.map((b) => h("option", { value: b.id }, boardLabel(b)))) as HTMLSelectElement;
       const wanted = route.params.get("board");
-      // Open on the network the reader picked; a board on the other network only when this one has none.
-      const first = data.boards.find((b) => b.chainId === CHAIN_ID) ?? data.boards[0];
+      // Open on the network the reader picked (a board on the other network only when this one has none),
+      // and on its most recently graded board, so the default shows the newest grade.
+      const pool = data.boards.some((b) => b.chainId === CHAIN_ID) ? data.boards.filter((b) => b.chainId === CHAIN_ID) : data.boards;
+      const first = pool.reduce((a, b) => (b.updatedTimestamp > a.updatedTimestamp ? b : a));
       picker.value = data.boards.some((b) => b.id === wanted) ? wanted! : first.id;
       const find = h("input", { type: "search", placeholder: "Agent id, OpenRouter tag or host key", autocomplete: "off" }) as HTMLInputElement;
       const boardSlot = h("div");
