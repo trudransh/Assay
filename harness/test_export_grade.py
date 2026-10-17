@@ -131,7 +131,39 @@ class Export(unittest.TestCase):
         with open(tgz + ".sha256") as f:
             self.assertEqual(f.read().split()[0], digest)
         with tarfile.open(tgz) as t:
-            self.assertEqual(t.getnames(), [f"raw_{STAMP}.jsonl", f"summary_{STAMP}.csv"])
+            self.assertEqual(t.getnames(), [f"provenance_{STAMP}.json", f"raw_{STAMP}.jsonl", f"summary_{STAMP}.csv"])
+
+    def test_provenance_in_bundle(self):
+        write_run(self.d, {"z-ai/fp8": [True], "direct:assay.example.com": [True], "down/fp8": []})
+        with mock.patch.object(eg, "grader_commit", return_value=("ab" * 20, False)):
+            doc = self.run_export(assay_agent=(143, 10278), assay_tag="direct:assay.example.com",
+                                  operator="erc8004:143:10279", stance="vouches")
+        with tarfile.open(os.path.join(self.d, doc["evidenceFile"])) as t:
+            prov = json.load(t.extractfile(f"provenance_{STAMP}.json"))
+        self.assertEqual(prov["grader"], {"repo": eg.GRADER_REPO, "commit": "ab" * 20, "dirty": False, "checks": eg.CHECKS_ID})
+        self.assertEqual((prov["operator"], prov["stance"]), ("erc8004:143:10279", "vouches"))
+        # every endpoint in the run, skipped ones included, with the same preimage its grade uses
+        self.assertEqual(prov["hostKeyPreimages"], {"z-ai/fp8": "openrouter:z-ai/fp8",
+                                                    "direct:assay.example.com": "erc8004:143:10278",
+                                                    "down/fp8": "openrouter:down/fp8"})
+        for g in doc["grades"]:
+            self.assertEqual(prov["hostKeyPreimages"][g["tag"]], g["hostKeyPreimage"])
+
+    def test_provenance_defaults_to_ran_grader(self):
+        write_run(self.d, {"z-ai/fp8": [True]})
+        self.run_export()
+        with open(os.path.join(self.d, f"provenance_{STAMP}.json")) as f:
+            prov = json.load(f)
+        self.assertEqual((prov["operator"], prov["stance"]), (None, "ran-grader"))
+
+    def test_unknown_stance_rejected(self):
+        write_run(self.d, {"z-ai/fp8": [True]})
+        with self.assertRaises(SystemExit):
+            self.run_export(stance="trust-me")
+
+    def test_grader_commit_outside_git(self):
+        with mock.patch.object(eg.subprocess, "run", side_effect=FileNotFoundError):
+            self.assertEqual(eg.grader_commit(), (None, None))
 
     def test_evidence_is_deterministic(self):
         write_run(self.d, {"z-ai/fp8": [True, False]})

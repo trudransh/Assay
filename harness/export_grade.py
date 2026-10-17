@@ -4,7 +4,8 @@ export_grade.py: turn one assay_probe.py run into VerifierRegistry grades.
 
 Reads summary_<stamp>.csv and raw_<stamp>.jsonl from --out, writes
 grades_<stamp>.json (one Grade per endpoint, SPEC section 5) and
-evidence_<stamp>.tar.gz plus evidence_<stamp>.tar.gz.sha256.
+evidence_<stamp>.tar.gz plus evidence_<stamp>.tar.gz.sha256. The bundle also carries
+provenance_<stamp>.json: the grader commit, who ran it, and whether they vouch for it (SPEC section 5).
 
 Examples:
   python3 export_grade.py --model z-ai/glm-5.3 --reference z-ai/fp8
@@ -18,6 +19,9 @@ from assay_probe import wilson  # noqa: E402
 
 CHECKS_ID = "assay-checks/tool-calls-v0"
 MAX_TOKENS_CASE = "max_tokens_16"
+GRADER_REPO = "https://github.com/trudransh/Assay"
+# vouches: the operator stands behind the methodology. ran-grader: they only ran this code (SPEC section 5).
+STANCES = ("ran-grader", "vouches")
 
 # ---------------------------------------------------------------- keccak-256
 _RC = [0x0000000000000001, 0x0000000000008082, 0x800000000000808A, 0x8000000080008000,
@@ -108,6 +112,15 @@ def write_evidence(paths, dest):
         f.write(f"{digest}  {os.path.basename(dest)}\n")
     return "0x" + digest
 
+def grader_commit():
+    """(commit, dirty) of the harness checkout, or (None, None) outside git. Untracked run folders don't count as dirty."""
+    here = os.path.dirname(os.path.abspath(__file__))
+    git = lambda *a: subprocess.run(["git", "-C", here, *a], capture_output=True, text=True, check=True).stdout.strip()
+    try:
+        return git("rev-parse", "HEAD"), bool(git("status", "--porcelain", "--untracked-files=no", "--", "."))
+    except (OSError, subprocess.CalledProcessError):
+        return None, None
+
 # ---------------------------------------------------------------- export
 def counts_from_raw(path):
     """passed/total per tag, recomputed from raw responses the same way assay_probe.py does."""
@@ -129,7 +142,7 @@ def latest_stamp(out_dir):
         sys.exit(f"no summary_*.csv in {out_dir}")
     return os.path.basename(found[-1])[len("summary_"):-len(".csv")]
 
-def export(out_dir, stamp, model=None, reference=None, assay_agent=None, assay_tag=None):
+def export(out_dir, stamp, model=None, reference=None, assay_agent=None, assay_tag=None, operator=None, stance="ran-grader"):
     summary_p = os.path.join(out_dir, f"summary_{stamp}.csv")
     raw_p = os.path.join(out_dir, f"raw_{stamp}.jsonl")
     with open(summary_p, newline="") as f:
@@ -146,10 +159,20 @@ def export(out_dir, stamp, model=None, reference=None, assay_agent=None, assay_t
         sys.exit(f"reference {reference!r} is not an endpoint in this run: {tags}")
     if assay_agent and assay_tag not in tags:
         sys.exit(f"--assay-agent needs --assay-tag set to one of {tags}")
+    if stance not in STANCES:
+        sys.exit(f"stance must be one of {STANCES}, got {stance!r}")
 
     counts = counts_from_raw(raw_p)
     t = calendar.timegm(time.strptime(stamp, "%Y%m%dT%H%M%SZ"))
-    evidence = write_evidence([summary_p, raw_p], os.path.join(out_dir, f"evidence_{stamp}.tar.gz"))
+    pres = {tag: host_key_preimage(tag, assay_agent if tag == assay_tag else None) for tag in tags}
+    # The tag -> host key map rides in the bundle, so a recount (the CRE workflow) needs no hand-kept list.
+    commit, dirty = grader_commit()
+    prov_p = os.path.join(out_dir, f"provenance_{stamp}.json")
+    with open(prov_p, "w") as f:
+        json.dump({"grader": {"repo": GRADER_REPO, "commit": commit, "dirty": dirty, "checks": CHECKS_ID},
+                   "operator": operator, "stance": stance, "hostKeyPreimages": pres}, f, indent=2, sort_keys=True)
+        f.write("\n")
+    evidence = write_evidence([summary_p, raw_p, prov_p], os.path.join(out_dir, f"evidence_{stamp}.tar.gz"))
     model_h, checks_h, ref_h = keccak_hex(model), keccak_hex(CHECKS_ID), keccak_hex(reference)
 
     grades, skipped = [], []
@@ -160,7 +183,7 @@ def export(out_dir, stamp, model=None, reference=None, assay_agent=None, assay_t
         if n == 0:  # VerifierRegistry rejects total == 0
             skipped.append(tag); continue
         lo, hi = to_bps(*wilson(k, n))
-        pre = host_key_preimage(tag, assay_agent if tag == assay_tag else None)
+        pre = pres[tag]
         grades.append({"tag": tag, "hostKeyPreimage": pre,
                        "model": model_h, "hostKey": keccak_hex(pre), "checks": checks_h,
                        "passed": k, "total": n, "ciLowBps": lo, "ciHighBps": hi,
@@ -181,8 +204,11 @@ def main(argv=None):
     ap.add_argument("--assay-agent", type=parse_agent, metavar="CHAIN:ID",
                     help="ERC-8004 identity of the Assay host graded in this run (D21)")
     ap.add_argument("--assay-tag", help="tag of the endpoint that --assay-agent belongs to")
+    ap.add_argument("--operator", help="who ran the grader, e.g. erc8004:143:10279 (goes in provenance_<stamp>.json)")
+    ap.add_argument("--stance", choices=STANCES, default="ran-grader",
+                    help="vouches: you stand behind the methodology; ran-grader (default): you only ran this code")
     a = ap.parse_args(argv)
-    doc = export(a.out, a.stamp or latest_stamp(a.out), a.model, a.reference, a.assay_agent, a.assay_tag)
+    doc = export(a.out, a.stamp or latest_stamp(a.out), a.model, a.reference, a.assay_agent, a.assay_tag, a.operator, a.stance)
     print(f"wrote {len(doc['grades'])} grades to {a.out}/grades_{doc['stamp']}.json"
           + (f" (skipped, no successful responses: {', '.join(doc['skipped'])})" if doc["skipped"] else ""))
     print(f"evidence {a.out}/{doc['evidenceFile']} sha256 {doc['evidence']}")

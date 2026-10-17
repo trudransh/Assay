@@ -19,7 +19,7 @@ python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --
 python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --base-url https://34-45-1-81.sslip.io/kimi/v1 --tag assay-kimi-10316 --repeats 8 --out og_host   # the host bills us, not you
 # one run with both endpoints: append the host run to the Moonshot run
 S=$(ls og/summary_*.csv | sed 's/.*summary_//;s/.csv//'); cat og_host/raw_*.jsonl >> og/raw_$S.jsonl; tail -n +2 og_host/summary_*.csv >> og/summary_$S.csv
-python3 harness/export_grade.py --out og --model moonshotai/kimi-k2.6 --reference moonshotai/int4 --assay-agent 143:10316 --assay-tag assay-kimi-10316
+python3 harness/export_grade.py --out og --model moonshotai/kimi-k2.6 --reference moonshotai/int4 --assay-agent 143:10316 --assay-tag assay-kimi-10316 --operator erc8004:143:<your agentId>
 # once, if you have no ERC-8004 identity on Monad mainnet; the agentId is in the Transfer event
 cast send 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432 'register(string)' "<your agent card URL>" --rpc-url https://rpc.monad.xyz --account <yours>
 # once, as the owner of that agentId
@@ -88,7 +88,10 @@ python3 export_grade.py --stamp 20261005T101500Z --assay-agent 10143:1962 --assa
 |---|---|
 | `grades_<stamp>.json` | One Grade per endpoint with the SPEC section 5 fields, plus `tag` and `hostKeyPreimage` for readers. |
 | `evidence_<stamp>.tar.gz` | The run's `summary` CSV and `raw` JSONL. The archive is deterministic, so the same run always gives the same hash. |
+| `provenance_<stamp>.json` | Also inside the archive: the grader's repo and git commit (and whether the harness had uncommitted changes), `--operator`, `--stance`, and each endpoint's tag with its host key preimage, so a recount needs no separate tag list. |
 | `evidence_<stamp>.tar.gz.sha256` | Its sha256, in `sha256sum` format. This is the `evidence` field. |
+
+`--stance vouches` means you stand behind the methodology. The default, `ran-grader`, says only that you ran this code at this commit (SPEC section 5). Bundles from before 17 Oct have no provenance file.
 
 `--model` and `--reference` override the summary's columns, which older runs don't have. `passed` and `total` are recounted from the raw log and must match the summary. An endpoint with no successful responses is listed under `skipped`, because the registry rejects `total = 0`.
 
