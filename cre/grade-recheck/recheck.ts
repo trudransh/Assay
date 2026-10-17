@@ -90,6 +90,18 @@ export function hostKeyPreimage(tag: string, assayHosts: Record<string, string> 
 
 export const keccakText = (s: string): Hex => keccak256(stringToHex(s))
 
+/** Tag -> host key preimage from the bundle's provenance_<stamp>.json; {} for bundles without one (before 17 Oct) or a broken one. */
+export function provenanceHosts(files: Map<string, Uint8Array>): Record<string, string> {
+	const found = [...files.keys()].filter((f) => /^provenance_.+\.json$/.test(f))
+	if (found.length !== 1) return {}
+	try {
+		const m = JSON.parse(strFromU8(files.get(found[0])!)).hostKeyPreimages
+		return Object.fromEntries(Object.entries(m ?? {}).filter(([, v]) => typeof v === 'string')) as Record<string, string>
+	} catch {
+		return {}
+	}
+}
+
 /** "20261005T101500Z" -> unix seconds, like calendar.timegm(time.strptime(stamp, "%Y%m%dT%H%M%SZ")). */
 export function stampToT(stamp: string): bigint | null {
 	const m = /^(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})Z$/.exec(stamp)
@@ -107,7 +119,9 @@ export function recheckBundle(bundle: Uint8Array, claim: Claim, assayHosts: Reco
 	if (raws.length !== 1) throw new Error(`expected one raw_<stamp>.jsonl in the bundle, found ${raws.length}`)
 	const stampT = stampToT(raws[0].slice('raw_'.length, -'.jsonl'.length))
 	const counts = countsFromRaw(strFromU8(files.get(raws[0])!))
-	const tag = [...counts.keys()].find((t) => keccakText(hostKeyPreimage(t, assayHosts)) === claim.hostKey.toLowerCase()) ?? null
+	// The verifier's own map, hashed into the evidence, wins over the config's list (kept for older bundles).
+	const hosts = { ...assayHosts, ...provenanceHosts(files) }
+	const tag = [...counts.keys()].find((t) => keccakText(hostKeyPreimage(t, hosts)) === claim.hostKey.toLowerCase()) ?? null
 	const [passed, total] = tag ? counts.get(tag)! : [0, 0]
 	const [ciLowBps, ciHighBps] = toBps(...wilson(passed, total))
 	return { hashOk: true, tag, passed, total, ciLowBps, ciHighBps, stampT: stampT === null ? null : stampT.toString() }

@@ -39,7 +39,9 @@ def main():
     run = os.path.join(HERE, "run")
     os.makedirs(run, exist_ok=True)
     write_run(run)
-    doc = eg.export(run, STAMP, assay_agent=(10143, 1962), assay_tag="direct:assay.example.com")
+    eg.grader_commit = lambda: ("0" * 40, False)  # pinned, so the fixture doesn't change with every commit
+    doc = eg.export(run, STAMP, assay_agent=(10143, 1962), assay_tag="direct:assay.example.com",
+                    operator="erc8004:10143:7", stance="vouches")
     # Content-addressed copy, the layout the workflow fetches (<evidenceBaseUrl>/<sha256>.tar.gz)
     os.makedirs(os.path.join(HERE, "evidence"), exist_ok=True)
     shutil.copyfile(os.path.join(run, doc["evidenceFile"]), os.path.join(HERE, "evidence", doc["evidence"][2:] + ".tar.gz"))

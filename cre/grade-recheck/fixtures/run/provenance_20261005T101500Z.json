@@ -1,0 +1,15 @@
+{
+  "grader": {
+    "checks": "assay-checks/tool-calls-v0",
+    "commit": "0000000000000000000000000000000000000000",
+    "dirty": false,
+    "repo": "https://github.com/trudransh/Assay"
+  },
+  "hostKeyPreimages": {
+    "chutes/bf16": "openrouter:chutes/bf16",
+    "direct:assay.example.com": "erc8004:10143:1962",
+    "z-ai/fp8": "openrouter:z-ai/fp8"
+  },
+  "operator": "erc8004:10143:7",
+  "stance": "vouches"
+}

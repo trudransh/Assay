@@ -72,7 +72,7 @@ describe('raw log recount', () => {
 	})
 	test('bundle holds the summary and the raw log', () => {
 		const files = untar(require('fflate').gunzipSync(bundle))
-		expect([...files.keys()]).toEqual([`raw_${STAMP}.jsonl`, `summary_${STAMP}.csv`])
+		expect([...files.keys()]).toEqual([`provenance_${STAMP}.json`, `raw_${STAMP}.jsonl`, `summary_${STAMP}.csv`])
 		expect(files.get(`raw_${STAMP}.jsonl`)).toEqual(new Uint8Array(readFileSync(`${dir}/run/raw_${STAMP}.jsonl`)))
 	})
 })
@@ -88,8 +88,14 @@ describe('recheckBundle against the harness export', () => {
 		const tampered = gzipSync(strToU8('not the bundle'), { mtime: 0 })
 		expect(recheckBundle(tampered, claimOf(grades.grades[0])).hashOk).toBe(false)
 	})
-	test('Assay host is unknown without its erc8004 mapping', () => {
-		expect(recheckBundle(bundle, claimOf(grades.grades[2])).tag).toBeNull()
+	test('provenance in the bundle maps the Assay host, no config needed', () => {
+		expect(recheckBundle(bundle, claimOf(grades.grades[2])).tag).toBe('direct:assay.example.com')
+	})
+	test('a bundle without provenance (before 17 Oct) needs the config mapping', () => {
+		const legacy = new Uint8Array(readFileSync(`${dir}/evidence/cd0b0aab09afd28ffb56d22dff6ac18a9ae582a4dad1e03b738c9d88e3a8b090.tar.gz`))
+		const claim = { ...claimOf(grades.grades[2]), evidence: sha256(legacy) }
+		expect(recheckBundle(legacy, claim).tag).toBeNull()
+		expect(recheckBundle(legacy, claim, ASSAY_HOSTS).tag).toBe('direct:assay.example.com')
 	})
 	test('bundle without exactly one raw log is rejected', () => {
 		const empty = gzipSync(new Uint8Array(1024), { mtime: 0 })
