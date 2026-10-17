@@ -1,12 +1,14 @@
 # harness
 
-The harness has three scripts, and all use only the Python 3 standard library.
+The Python scripts use only the standard library. Two small shell scripts wrap them for our own re-grades.
 
 | Script | Does |
 |---|---|
 | `assay_probe.py` | Grades hosts of one model against a reference endpoint and writes the raw log and a summary. |
 | `export_grade.py` | Turns one probe run into `VerifierRegistry` grades and an evidence bundle. |
 | `post_grade.py` | Prints the commands that post those grades onchain, holding back hosts still inside their right of reply. |
+| `regrade.sh` | Re-grades one of our hosts (`gemma` or `kimi`) end to end: both probes, merge, export with provenance, evidence staged where CRE fetches it, post commands written. |
+| `post.sh` | Runs those post commands with the verifier keystore, asking for its password once. |
 
 ## Grade a host from your own key
 
