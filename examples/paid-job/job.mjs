@@ -2,7 +2,7 @@
 //   npm install assay-receipts viem && node job.mjs 10
 // Prints one line per receipt and the job's deliverableHash (the Merkle root over its receipt hashes).
 // Pay for each line with ok=true. Keep job.json private: it holds the salts that let you re-prove any line later.
-import { wrap, hostGradeCheck, verifyReceipt, buildBatch, waitForAnchor } from "assay-receipts";
+import { wrap, chainGradeCheck, verifyReceipt, buildBatch, waitForAnchor } from "assay-receipts";
 import { createPublicClient, http } from "viem";
 import { writeFileSync } from "node:fs";
 
@@ -10,13 +10,14 @@ const N = Number(process.argv[2] ?? 10);
 const MAX_TOKENS = 256;
 const HOST = "https://34-45-1-81.sslip.io/kimi";
 const ANCHOR = "0x049A73755cA3508ef3Daa4752A3406f6e00CfB13"; // ReceiptAnchor, Monad mainnet
+const REGISTRY = "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1"; // VerifierRegistry, Monad mainnet
 const VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7";
 const client = createPublicClient({ transport: http("https://rpc.monad.xyz") });
 
-// Refuse before paying unless the host is graded "pass" against Moonshot's own endpoint.
+// Refuse before paying unless the host is graded "pass" against Moonshot's own endpoint, read from the chain.
 const ask = wrap(fetch, {
   gate: {
-    check: hostGradeCheck(HOST, { model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [VERIFIER], reference: "openrouter:moonshotai/int4" }),
+    check: chainGradeCheck(client, { registry: REGISTRY, model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [VERIFIER], reference: "openrouter:moonshotai/int4" }),
     allow: ["pass"],
   },
 });

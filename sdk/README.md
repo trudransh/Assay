@@ -11,15 +11,18 @@ A receipt proves who served which bytes and what they claimed. It doesn't prove 
 ## Ask a host and keep the receipt
 
 ```ts
-import { wrap, hostGradeCheck } from "assay-receipts";
+import { createPublicClient, http } from "viem";
+import { wrap, chainGradeCheck } from "assay-receipts";
 
 const HOST = "https://34-45-1-81.sslip.io/mainnet"; // Assay host 10278 on Monad mainnet
+const REGISTRY = "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1"; // VerifierRegistry on Monad mainnet
 const VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"; // a verifier you choose to trust
+const monad = createPublicClient({ transport: http("https://rpc.monad.xyz") });
 
-// Refuse the host before sending (or paying) unless your verifiers grade it "pass".
+// Refuse the host before sending (or paying) unless your verifiers grade it "pass". The grade comes from the chain, not the host.
 const ask = wrap(fetch, {
   gate: {
-    check: hostGradeCheck(HOST, { model: "gemma-4-31b-it", host: "erc8004:143:10278", verifiers: [VERIFIER], reference: "direct:generativelanguage.googleapis.com" }),
+    check: chainGradeCheck(monad, { registry: REGISTRY, model: "gemma-4-31b-it", host: "erc8004:143:10278", verifiers: [VERIFIER], reference: "direct:generativelanguage.googleapis.com" }),
     allow: ["pass"],
   },
 });
@@ -34,6 +37,8 @@ const { json, receipt, salt } = await ask(`${HOST}/v1/chat/completions`, {
 ```
 
 `reference` is the lab's own endpoint for the model: the host is judged against it. Without one, a grade must clear an absolute floor (its 95% lower bound at least 80%) to pass. `wrap` sends a fresh 32-byte salt with the request, reads the receipt from the response headers, and checks that the output commit matches the bytes you received. If the gate says no, it throws `GradeGateError` and sends nothing.
+
+`chainGradeCheck` reads `VerifierRegistry.gradeOf` for the host and the reference and keeps the answer for 5 minutes (`cacheMs`). If the read fails, nothing is sent. Set `failOpen: true` on the gate to send anyway when the chain can't be read; a grade that reads "unknown" or "fail" still blocks. `hostGradeCheck` asks a host's `GET /v1/grade` instead, so only point it at a host you trust to answer, never at the host being graded.
 
 ## Verify a receipt
 
@@ -70,7 +75,7 @@ Anyone can register an ERC-8004 agent and run an Assay host. A valid receipt pro
 
 - **Pin the host by its ERC-8004 id**, written `erc8004:<chainId>:<agentId>`, for example `erc8004:143:10278`. Refuse receipts from any other host. `checkRecord` does this with `trustedHosts`.
 - **Pin the ReceiptAnchor address and chain yourself.** Never take them from the receipt or the record: a forged record can name any contract.
-- **Before you pin a host, look it up.** `ownerOf(agentId)` on the ERC-8004 IdentityRegistry gives its owner, and its agent card (`/.well-known/agent-registration.json` on the host) should list the URL you call. Then check its grade from verifiers you trust with `hostGradeCheck` or `gradeOf`.
+- **Before you pin a host, look it up.** `ownerOf(agentId)` on the ERC-8004 IdentityRegistry gives its owner, and its agent card (`/.well-known/agent-registration.json` on the host) should list the URL you call. Then check its grade from verifiers you trust with `chainGradeCheck` or `gradeOf`.
 - **Offline (CI, no RPC), also pin the signing key.** Without the chain read nothing ties a key to the host, so pass the key's RFC 7638 thumbprint (the host's `kid`) in `pinnedKeys`. `checkRecord` refuses offline checks without it.
 
 ```ts

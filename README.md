@@ -52,7 +52,7 @@ We measured one difference ourselves on 8 Oct. Sixteen hosts on OpenRouter answe
 | ⚠️ | Per-app keys that never hold MON (EIP-7702 gas sponsorship) work end to end on testnet; there's no mainnet run yet | [`host/src/sponsor.ts`](host/src/sponsor.ts) |
 | ⚠️ | The tool-calling checks are easy: every host we graded passed. The token-cap test is the first one that separates hosts | [`harness/`](harness/) |
 | ❌ | Which weights ran. A receipt proves who served which bytes and what they claimed, not the model behind them | [roadmap](https://assay.gitbook.io/assay-docs/resources/roadmap) |
-| ✅ | The SDK is on npm as [`assay-receipts`](https://www.npmjs.com/package/assay-receipts) (0.1.1) | [`sdk/`](sdk/) |
+| ✅ | The SDK is on npm as [`assay-receipts`](https://www.npmjs.com/package/assay-receipts) (0.2.0) | [`sdk/`](sdk/) |
 
 ## What a receipt proves
 
@@ -111,16 +111,18 @@ flowchart LR
 ## Thirty seconds of code
 
 ```ts
-import { wrap, hostGradeCheck, verifyReceipt, GradeGateError } from "assay-receipts";
+import { wrap, chainGradeCheck, verifyReceipt, GradeGateError } from "assay-receipts";
 
 const HOST = "https://34-45-1-81.sslip.io/kimi";                  // Assay host 10316 (Kimi K2.6) on Monad mainnet
+const REGISTRY = "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1";    // VerifierRegistry on Monad mainnet
 const MY_VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"; // a verifier you choose to trust
 const messages = [{ role: "user", content: "Say OK" }];
 
-// Refuse a host before sending (or paying) unless verifiers you trust grade it "pass" against the lab's own endpoint
+// Refuse a host before sending (or paying) unless verifiers you trust grade it "pass" against the lab's own endpoint.
+// The grade is read from the chain (`client` is a viem public client for Monad), never from the host itself.
 const ask = wrap(fetch, {
   gate: {
-    check: hostGradeCheck(HOST, { model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [MY_VERIFIER], reference: "openrouter:moonshotai/int4" }),
+    check: chainGradeCheck(client, { registry: REGISTRY, model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [MY_VERIFIER], reference: "openrouter:moonshotai/int4" }),
     allow: ["pass"],
   },
 });
