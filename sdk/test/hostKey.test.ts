@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { hostKeyForAgent, hostKeyForDirect, hostKeyForEndpoint } from "../src/hostKey.js";
+import { hostKeyForAgent, hostKeyForDirect, hostKeyForEndpoint, hostKeyOf } from "../src/hostKey.js";
 
 // Expected values come from `cast keccak "<string>"`.
 describe("host keys (D21)", () => {
@@ -22,5 +22,18 @@ describe("host keys (D21)", () => {
     expect(hostKeyForDirect("generativelanguage.googleapis.com")).toBe(
       "0xd0fe1e8708e22bc3fe3b101f9ab21a41052eb11b27d4d994f91cccca881927c7",
     );
+  });
+});
+
+describe("hostKeyOf", () => {
+  it("reads every convention as its preimage, and a bytes32 as is", () => {
+    expect(hostKeyOf("erc8004:143:10278")).toBe(hostKeyForAgent(143, 10278));
+    expect(hostKeyOf("openrouter:z-ai/fp8")).toBe(hostKeyForEndpoint("z-ai/fp8"));
+    expect(hostKeyOf("direct:generativelanguage.googleapis.com")).toBe(hostKeyForDirect("generativelanguage.googleapis.com"));
+    expect(hostKeyOf(`0x${"AB".repeat(32)}`)).toBe(`0x${"ab".repeat(32)}`);
+  });
+
+  it("returns null for anything else", () => {
+    for (const bad of ["10278", "z-ai/fp8", "erc8004:143", "0x1234", ""]) expect(hostKeyOf(bad)).toBeNull();
   });
 });

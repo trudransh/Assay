@@ -1,4 +1,5 @@
-import { zeroAddress, type Address, type Hex } from "viem";
+import { keccak256, stringToBytes, zeroAddress, type Address, type Hex } from "viem";
+import { hostKeyOf } from "./hostKey.js";
 import type { ContractReader } from "./verify.js";
 
 /// VerifierRegistry.Grade as viem decodes it.
@@ -80,4 +81,26 @@ export function gradeStatus(grade: Grade | null | undefined, opts: { now: bigint
   if (grade.total < GRADE_MIN_SAMPLES) return "warn";
   if (!opts.reference && grade.ciLowBps < GRADE_FLOOR_BPS) return "warn";
   return "pass";
+}
+
+/// A GradeGate check that reads VerifierRegistry itself, so the graded host has no say in its own grade.
+/// `host` and `reference` take hostKeyOf specs. A status is reused for `cacheMs` (default 5 minutes); a failed read isn't cached.
+export function chainGradeCheck(
+  client: ContractReader,
+  q: { registry: Address; model: string; host: string; verifiers: readonly Address[]; reference?: string; cacheMs?: number; now?: () => number },
+): () => Promise<GradeStatus> {
+  const hostKey = hostKeyOf(q.host);
+  const refKey = q.reference === undefined ? undefined : hostKeyOf(q.reference);
+  if (!hostKey || refKey === null) throw new Error("host and reference must be erc8004:<chain>:<id>, openrouter:<tag>, direct:<host> or a 0x bytes32 host key");
+  const model = keccak256(stringToBytes(q.model));
+  const { cacheMs = 300_000, now = Date.now } = q;
+  let cached: { status: GradeStatus; at: number } | undefined;
+  return async () => {
+    const t = now();
+    if (cached && t - cached.at < cacheMs) return cached.status;
+    const got = await gradeOf(client, q.registry, model, hostKey, q.verifiers);
+    const ref = refKey ? await gradeOf(client, q.registry, model, refKey, q.verifiers) : null;
+    cached = { status: gradeStatus(got?.grade, { now: Math.floor(t / 1000), reference: ref?.grade }), at: t };
+    return cached.status;
+  };
 }

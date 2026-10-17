@@ -22,6 +22,9 @@ export interface GradeGate {
   allow?: readonly GradeStatus[];
   /// Return true to send without checking, e.g. for cheap calls.
   skip?: (init: RequestInit) => boolean;
+  /// Send anyway when the grade can't be read (an RPC outage), for callers that can't take a hard dependency.
+  /// Default false: nothing is sent. A grade that reads "unknown" still blocks.
+  failOpen?: boolean;
 }
 
 export class GradeGateError extends Error {
@@ -30,7 +33,8 @@ export class GradeGateError extends Error {
   }
 }
 
-/// A GradeGate check backed by an Assay host's GET /v1/grade.
+/// A GradeGate check backed by an Assay host's GET /v1/grade. That host answers, so never point it at the host
+/// being graded: a dishonest one could just say "pass". chainGradeCheck reads the registry directly.
 export function hostGradeCheck(
   gradeUrl: string,
   q: { model: string; host: string; verifiers: readonly string[]; reference?: string },
@@ -98,11 +102,12 @@ export function wrap(fetchImpl: typeof fetch, opts: { cosigner?: Hex; gate?: Gra
   return async (input: RequestInfo | URL, init: RequestInit = {}): Promise<WrappedResult> => {
     const gate = opts.gate;
     if (gate && !gate.skip?.(init)) {
-      // Fails closed: if the grade can't be read, nothing is sent and nothing is paid.
+      // Fails closed unless failOpen: if the grade can't be read, nothing is sent and nothing is paid.
       const status = await gate.check().catch((e: unknown) => {
+        if (gate.failOpen) return undefined;
         throw new GradeGateError("error", e);
       });
-      if (!(gate.allow ?? ["pass"]).includes(status)) throw new GradeGateError(status);
+      if (status !== undefined && !(gate.allow ?? ["pass"]).includes(status)) throw new GradeGateError(status);
     }
     const salt = newSalt();
     const headers = new Headers(init.headers ?? (input instanceof Request ? input.headers : undefined));

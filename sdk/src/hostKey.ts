@@ -14,3 +14,13 @@ export function hostKeyForEndpoint(tag: string): Hex {
 export function hostKeyForDirect(host: string): Hex {
   return keccak256(stringToBytes(`direct:${host}`));
 }
+
+const BYTES32 = /^0x[0-9a-fA-F]{64}$/;
+// Every convention above is keccak256 of a prefixed string, so the spec itself is the preimage.
+const HOST_SPEC = /^(erc8004:\d+:\d+|openrouter:.+|direct:.+)$/;
+
+/// "erc8004:<chain>:<id>", "openrouter:<tag>", "direct:<host>" or a 0x bytes32 host key, as a host key; null for anything else.
+export function hostKeyOf(spec: string): Hex | null {
+  if (BYTES32.test(spec)) return spec.toLowerCase() as Hex;
+  return HOST_SPEC.test(spec) ? keccak256(stringToBytes(spec)) : null;
+}

@@ -1,21 +1,12 @@
-import { gradeOf, gradeStatus, type ContractReader } from "@assay/receipts";
+import { gradeOf, gradeStatus, hostKeyOf, type ContractReader } from "@assay/receipts";
 import type { Hono } from "hono";
 import { publicError } from "./errors.js";
-import { isAddress, keccak256, stringToBytes, type Address, type Hex } from "viem";
+import { isAddress, keccak256, stringToBytes, type Address } from "viem";
 
 export interface GradeDeps {
   reader: ContractReader;
   registry: Address;
   now?: () => number;
-}
-
-const BYTES32 = /^0x[0-9a-fA-F]{64}$/;
-// Every host-key convention (D21) is keccak256 of a prefixed string, so the spec itself is the preimage.
-const HOST_SPEC = /^(erc8004:\d+:\d+|openrouter:.+|direct:.+)$/;
-
-export function hostKeyOf(spec: string): Hex | null {
-  if (BYTES32.test(spec)) return spec.toLowerCase() as Hex;
-  return HOST_SPEC.test(spec) ? keccak256(stringToBytes(spec)) : null;
 }
 
 /// GET /v1/grade?model=<id>&host=<spec or hostKey>&verifiers=<a,b>[&reference=<spec or hostKey>]

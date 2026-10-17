@@ -1,7 +1,7 @@
 import type { ContractReader } from "@assay/receipts";
 import { keccak256, stringToBytes, type Hex } from "viem";
 import { describe, expect, it } from "vitest";
-import { hostKeyOf } from "../src/grades.js";
+import { hostKeyOf } from "@assay/receipts";
 import { createApp } from "../src/server.js";
 import { Store } from "../src/store.js";
 import { newSigner, tempDir } from "./helpers.js";

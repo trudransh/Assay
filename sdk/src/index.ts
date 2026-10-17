@@ -3,7 +3,7 @@ export { newSalt, commitRequest, commitResponse, assertBytes32 } from "./commit.
 export { buildReceipt, receiptHash, RECEIPT_VERSION, type ReceiptBody, type ReceiptInput } from "./receipt.js";
 export { P256_N, normalizeS, splitRawSignature, derToRaw, spkiToXY, rawPubToXY, type Signature } from "./p256.js";
 export { leafHash, buildBatch, verifyProof, type Batch } from "./merkle.js";
-export { hostKeyForAgent, hostKeyForDirect, hostKeyForEndpoint } from "./hostKey.js";
+export { hostKeyForAgent, hostKeyForDirect, hostKeyForEndpoint, hostKeyOf } from "./hostKey.js";
 export {
   findClientDataIndexes,
   assertionToWebAuthnAuth,
@@ -19,6 +19,7 @@ export {
 } from "./webauthn.js";
 export { wrap, type WrappedResult, hostGradeCheck, GradeGateError, type GradeGate, waitForAnchor, AnchorTimeoutError, type AnchoredReceipt } from "./wrap.js";
 export {
+  chainGradeCheck,
   gradeOf,
   gradeStatus,
   verifierRegistryAbi,
