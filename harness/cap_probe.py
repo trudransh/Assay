@@ -32,6 +32,7 @@ def trial(key, ep, cap, require_parameters):
     ct = u.get("completion_tokens")
     rt = (u.get("completion_tokens_details") or {}).get("reasoning_tokens") or 0
     rec.update(
+        gen_id=d.get("id"),  # OpenRouter's generation id, so a provider or OpenRouter can find the request
         served_by=d.get("provider"),
         finish=d["choices"][0].get("finish_reason"),
         completion_tokens=ct,
