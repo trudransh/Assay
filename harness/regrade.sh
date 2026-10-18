@@ -4,8 +4,8 @@
 # Probes the reference and the host in parallel, merges the two runs, exports grades with provenance
 # (operator = our verifier agent, stance "vouches"), copies the evidence bundle to where CRE fetches it once
 # pushed, and writes the post commands. It never touches a key: run `bash harness/post.sh <post_cmds.txt>` yourself.
-# Re-running the same day skips probes that already finished. Kimi's host allows 10 requests per client per hour,
-# so raise its CHAT_LIMIT on the VM before a Kimi run (41 requests).
+# Re-running the same day skips probes that already finished. The host probe sends GRADER_TOKEN from .env, which
+# lets it past the host's chat limits (Kimi's allows 10 an hour); push-secrets.sh puts the same token on the VM.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 WHO=${1:?usage: regrade.sh gemma|kimi}
@@ -31,7 +31,7 @@ probe() { # <dir> <assay_probe args...>; skipped when the dir already holds a fi
   python3 -u harness/assay_probe.py --model "$MODEL" --repeats "$REPEATS" --out "$dir" "$@" > "$dir.log" 2>&1
 }
 probe "$OUT/ref" "${REF_ARGS[@]}" & REF_PID=$!
-probe "$OUT/host" --base-url "$HOST_URL" --tag "$TAG" & HOST_PID=$!
+probe "$OUT/host" --base-url "$HOST_URL" --tag "$TAG" --api-key-env GRADER_TOKEN & HOST_PID=$!
 wait $REF_PID && wait $HOST_PID
 
 # One run with both endpoints, under the reference run's stamp.
