@@ -13,7 +13,7 @@ case "$INST" in
   testnet) NET=testnet; PORT=8787; DATA=data; URL="https://$DOMAIN"; JWK=host.jwk.json ;;
   mainnet) NET=mainnet; PORT=8788; DATA=data-mainnet; URL="https://$DOMAIN/mainnet"; JWK=host.jwk.json ;;
   kimi) NET=mainnet; PORT=8789; DATA=data-kimi; URL="https://$DOMAIN/kimi"; JWK=kimi.jwk.json ;;
-  grader) ;;
+  grader) NET=mainnet ;;  # it grades the mainnet hosts; set -u needs NET below
   *) echo "instance must be testnet, mainnet, kimi or grader"; exit 1 ;;
 esac
 SUFFIX="_${NET^^}"
