@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { pathToFileURL } from "node:url";
 import { serve } from "@hono/node-server";
 import {
@@ -43,6 +44,9 @@ export interface AppDeps {
   /// Chat requests per client and per host per hour. Defaults: CHAT_LIMIT and CHAT_LIMIT_GLOBAL.
   chatLimit?: number;
   chatLimitGlobal?: number;
+  /// Requests with "Authorization: Bearer <graderToken>" skip both chat limits, so a grading run fits on a
+  /// tightly capped host. They're answered and signed like any other request. Unset: nobody skips.
+  graderToken?: string;
   /// Token budget filled in when a request names none, and the most a request may ask for.
   /// Defaults: DEFAULT_MAX_TOKENS and MAX_TOKENS_CAP. A paid upstream (Kimi) sets both lower.
   defaultMaxTokens?: number;
@@ -115,11 +119,18 @@ export function createApp(d: AppDeps): Hono {
   const cosignHits = new Map<string, number[]>();
 
   const chatHits = new Map<string, number[]>();
+  const graderAuth = d.graderToken === undefined ? undefined : Buffer.from(`Bearer ${d.graderToken}`);
+  const isGrader = (h: string | undefined) => {
+    const got = Buffer.from(h ?? "");
+    return graderAuth !== undefined && got.length === graderAuth.length && timingSafeEqual(got, graderAuth);
+  };
   app.post("/v1/chat/completions", async (c) => {
     const t0 = now();
-    // Per client first, so a request it rejects doesn't use up the host-wide budget.
-    if (overLimit(chatHits, clientIp(c), d.chatLimit ?? CHAT_LIMIT, t0)) return fail(c, 429, `requests are limited to ${d.chatLimit ?? CHAT_LIMIT} per hour per client`);
-    if (overLimit(chatHits, "*", d.chatLimitGlobal ?? CHAT_LIMIT_GLOBAL, t0)) return fail(c, 429, "this host is at its hourly request limit; try again later");
+    if (!isGrader(c.req.header("authorization"))) {
+      // Per client first, so a request it rejects doesn't use up the host-wide budget.
+      if (overLimit(chatHits, clientIp(c), d.chatLimit ?? CHAT_LIMIT, t0)) return fail(c, 429, `requests are limited to ${d.chatLimit ?? CHAT_LIMIT} per hour per client`);
+      if (overLimit(chatHits, "*", d.chatLimitGlobal ?? CHAT_LIMIT_GLOBAL, t0)) return fail(c, 429, "this host is at its hourly request limit; try again later");
+    }
     const saltHex = c.req.header("x-assay-salt")?.replace(/^0x/, "") ?? "";
     if (!/^[0-9a-fA-F]{64}$/.test(saltHex)) return fail(c, 400, "X-Assay-Salt header is required: 32 random bytes as 64 hex chars");
     const salt = `0x${saltHex.toLowerCase()}` as Hex;
@@ -304,6 +315,7 @@ async function main() {
     provider: cfg.upstreamProvider,
     chatLimit: cfg.chatLimit,
     chatLimitGlobal: cfg.chatLimitGlobal,
+    graderToken: cfg.graderToken,
     defaultMaxTokens: cfg.defaultMaxTokens,
     maxTokensCap: cfg.maxTokensCap,
     hostName: cfg.hostName,

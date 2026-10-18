@@ -43,7 +43,7 @@ function fakeUpstream(over: Record<string, unknown> = {}, status = 200) {
   return { up, calls };
 }
 
-async function setup(opts: { dir?: string; signer?: HostSigner; upstream?: Upstream; provider?: string; retiredJwks?: JWK[]; chatLimit?: number; chatLimitGlobal?: number; defaultMaxTokens?: number; maxTokensCap?: number; reasoning?: Record<string, unknown> } = {}) {
+async function setup(opts: { dir?: string; signer?: HostSigner; upstream?: Upstream; provider?: string; retiredJwks?: JWK[]; chatLimit?: number; chatLimitGlobal?: number; graderToken?: string; defaultMaxTokens?: number; maxTokensCap?: number; reasoning?: Record<string, unknown> } = {}) {
   const dir = opts.dir ?? tempDir();
   const store = new Store(dir);
   const signer = opts.signer ?? (await newSigner());
@@ -70,6 +70,7 @@ async function setup(opts: { dir?: string; signer?: HostSigner; upstream?: Upstr
     provider: opts.provider,
     chatLimit: opts.chatLimit,
     chatLimitGlobal: opts.chatLimitGlobal,
+    graderToken: opts.graderToken,
     defaultMaxTokens: opts.defaultMaxTokens,
     maxTokensCap: opts.maxTokensCap,
     reasoning: opts.reasoning,
@@ -140,6 +141,22 @@ describe("POST /v1/chat/completions", () => {
     expect(((await third.json()) as any).error.message).toMatch(/per hour per client/);
     expect((await send("2.2.2.2")).status).toBe(200); // another client still gets through
     expect((await send("3.3.3.3")).status).toBe(429); // the host-wide cap is the hard bound
+  });
+
+  it("lets the grader's token past both chat limits, and only the exact token", async () => {
+    const { up } = fakeUpstream();
+    const token = "g".repeat(32);
+    const { app } = await setup({ upstream: up, chatLimit: 1, chatLimitGlobal: 1, graderToken: token });
+    const send = (auth?: string) =>
+      app.request("/v1/chat/completions", {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-assay-salt": SALT, ...(auth ? { authorization: auth } : {}) },
+        body: JSON.stringify({ messages, max_tokens: 16 }),
+      });
+    expect((await send()).status).toBe(200);
+    expect((await send()).status).toBe(429);
+    expect((await send(`Bearer ${"g".repeat(31)}h`)).status).toBe(429);
+    for (let i = 0; i < 3; i++) expect((await send(`Bearer ${token}`)).status).toBe(200);
   });
 
   it("fills max_tokens when the request has no budget, and signs what it forwarded", async () => {

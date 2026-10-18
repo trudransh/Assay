@@ -89,6 +89,8 @@ describe("per-host caps", () => {
     const c = loadConfig({ ...base, CHAT_LIMIT: "10", CHAT_LIMIT_GLOBAL: "30", DEFAULT_MAX_TOKENS: "256", MAX_TOKENS_CAP: "512" });
     expect(c).toMatchObject({ chatLimit: 10, chatLimitGlobal: 30, defaultMaxTokens: 256, maxTokensCap: 512 });
     expect(() => loadConfig({ ...base, MAX_TOKENS_CAP: "0" })).toThrow(/MAX_TOKENS_CAP/);
+    expect(loadConfig({ ...base, GRADER_TOKEN: "x".repeat(32) }).graderToken).toBe("x".repeat(32));
+    expect(() => loadConfig({ ...base, GRADER_TOKEN: "short" })).toThrow(/GRADER_TOKEN/);
   });
 });
 

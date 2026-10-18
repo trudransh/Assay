@@ -58,6 +58,7 @@ export interface Config {
   /// Optional per-host caps (see AppDeps). Unset means the server defaults.
   chatLimit?: number;
   chatLimitGlobal?: number;
+  graderToken?: string;
   defaultMaxTokens?: number;
   maxTokensCap?: number;
   hostName?: string;
@@ -129,6 +130,9 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   const relayerPrivateKey = required("RELAYER_PRIVATE_KEY");
   if (relayerPrivateKey && !/^0x[0-9a-fA-F]{64}$/.test(relayerPrivateKey)) errors.push("RELAYER_PRIVATE_KEY must be 0x + 64 hex");
 
+  const graderToken = get("GRADER_TOKEN");
+  if (graderToken && graderToken.length < 32) errors.push("GRADER_TOKEN must be at least 32 characters");
+
   const port = int("PORT", 8787, 1);
   const cfg: Config = {
     network,
@@ -157,6 +161,7 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     batchMax: int("BATCH_MAX", 64, 1),
     chatLimit: optInt("CHAT_LIMIT"),
     chatLimitGlobal: optInt("CHAT_LIMIT_GLOBAL"),
+    graderToken,
     defaultMaxTokens: optInt("DEFAULT_MAX_TOKENS"),
     maxTokensCap: optInt("MAX_TOKENS_CAP"),
     hostName: get("HOST_NAME"),

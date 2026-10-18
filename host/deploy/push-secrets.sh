@@ -50,6 +50,8 @@ chmod 600 "$ENV_FILE"
   for k in RELAYER_PRIVATE_KEY BATCH_SECONDS BATCH_MAX; do v=$(val "$k$SUFFIX"); [ -z "$v" ] && v=$(val $k); echo "$k=$v"; done | \
     # Every mainnet anchor costs real MON, so batch less often there unless told otherwise.
     { if [ "$NET" = mainnet ] && [ -z "$(val BATCH_SECONDS_MAINNET)" ]; then sed 's/^BATCH_SECONDS=.*/BATCH_SECONDS=120/'; else cat; fi; }
+  # Lets our own grading runs (harness/regrade.sh) past the chat limits. Unset: nobody skips them.
+  if [ -n "$(val GRADER_TOKEN)" ]; then echo "GRADER_TOKEN=$(val GRADER_TOKEN)"; fi
   echo "PORT=$PORT"
   echo "DATA_DIR=$DATA"
   echo "PUBLIC_URL=$URL"
