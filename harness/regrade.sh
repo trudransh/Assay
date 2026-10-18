@@ -2,8 +2,8 @@
 # Re-grade one of our Assay hosts against the lab's own endpoint and stage the result for posting.
 #   bash harness/regrade.sh gemma|kimi        (from the repo root; API keys come from .env and are never printed)
 # Probes the reference and the host in parallel, merges the two runs, exports grades with provenance
-# (operator = our verifier agent, stance "vouches"), copies the evidence bundle to where CRE fetches it once
-# pushed, and writes the post commands. It never touches a key: run `bash harness/post.sh <post_cmds.txt>` yourself.
+# (operator = our verifier agent, stance "vouches"), writes the post commands and stages the bundle (stage.sh;
+# STAGE=0 skips that, as on the VM). It never touches a key: run `bash harness/post.sh <post_cmds.txt>` yourself.
 # Re-running the same day skips probes that already finished. The host probe sends GRADER_TOKEN from .env, which
 # lets it past the host's chat limits (Kimi's allows 10 an hour); push-secrets.sh puts the same token on the VM.
 set -euo pipefail
@@ -23,7 +23,8 @@ case "$WHO" in
 esac
 OUT=${OUT:-harness/regrade_out/$WHO-$(date -u +%Y%m%d)}
 mkdir -p "$OUT"
-set -a; . ./.env; set +a
+# On the VM the keys come from systemd's EnvironmentFile instead.
+if [ -f .env ]; then set -a; . ./.env; set +a; fi
 
 probe() { # <dir> <assay_probe args...>; skipped when the dir already holds a finished run
   local dir=$1; shift
@@ -43,18 +44,7 @@ cat "$OUT/ref/raw_$S.jsonl" "$OUT"/host/raw_*.jsonl > "$M/raw_$S.jsonl"
 
 python3 harness/export_grade.py --out "$M" --stamp "$S" --model "$MODEL" --reference "$REFERENCE" \
   --assay-agent "$AGENT" --assay-tag "$TAG" --operator "$OPERATOR" --stance vouches
-SHA=$(cut -c1-64 "$M/evidence_$S.tar.gz.sha256")
-# A grade onchain may already point at the published bundle: never replace it with different bytes.
-for f in evidence_$S.tar.gz grades_$S.json; do
-  if [ -e "docs/evidence/$f" ] && ! cmp -s "$M/$f" "docs/evidence/$f"; then
-    echo "regrade.sh: docs/evidence/$f already exists with different content; not overwriting" >&2; exit 1
-  fi
-done
-cp "$M/evidence_$S.tar.gz" "cre/grade-recheck/fixtures/evidence/$SHA.tar.gz"
-cp "$M/evidence_$S.tar.gz" "$M/grades_$S.json" docs/evidence/
-
 python3 harness/post_grade.py "$M/grades_$S.json" --registry "$REGISTRY" --rpc-url "$RPC" > "$OUT/post_cmds.txt"
 column -s, -t "$M/summary_$S.csv" | cut -c1-120
 echo
-echo "staged: docs/evidence/evidence_$S.tar.gz, docs/evidence/grades_$S.json, cre/grade-recheck/fixtures/evidence/$SHA.tar.gz"
-echo "next: commit and push those three files, then run: bash harness/post.sh $OUT/post_cmds.txt"
+if [ "${STAGE:-1}" != 0 ]; then bash harness/stage.sh "$OUT"; fi
