@@ -1,0 +1,39 @@
+{
+  "stamp": "20261017T152408Z",
+  "modelId": "gemma-4-31b-it",
+  "checksId": "assay-checks/tool-calls-v0",
+  "reference": "direct:generativelanguage.googleapis.com",
+  "evidenceFile": "evidence_20261017T152408Z.tar.gz",
+  "evidence": "0x40bfa321ad2db452cccc25cd323230486d8d0fe28739210082acaed3d0aff88e",
+  "grades": [
+    {
+      "tag": "direct:generativelanguage.googleapis.com",
+      "hostKeyPreimage": "direct:generativelanguage.googleapis.com",
+      "model": "0xc7caf589e74ab73af82429c6b2aa4cda8157935c4cde359371773250214d9d05",
+      "hostKey": "0xd0fe1e8708e22bc3fe3b101f9ab21a41052eb11b27d4d994f91cccca881927c7",
+      "checks": "0x414c940358dd4cd842c195ab1ad421a6a54559284c6846f743916a5f934e001e",
+      "passed": 35,
+      "total": 35,
+      "ciLowBps": 9010,
+      "ciHighBps": 10000,
+      "refModel": "0xd0fe1e8708e22bc3fe3b101f9ab21a41052eb11b27d4d994f91cccca881927c7",
+      "evidence": "0x40bfa321ad2db452cccc25cd323230486d8d0fe28739210082acaed3d0aff88e",
+      "t": 1792250648
+    },
+    {
+      "tag": "assay-gemma-10278",
+      "hostKeyPreimage": "erc8004:143:10278",
+      "model": "0xc7caf589e74ab73af82429c6b2aa4cda8157935c4cde359371773250214d9d05",
+      "hostKey": "0x86cbfee7b8932227e5fa898eeb64b928ac8c4c61a9e65d575bc41622ac813234",
+      "checks": "0x414c940358dd4cd842c195ab1ad421a6a54559284c6846f743916a5f934e001e",
+      "passed": 37,
+      "total": 37,
+      "ciLowBps": 9059,
+      "ciHighBps": 10000,
+      "refModel": "0xd0fe1e8708e22bc3fe3b101f9ab21a41052eb11b27d4d994f91cccca881927c7",
+      "evidence": "0x40bfa321ad2db452cccc25cd323230486d8d0fe28739210082acaed3d0aff88e",
+      "t": 1792250648
+    }
+  ],
+  "skipped": []
+}
