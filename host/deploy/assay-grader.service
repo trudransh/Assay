@@ -1,0 +1,15 @@
+[Unit]
+Description=Assay grading job: re-grades our hosts (Mon, Thu), checks grade age, alerts via ntfy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=assay
+WorkingDirectory=/opt/assay
+# GEMINI_API_KEY, OPENROUTER_API_KEY, GRADER_TOKEN, NTFY_TOPIC (written by push-secrets.sh grader)
+EnvironmentFile=/etc/assay/grader.env
+StateDirectory=assay-grader
+ExecStart=/usr/bin/bash harness/vm_grader.sh
+# Google's endpoint has taken hours for one Gemma run.
+TimeoutStartSec=10h
