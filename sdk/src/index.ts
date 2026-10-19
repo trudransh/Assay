@@ -29,6 +29,7 @@ export {
   type Grade,
   type GradeStatus,
 } from "./grade.js";
+export { feedStatuses, toOpenRouterIgnore, type Feed, type FeedHost, type FeedModel } from "./feed.js";
 export {
   ANCHOR_TAG,
   anchorMessage,
