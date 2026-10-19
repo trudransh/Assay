@@ -15,9 +15,9 @@ Examples:
 import argparse, calendar, csv, glob, gzip, hashlib, io, json, math, os, shutil, subprocess, sys, tarfile, time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from assay_probe import wilson  # noqa: E402
+from assay_probe import CHECKS, wilson  # noqa: E402
 
-CHECKS_ID = "assay-checks/tool-calls-v0"
+CHECKS_ID = CHECKS["v0"]  # summaries from before the checks column
 MAX_TOKENS_CASE = "max_tokens_16"
 GRADER_REPO = "https://github.com/trudransh/Assay"
 # vouches: the operator stands behind the methodology. ran-grader: they only ran this code (SPEC section 5).
@@ -162,6 +162,11 @@ def export(out_dir, stamp, model=None, reference=None, assay_agent=None, assay_t
     if stance not in STANCES:
         sys.exit(f"stance must be one of {STANCES}, got {stance!r}")
 
+    suites = {r.get("checks") or CHECKS_ID for r in rows}
+    if len(suites) != 1:
+        sys.exit(f"the endpoints in this run were graded with different checks: {sorted(suites)}")
+    checks_id = suites.pop()
+
     counts = counts_from_raw(raw_p)
     t = calendar.timegm(time.strptime(stamp, "%Y%m%dT%H%M%SZ"))
     pres = {tag: host_key_preimage(tag, assay_agent if tag == assay_tag else None) for tag in tags}
@@ -169,11 +174,11 @@ def export(out_dir, stamp, model=None, reference=None, assay_agent=None, assay_t
     commit, dirty = grader_commit()
     prov_p = os.path.join(out_dir, f"provenance_{stamp}.json")
     with open(prov_p, "w") as f:
-        json.dump({"grader": {"repo": GRADER_REPO, "commit": commit, "dirty": dirty, "checks": CHECKS_ID},
+        json.dump({"grader": {"repo": GRADER_REPO, "commit": commit, "dirty": dirty, "checks": checks_id},
                    "operator": operator, "stance": stance, "hostKeyPreimages": pres}, f, indent=2, sort_keys=True)
         f.write("\n")
     evidence = write_evidence([summary_p, raw_p, prov_p], os.path.join(out_dir, f"evidence_{stamp}.tar.gz"))
-    model_h, checks_h, ref_h = keccak_hex(model), keccak_hex(CHECKS_ID), keccak_hex(reference)
+    model_h, checks_h, ref_h = keccak_hex(model), keccak_hex(checks_id), keccak_hex(reference)
 
     grades, skipped = [], []
     for r in rows:
@@ -188,7 +193,7 @@ def export(out_dir, stamp, model=None, reference=None, assay_agent=None, assay_t
                        "model": model_h, "hostKey": keccak_hex(pre), "checks": checks_h,
                        "passed": k, "total": n, "ciLowBps": lo, "ciHighBps": hi,
                        "refModel": ref_h, "evidence": evidence, "t": t})
-    doc = {"stamp": stamp, "modelId": model, "checksId": CHECKS_ID, "reference": reference,
+    doc = {"stamp": stamp, "modelId": model, "checksId": checks_id, "reference": reference,
            "evidenceFile": f"evidence_{stamp}.tar.gz", "evidence": evidence,
            "grades": grades, "skipped": skipped}
     with open(os.path.join(out_dir, f"grades_{stamp}.json"), "w") as f:
