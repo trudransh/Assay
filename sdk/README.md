@@ -40,6 +40,8 @@ const { json, receipt, salt } = await ask(`${HOST}/v1/chat/completions`, {
 
 `chainGradeCheck` reads `VerifierRegistry.gradeOf` for the host and the reference and keeps the answer for 5 minutes (`cacheMs`). If the read fails, nothing is sent. Set `failOpen: true` on the gate to send anyway when the chain can't be read; a grade that reads "unknown" or "fail" still blocks. `hostGradeCheck` asks a host's `GET /v1/grade` instead, so only point it at a host you trust to answer, never at the host being graded.
 
+The receipt arrives with the answer, so a missing one can only be found after the host has replied. `wrap` then throws `ReceiptError`, and its `response` still holds the reply with the body unread. If you pay after delivery, as in `examples/paid-job`, don't settle a request that ended in `ReceiptError`. If your payment goes with the request, it may already be settled, and the gate is your only check.
+
 ## Verify a receipt
 
 ```ts

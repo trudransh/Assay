@@ -330,7 +330,7 @@ cosignerAddress(cosigner); // "0x70997970C51812dc3A010C7d01b50e0d17dc79C8"
 
 ## Client
 
-### `wrap(fetch, { cosigner? })`
+### `wrap(fetch, { cosigner?, gate? })`
 
 Returns a fetch-like function for an Assay host. It sends a fresh salt (and `X-Assay-Cosigner` if given), parses `X-Assay-Receipt`, checks `X-Assay-Receipt-Hash`, and checks `res.commit` against the text you received.
 
@@ -342,7 +342,16 @@ Returns a fetch-like function for an Assay host. It sends a fresh salt (and `X-A
 | `salt` | The salt that was sent. Keep it. |
 | `outputCommitOk` | `true` when `res.commit` matches the assistant text you got. |
 
-Throws `no X-Assay-Receipt header in the response (HTTP <status>); is this an Assay host?` and `X-Assay-Receipt-Hash <claimed> != sha256(JCS(body)) <hash>`.
+With `gate`, the host's grade is checked before anything is sent. If the status isn't in `gate.allow` (default `["pass"]`), `wrap` throws `GradeGateError` and sends nothing. If the check itself fails, nothing is sent either, unless you set `failOpen: true`. Even then, a grade that reads "unknown" or "fail" still blocks the request.
+
+| `gate` field | Meaning |
+|---|---|
+| `check` | Returns the status. Use `chainGradeCheck`, which reads the registry, not the graded host. |
+| `allow` | Statuses that may proceed. Default `["pass"]`. |
+| `skip(init)` | Return `true` to send without checking. |
+| `failOpen` | Send anyway when the check throws, for example during an RPC outage. Default `false`. |
+
+When the host answers without a usable receipt (none, one that can't be read, or a hash that doesn't match), `wrap` throws `ReceiptError`. The request was sent by then and may be billed, so the error carries `response` with its body unread: you keep the answer and decide what to pay. The receipt arrives with the answer, so `wrap` can't know about it before sending. If you pay after delivery, don't settle a request that ended in `ReceiptError`. If your payment goes with the request, it may already be settled, and the gate is your only check.
 
 ```typescript
 const ask = wrap(fetch, { cosigner });
@@ -377,6 +386,36 @@ const found = await gradeOf(
 
 ```typescript
 const status = gradeStatus(found?.grade, { now: Math.floor(Date.now() / 1000), reference: refGrade });
+```
+
+### `chainGradeCheck(client, { registry, model, host, verifiers, reference?, cacheMs? })`
+
+A `gate.check` that reads `gradeOf` for `host` and `reference` from the chain and returns `gradeStatus`. `host` and `reference` take `erc8004:<chain>:<id>`, `openrouter:<tag>`, `direct:<host>` or a 0x host key. The status is reused for `cacheMs` (default 5 minutes), and a failed read isn't cached.
+
+```typescript
+const ask = wrap(fetch, {
+  gate: {
+    check: chainGradeCheck(client, {
+      registry: "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1",
+      model: "moonshotai/kimi-k2.6",
+      host: "erc8004:143:10316",
+      verifiers: ["0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"],
+      reference: "openrouter:moonshotai/int4",
+    }),
+  },
+});
+```
+
+### `feedStatuses(feed, model, now?)` and `toOpenRouterIgnore(feed, model, { now?, block? })`
+
+A grade feed is one JSON file with every graded host's newest onchain grade for each model, built by `harness/feed.py`. The feed carries the grade numbers and leaves the verdict to the reader: `feedStatuses` judges them with `gradeStatus` against the model's reference at the moment you call it, so an old copy of the feed can't show an expired grade as a pass. It returns a `Map` from host spec to status.
+
+`toOpenRouterIgnore` turns that into OpenRouter provider tags for `provider: { ignore }`. By default it lists only failing providers; pass `block: ["fail", "unknown"]` to also skip providers whose grade has expired. Hosts that nobody has graded don't appear in the feed at all.
+
+```typescript
+const feed = await fetch(FEED_URL).then((r) => r.json());
+const ignore = toOpenRouterIgnore(feed, "moonshotai/kimi-k2.6");
+// body: { model: "moonshotai/kimi-k2.6", messages, provider: { ignore } }
 ```
 
 ### `verifierRegistryAbi`
