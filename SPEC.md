@@ -120,6 +120,10 @@ The SDK computes these with `hostKeyForAgent`, `hostKeyForEndpoint` and `hostKey
 
 Readers call `gradeOf(model, hostKey, trustedVerifiers[])` and choose whose grades count. ERC-8004 recommends the same pattern for reputation, because unfiltered feedback is easy to spam. Assay runs the first verifier, but the registry doesn't depend on Assay in any way.
 
+**Check suites.** `checks` is `keccak256` of the suite's name. `assay-checks/tool-calls-v0` counts four tool-call cases per repeat and logs one capped reply without counting it. `assay-checks/v1` counts two more cases per repeat. A reply capped at `max_tokens` 16 passes only if the reported completion tokens stay at 18 or under, since that count is what the caller is billed for. A stop sequence passes only if the answer ends before it. A host and its reference are always graded with the same suite in the same run. Google's API leaves thinking tokens out of the count it reports, so on Gemma the capped-reply check can't see them.
+
+**Grade feed.** `harness/feed.py` writes one JSON file with the newest onchain grade of every graded host for each model, currently from Assay's verifier only. It carries the grade fields and a link to each evidence bundle, but no verdicts. The SDK's `feedStatuses` judges the numbers with `gradeStatus` when the feed is read, so an old copy can't show an expired grade as a pass, and `toOpenRouterIgnore` turns a feed into tags for OpenRouter's `provider.ignore`.
+
 ## 6. Out of scope for v0
 
 A receipt can't prove which weights ran. That becomes possible when the host signs from inside a TEE whose attestation quote includes a model hash, and it's the likely next step after v0.
