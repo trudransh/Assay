@@ -10,6 +10,7 @@ The Python scripts use only the standard library. A few small shell scripts wrap
 | `regrade.sh` | Re-grades one of our hosts (`gemma` or `kimi`) end to end: both probes, merge, export with provenance, post commands written, evidence staged (`STAGE=0` skips that). |
 | `stage.sh` | Copies a run's evidence bundle to where CRE fetches it and to `docs/evidence`. Never overwrites a published bundle with different bytes. |
 | `post.sh` | Runs those post commands with the verifier keystore, asking for its password once. |
+| `feed.py` | Builds the public grade feed: every host in the published grade files with its newest onchain grade, as numbers. Readers judge them with the SDK's `feedStatuses`. |
 | `grade_age.py` | Reads our hosts' newest grades from `VerifierRegistry` and exits 1 if one is missing or more than 5 days old. |
 | `vm_grader.sh` | The VM's daily job (`host/deploy/assay-grader.timer`): re-grades both hosts on Mondays and Thursdays, checks grade age every day, and sends each result to an ntfy topic. Posting stays manual. |
 
