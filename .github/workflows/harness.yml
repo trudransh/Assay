@@ -8,4 +8,4 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - run: python3 -m unittest harness/test_export_grade.py harness/test_assay_probe.py harness/test_post_grade.py
+      - run: python3 -m unittest discover -s harness -p "test_*.py"
