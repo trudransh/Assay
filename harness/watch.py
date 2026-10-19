@@ -2,8 +2,9 @@
 
   python3 harness/watch.py            (prints each problem and exits 1 if there is one)
 
-Meant to run outside the VM (.github/workflows/watch.yml): a VM that's down can't report itself. The same alert
-isn't sent twice within 3 hours, because the script reads the topic's recent messages first. Stdlib only.
+Best run outside the VM (.github/workflows/watch.yml), since a VM that's down can't report itself; scheduled
+workflows only run on main, so until it's merged the VM runs it every 15 minutes (host/deploy/assay-watch.timer).
+The same alert isn't sent twice within 3 hours, because the script reads the topic's recent messages first. Stdlib only.
 """
 import json, os, sys, time, urllib.parse, urllib.request
 
