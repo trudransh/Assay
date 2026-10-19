@@ -154,7 +154,7 @@ The response includes `reproduce` with the exact `gradeOf(bytes32,bytes32,addres
 | `BATCH_MAX` | no | `64` | Anchor at once when this many receipts wait |
 | `PORT` | no | `8787` | HTTP port |
 | `PUBLIC_URL` | no | `http://localhost:<PORT>` | Base URL in the registration file |
-| `DATA_DIR` | no | `data` | Where `receipts.jsonl` and `batches.jsonl` live |
+| `DATA_DIR` | no | `data` | Where the SQLite store `assay.db` lives |
 
 ## Run your own host
 

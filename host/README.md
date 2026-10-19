@@ -75,7 +75,7 @@ curl -s localhost:8787/v1/receipts/<X-Assay-Receipt-Hash>
 
 ## Storage and anchoring
 
-Receipts and batches are appended to `data/receipts.jsonl` and `data/batches.jsonl`. On start the host replays both files, so pending receipts stay queued across restarts.
+Receipts and batches live in SQLite at `data/assay.db`, using Node's built-in `node:sqlite` (Node 22.13 or later). A restart reads no history back, and pending receipts stay queued. Hosts that still have the older `receipts.jsonl` and `batches.jsonl` import them on their first start and keep the files as `*.imported`.
 
 Each anchor signs the batch root with the host key, then sends `anchor()` with `gas = estimate × 1.2`, because Monad bills the gas limit. On an RPC error it retries once on `MONAD_RPC_URL_2`. A reverted transaction is treated as a failure and the receipts stay queued. The host logs a warning when the relayer balance is below 1 MON.
 
