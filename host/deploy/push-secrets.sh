@@ -13,7 +13,7 @@ case "$INST" in
   testnet) NET=testnet; PORT=8787; DATA=data; URL="https://$DOMAIN"; JWK=host.jwk.json ;;
   mainnet) NET=mainnet; PORT=8788; DATA=data-mainnet; URL="https://$DOMAIN/mainnet"; JWK=host.jwk.json ;;
   kimi) NET=mainnet; PORT=8789; DATA=data-kimi; URL="https://$DOMAIN/kimi"; JWK=kimi.jwk.json ;;
-  grader) NET=mainnet ;;  # it grades the mainnet hosts; set -u needs NET below
+  grader) NET=mainnet; GRADER_BRANCH=${GRADER_BRANCH:-dev} ;;  # main is frozen for judging until 3 Nov
   *) echo "instance must be testnet, mainnet, kimi or grader"; exit 1 ;;
 esac
 SUFFIX="_${NET^^}"
@@ -29,9 +29,14 @@ if [ "$INST" = grader ]; then
     echo "$k=$(val $k)"
   done > "$ENV_FILE"
   scp -q "$ENV_FILE" "$TARGET:/tmp/grader.env"
+  scp -q host/deploy/assay-grader.{service,timer} host/deploy/assay-watch.{service,timer} "$TARGET:/tmp/"
+  # The grading job and the watch run from their own checkout of $GRADER_BRANCH, never the hosts' /opt/assay.
   ssh "$TARGET" "sudo install -m 640 -g assay /tmp/grader.env /etc/assay/grader.env && rm -f /tmp/grader.env &&
-    sudo install -m 644 /opt/assay/host/deploy/assay-grader.service /opt/assay/host/deploy/assay-grader.timer /etc/systemd/system/ &&
-    sudo systemctl daemon-reload && sudo systemctl enable -q --now assay-grader.timer && systemctl list-timers assay-grader.timer --no-pager | head -2"
+    { [ -d /opt/assay-grader ] || { sudo git clone -q -b $GRADER_BRANCH https://github.com/trudransh/Assay.git /opt/assay-grader && sudo chown -R assay:assay /opt/assay-grader; }; } &&
+    cd /tmp && sudo install -m 644 assay-grader.service assay-grader.timer assay-watch.service assay-watch.timer /etc/systemd/system/ &&
+    rm -f /tmp/assay-grader.service /tmp/assay-grader.timer /tmp/assay-watch.service /tmp/assay-watch.timer &&
+    sudo systemctl daemon-reload && sudo systemctl enable -q --now assay-grader.timer assay-watch.timer &&
+    systemctl list-timers 'assay-*' --no-pager | head -3"
   exit 0
 fi
 

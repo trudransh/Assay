@@ -6,7 +6,8 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 User=assay
-WorkingDirectory=/opt/assay
+# Its own checkout (branch dev while main is frozen for judging), so the hosts' /opt/assay never changes under them.
+WorkingDirectory=/opt/assay-grader
 # GEMINI_API_KEY, OPENROUTER_API_KEY, GRADER_TOKEN, NTFY_TOPIC (written by push-secrets.sh grader)
 EnvironmentFile=/etc/assay/grader.env
 StateDirectory=assay-grader
