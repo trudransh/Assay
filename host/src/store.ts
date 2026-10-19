@@ -1,5 +1,6 @@
-import { appendFileSync, existsSync, mkdirSync, readFileSync, statSync, truncateSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, renameSync } from "node:fs";
 import { join } from "node:path";
+import { DatabaseSync } from "node:sqlite";
 import type { ReceiptBody } from "@assay/receipts";
 import type { Hex } from "viem";
 
@@ -17,56 +18,89 @@ export interface StoredBatch {
   anchoredAt: number;
 }
 
-/// Append-only JSONL files, replayed on start. One process owns the directory.
+/// SQLite in `<dir>/assay.db`: a row per receipt (with its batch root and proof once anchored) and a row per batch.
+/// One process owns the directory. Hosts before 19 Oct kept JSONL files: the first start imports them and renames
+/// them to *.imported, so nothing is replayed on later starts.
 export class Store {
-  private receipts = new Map<Hex, StoredReceipt>();
-  private batchOf = new Map<Hex, StoredBatch>();
-  private byRoot = new Map<Hex, StoredBatch>();
-  private queue: Hex[] = [];
-  private readonly receiptsFile: string;
-  private readonly batchesFile: string;
+  private readonly db: DatabaseSync;
 
   constructor(dir: string) {
     mkdirSync(dir, { recursive: true });
-    this.receiptsFile = join(dir, "receipts.jsonl");
-    this.batchesFile = join(dir, "batches.jsonl");
-    for (const r of readJsonl<StoredReceipt>(this.receiptsFile)) this.receipts.set(r.hash, r);
-    for (const b of readJsonl<StoredBatch>(this.batchesFile)) this.indexBatch(b);
-    this.queue = [...this.receipts.keys()].filter((h) => !this.batchOf.has(h));
+    this.db = new DatabaseSync(join(dir, "assay.db"));
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS receipts (hash TEXT PRIMARY KEY, body TEXT NOT NULL, jws TEXT NOT NULL, root TEXT, proof TEXT);
+      CREATE INDEX IF NOT EXISTS receipts_pending ON receipts (root) WHERE root IS NULL;
+      CREATE TABLE IF NOT EXISTS batches (root TEXT PRIMARY KEY, count INTEGER NOT NULL, anchor_tx TEXT NOT NULL, anchored_at INTEGER NOT NULL);
+    `);
+    this.importJsonl(dir);
   }
 
   addReceipt(r: StoredReceipt): void {
-    appendFileSync(this.receiptsFile, JSON.stringify(r) + "\n");
-    this.receipts.set(r.hash, r);
-    this.queue.push(r.hash);
+    // The answer is already paid for when this runs: a repeated hash (identical body) must not throw.
+    this.db.prepare("INSERT OR IGNORE INTO receipts (hash, body, jws) VALUES (?, ?, ?)").run(r.hash.toLowerCase(), JSON.stringify(r.body), r.jws);
   }
 
   addBatch(b: StoredBatch): void {
-    appendFileSync(this.batchesFile, JSON.stringify(b) + "\n");
-    this.indexBatch(b);
-    this.queue = this.queue.filter((h) => !this.batchOf.has(h));
+    this.tx(() => this.insertBatch(b));
   }
 
   getReceipt(hash: Hex): StoredReceipt | undefined {
-    return this.receipts.get(hash.toLowerCase() as Hex);
+    const row = this.db.prepare("SELECT hash, body, jws FROM receipts WHERE hash = ?").get(hash.toLowerCase()) as
+      | { hash: Hex; body: string; jws: string }
+      | undefined;
+    return row && { hash: row.hash, body: JSON.parse(row.body) as ReceiptBody, jws: row.jws };
   }
 
   getBatch(hash: Hex): StoredBatch | undefined {
-    return this.batchOf.get(hash.toLowerCase() as Hex);
+    const row = this.db.prepare("SELECT root FROM receipts WHERE hash = ? AND root IS NOT NULL").get(hash.toLowerCase()) as { root: Hex } | undefined;
+    return row && this.batchByRoot(row.root);
   }
 
   batchByRoot(root: Hex): StoredBatch | undefined {
-    return this.byRoot.get(root.toLowerCase() as Hex);
+    const b = this.db.prepare("SELECT root, count, anchor_tx, anchored_at FROM batches WHERE root = ?").get(root.toLowerCase()) as
+      | { root: Hex; count: number; anchor_tx: Hex; anchored_at: number }
+      | undefined;
+    if (!b) return undefined;
+    const rows = this.db.prepare("SELECT hash, proof FROM receipts WHERE root = ?").all(b.root) as { hash: Hex; proof: string }[];
+    const proofs = Object.fromEntries(rows.map((r) => [r.hash, JSON.parse(r.proof) as Hex[]])) as Record<Hex, Hex[]>;
+    return { root: b.root, count: b.count, anchorTx: b.anchor_tx, proofs, anchoredAt: b.anchored_at };
   }
 
   /// Receipt hashes not yet in an anchored batch, oldest first.
   pending(): Hex[] {
-    return [...this.queue];
+    return (this.db.prepare("SELECT hash FROM receipts WHERE root IS NULL ORDER BY rowid").all() as { hash: Hex }[]).map((r) => r.hash);
   }
 
-  private indexBatch(b: StoredBatch): void {
-    this.byRoot.set(b.root.toLowerCase() as Hex, b);
-    for (const h of Object.keys(b.proofs) as Hex[]) this.batchOf.set(h, b);
+  private insertBatch(b: StoredBatch): void {
+    const root = b.root.toLowerCase();
+    this.db.prepare("INSERT OR REPLACE INTO batches (root, count, anchor_tx, anchored_at) VALUES (?, ?, ?, ?)").run(root, b.count, b.anchorTx, b.anchoredAt);
+    const setProof = this.db.prepare("UPDATE receipts SET root = ?, proof = ? WHERE hash = ?");
+    for (const [h, proof] of Object.entries(b.proofs)) setProof.run(root, JSON.stringify(proof), h.toLowerCase());
+  }
+
+  private tx(fn: () => void): void {
+    this.db.exec("BEGIN");
+    try {
+      fn();
+      this.db.exec("COMMIT");
+    } catch (e) {
+      this.db.exec("ROLLBACK");
+      throw e;
+    }
+  }
+
+  // Safe to repeat: if the process dies between the commit and the renames, the next start imports the same rows again.
+  private importJsonl(dir: string): void {
+    const [rf, bf] = [join(dir, "receipts.jsonl"), join(dir, "batches.jsonl")];
+    if (!existsSync(rf) && !existsSync(bf)) return;
+    const receipts = readJsonl<StoredReceipt>(rf);
+    const batches = readJsonl<StoredBatch>(bf);
+    this.tx(() => {
+      for (const r of receipts) this.addReceipt(r);
+      for (const b of batches) this.insertBatch(b);
+    });
+    for (const f of [rf, bf]) if (existsSync(f)) renameSync(f, `${f}.imported`);
+    console.info(`[store] imported ${receipts.length} receipts and ${batches.length} batches from JSONL`);
   }
 }
 
@@ -74,10 +108,6 @@ function readJsonl<T>(file: string): T[] {
   if (!existsSync(file)) return [];
   const lines = readFileSync(file, "utf8").split("\n");
   // A crash mid-append leaves a partial last line with no newline. That request was never answered, so drop it.
-  const tail = lines.pop() ?? "";
-  if (tail) {
-    console.warn(`[store] dropping partial last line in ${file}`);
-    truncateSync(file, statSync(file).size - Buffer.byteLength(tail));
-  }
+  if (lines.pop()) console.warn(`[store] dropping partial last line in ${file}`);
   return lines.filter((l) => l.trim()).map((l) => JSON.parse(l) as T);
 }
