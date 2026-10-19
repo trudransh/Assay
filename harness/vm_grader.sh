@@ -6,6 +6,8 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 RUNS=${STATE_DIRECTORY:-/var/lib/assay-grader}
 note() { curl -fsS -m 20 -H "Title: $1" -d "$2" "https://ntfy.sh/$NTFY_TOPIC" >/dev/null || echo "ntfy failed: $1" >&2; }
+# This checkout only runs the grader (the hosts run from /opt/assay), so it can follow its branch on its own.
+git pull --ff-only -q || note "Assay grader: git pull failed" "Grading with the checked-out commit $(git rev-parse --short HEAD)."
 
 regrade() {
   local run=$1-$(date -u +%Y%m%d)
