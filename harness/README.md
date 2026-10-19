@@ -61,6 +61,7 @@ Any OpenAI-compatible API can be graded or used as the reference. Direct endpoin
 | `--reference-base-url URL` | Use this endpoint, usually the lab's own API, as the reference. Replaces `--reference`. |
 | `--reference-model ID` | Model id at the reference URL. Default `--model`. |
 | `--reference-api-key-env NAME` | Env var with the reference API key. No key is sent if unset. |
+| `--checks v0\|v1` | `v0` (default) grades tool calls only. `v1` adds a capped reply to every repeat (`max_tokens` 16, an essay prompt): it passes only if the reported completion tokens, which are what the caller pays for, stay at 18 or under. Both count in passed/total, and the grade's `checks` field names the suite. |
 
 Each endpoint receives its own key and never the key of another endpoint.
 
