@@ -18,6 +18,7 @@ On WSL: scp -r assay-vm:$RUNS/$run harness/regrade_out/ && bash harness/stage.sh
 }
 
 case $(date -u +%a) in
-  Mon|Thu) regrade gemma & regrade kimi & wait ;;
+  # One after the other: started in the same second, both runs would get the same stamp and file names.
+  Mon|Thu) regrade kimi; regrade gemma ;;
 esac
 python3 harness/grade_age.py > "$RUNS/age.txt" 2>&1 || note "Assay: grade over 5 days old" "$(cat "$RUNS/age.txt")"
