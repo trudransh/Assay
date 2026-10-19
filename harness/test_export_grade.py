@@ -204,14 +204,14 @@ class Export(unittest.TestCase):
             self.run_export(reference="z-ai")
 
     def test_checks_suite_comes_from_the_summary(self):
-        v1 = {"checks": "assay-checks/tool-calls-cap-v1"}
+        v1 = {"checks": "assay-checks/v1"}
         write_run(self.d, {"z-ai/fp8": [True], "cheap/int4": [False]}, {"z-ai/fp8": v1, "cheap/int4": v1})
         doc = self.run_export()
-        self.assertEqual(doc["checksId"], "assay-checks/tool-calls-cap-v1")
-        self.assertEqual({g["checks"] for g in doc["grades"]}, {eg.keccak_hex("assay-checks/tool-calls-cap-v1")})
+        self.assertEqual(doc["checksId"], "assay-checks/v1")
+        self.assertEqual({g["checks"] for g in doc["grades"]}, {eg.keccak_hex("assay-checks/v1")})
 
     def test_mixed_checks_suites_rejected(self):
-        write_run(self.d, {"z-ai/fp8": [True], "cheap/int4": [True]}, {"cheap/int4": {"checks": "assay-checks/tool-calls-cap-v1"}})
+        write_run(self.d, {"z-ai/fp8": [True], "cheap/int4": [True]}, {"cheap/int4": {"checks": "assay-checks/v1"}})
         with self.assertRaises(SystemExit):
             self.run_export()
 

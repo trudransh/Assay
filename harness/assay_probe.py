@@ -167,9 +167,10 @@ def run_case(key, ep, case):
         good = False
     rec.update(ok=bool(good), reason="" if good else "wrong argument values", args=args); return rec
 
-# What a grade's passed/total counts. v1 adds a capped reply to every repeat: the host passes only if the completion
-# tokens it reports, which are what the caller is billed for, stay within max_tokens.
-CHECKS = {"v0": "assay-checks/tool-calls-v0", "v1": "assay-checks/tool-calls-cap-v1"}
+# What a grade's passed/total counts. v1 adds two parameter checks to every repeat: a capped reply, which passes only
+# if the completion tokens the host reports (what the caller is billed for) stay within max_tokens, and a stop
+# sequence, which passes only if the answer ends before it.
+CHECKS = {"v0": "assay-checks/tool-calls-v0", "v1": "assay-checks/v1"}
 CAP, CAP_SLACK = 16, 2  # some tokenizers return 17 or 18 for a cap of 16
 
 def run_cap(key, ep):
@@ -182,6 +183,19 @@ def run_cap(key, ep):
     ok = ct is not None and ct <= CAP + CAP_SLACK
     reason = "" if ok else "no usage reported" if ct is None else f"completion_tokens={ct} over max_tokens={CAP}"
     rec.update(ok=ok, reason=reason, finish=d["choices"][0].get("finish_reason"), usage=u); return rec
+
+# Some models (Gemma on Google's API) put their thinking inside the answer text; a stop sequence only applies after it.
+THINKING = re.compile(r"<(thought|think)>.*?</\1>", re.S)
+
+def run_stop(key, ep):
+    body = request_body(ep, "Count from 1 to 20, separated by spaces. Output only the numbers.", stop=["7"], temperature=0, max_tokens=256)
+    s, d = http("POST", f"{ep['base']}/chat/completions", body, key)
+    rec = {"case": "stop_7", "tag": ep["tag"], "http": s}
+    if s != 200 or not isinstance(d, dict) or "choices" not in d:
+        rec.update(ok=False, reason=f"http {s}: {str(d)[:200]}"); return rec
+    answer = THINKING.sub("", (d["choices"][0].get("message") or {}).get("content") or "")
+    ok = "7" not in answer
+    rec.update(ok=ok, reason="" if ok else f"answer went past the stop sequence: {answer[:80]!r}", finish=d["choices"][0].get("finish_reason")); return rec
 
 def run_max_tokens(key, ep):
     tag = ep["tag"]
@@ -233,7 +247,7 @@ def main(argv=None):
         eps.append(ref_ep)
         a.reference = ref_ep["tag"]
     v1 = a.checks == "v1"
-    n_req = a.repeats * (len(CASES) + v1) + (not v1)
+    n_req = a.repeats * (len(CASES) + 2 * v1) + (not v1)
     est_in, est_out = 700, 200  # rough tokens per request (tool schemas + prompt; short outputs)
     total = 0.0
     print(f"{a.model}: {len(eps)} endpoints, {n_req} requests each\n")
@@ -260,7 +274,8 @@ def main(argv=None):
             for c in CASES:
                 r = run_case(key, e, c); recs.append(r); raw.write(json.dumps(r) + "\n"); raw.flush()
             if v1:
-                r = run_cap(key, e); recs.append(r); raw.write(json.dumps(r) + "\n"); raw.flush()
+                for r in (run_cap(key, e), run_stop(key, e)):
+                    recs.append(r); raw.write(json.dumps(r) + "\n"); raw.flush()
         if not v1:  # v0's single cap trial is reported but not counted
             r = run_max_tokens(key, e); recs.append(r); raw.write(json.dumps(r) + "\n")
         tool = [r for r in recs if r["case"] != "max_tokens_16" and r.get("http", 200) == 200]

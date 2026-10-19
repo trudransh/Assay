@@ -82,6 +82,17 @@ class RequestBuilding(unittest.TestCase):
         with mock.patch.object(ap, "http", return_value=(503, {"error": "busy"})):
             self.assertEqual((ap.run_cap(None, ep)["ok"], ap.run_cap(None, ep)["http"]), (False, 503))
 
+    def test_stop_check_reads_the_answer_after_any_thinking(self):
+        ep = ap.direct_ep("https://h/v1", "m", None)
+        reply = lambda text: (200, {"choices": [{"message": {"content": text}, "finish_reason": "stop"}]})
+        for text, ok in [("1 2 3 4 5 6 ", True), ("<thought>1 2 3 4 5 6 7 8</thought>1 2 3 4 5 6 ", True),
+                         ("<think>7</think>", True), ("1 2 3 4 5 6 7 8 9", False), (None, True)]:
+            with mock.patch.object(ap, "http", return_value=reply(text)):
+                r = ap.run_stop(None, ep)
+            self.assertEqual((r["case"], r["ok"]), ("stop_7", ok), text)
+        with mock.patch.object(ap, "http", return_value=(500, {"error": "x"})):
+            self.assertFalse(ap.run_stop(None, ep)["ok"])
+
     def test_no_key_sends_no_authorization(self):
         seen = []
         def fake(req, timeout):
