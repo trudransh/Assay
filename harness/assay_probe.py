@@ -173,15 +173,22 @@ def run_case(key, ep, case):
 CHECKS = {"v0": "assay-checks/tool-calls-v0", "v1": "assay-checks/v1"}
 CAP, CAP_SLACK = 16, 2  # some tokenizers return 17 or 18 for a cap of 16
 
+def billed_out(u):
+    """Output tokens billed. Google's API counts thinking only in total_tokens, so take the larger reading."""
+    ct, tt, pt = u.get("completion_tokens"), u.get("total_tokens"), u.get("prompt_tokens")
+    if ct is None and tt is None:
+        return None
+    return max(ct or 0, (tt or 0) - (pt or 0))
+
 def run_cap(key, ep):
     body = request_body(ep, "Write a 500-word essay about rivers.", max_tokens=CAP, temperature=0)
     s, d = http("POST", f"{ep['base']}/chat/completions", body, key)
     rec = {"case": "cap_16", "tag": ep["tag"], "http": s}
     if s != 200 or not isinstance(d, dict) or "choices" not in d:
         rec.update(ok=False, reason=f"http {s}: {str(d)[:200]}"); return rec
-    u = d.get("usage") or {}; ct = u.get("completion_tokens")
+    u = d.get("usage") or {}; ct = billed_out(u)
     ok = ct is not None and ct <= CAP + CAP_SLACK
-    reason = "" if ok else "no usage reported" if ct is None else f"completion_tokens={ct} over max_tokens={CAP}"
+    reason = "" if ok else "no usage reported" if ct is None else f"billed output tokens={ct} over max_tokens={CAP}"
     rec.update(ok=ok, reason=reason, finish=d["choices"][0].get("finish_reason"), usage=u); return rec
 
 # Some models (Gemma on Google's API) put their thinking inside the answer text; a stop sequence only applies after it.
