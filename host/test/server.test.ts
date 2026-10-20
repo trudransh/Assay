@@ -192,6 +192,12 @@ describe("POST /v1/chat/completions", () => {
     expect(calls[0]).toEqual({ messages, model: MODEL, max_tokens: 16, temperature: 0 });
   });
 
+  it("counts thinking that the upstream reports only in total_tokens, as Google's API does", async () => {
+    const { up } = fakeUpstream({ usage: { prompt_tokens: 13, completion_tokens: 0, total_tokens: 26 } });
+    const { app } = await setup({ upstream: up });
+    expect(receiptOf(await chat(app)).body.res).toMatchObject({ tokensIn: 13, tokensOut: 13 });
+  });
+
   it("accepts a 0x-prefixed salt", async () => {
     const { app } = await setup();
     expect((await chat(app, {}, { "x-assay-salt": `0x${SALT}` })).status).toBe(200);
