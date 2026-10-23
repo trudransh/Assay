@@ -44,4 +44,4 @@
 * [Hosting report](resources/hosting-report.md)
 * [FAQ](resources/faq.md)
 * [Glossary](resources/glossary.md)
-* [Roadmap after Metropolis](resources/roadmap.md)
+* [Roadmap](resources/roadmap.md)

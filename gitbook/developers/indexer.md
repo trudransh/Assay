@@ -5,11 +5,23 @@ icon: database
 
 # Indexer and GraphQL
 
-**Where:** `indexer/` (Envio HyperIndex, its own install, outside the pnpm workspace). `schema.graphql` defines the entities and `src/` holds the handlers. Locally the API is at `http://localhost:8080`.
+**Where:** `indexer/` (Envio HyperIndex, its own install, outside the pnpm workspace). `schema.graphql` defines the entities and `src/` holds the handlers. Live endpoint (public, read-only): `https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql`. Locally the API is at `http://localhost:8080`.
 
 The indexer joins Assay's contracts with the ERC-8004 identity registry and the CRE attestor. Handlers compute drift, leaderboards, activity and key history at index time, so GraphQL only reads.
 
 ## Sources
+
+One deployment indexes Monad mainnet (143) and testnet (10143) over HyperSync. Mainnet sources:
+
+| Contract | Address | Start block |
+|---|---|---|
+| ReceiptAnchor | `0x049A73755cA3508ef3Daa4752A3406f6e00CfB13` | 110678733 |
+| VerifierRegistry | `0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1` | 110678737 |
+| CreAttestor v2 | `0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E` | 110678745 |
+| ERC-8004 IdentityRegistry | `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` | 110678733 |
+| ERC-8004 ReputationRegistry | `0x8004BAa17C55a88189AE136b182e5fdA19dE9b63` | 110678733 |
+
+Testnet sources, with the events each contract emits:
 
 | Contract | Address | Start block | Events |
 |---|---|---|---|
@@ -20,7 +32,7 @@ The indexer joins Assay's contracts with the ERC-8004 identity registry and the 
 
 ## Entities
 
-Every id starts with the chain id (`10143-…`).
+Every id starts with the chain id: `143-…` on mainnet, `10143-…` on testnet. The examples below use testnet ids; swap in `143-10278` or `143-10316` for the mainnet hosts.
 
 | Entity | Id | Answers |
 |---|---|---|

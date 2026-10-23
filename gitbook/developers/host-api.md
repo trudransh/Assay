@@ -5,7 +5,7 @@ icon: server
 
 # Host API
 
-**Live:** https://34-45-1-81.sslip.io (agent 1962, Gemma 4 31B through Google AI Studio) · **Where:** `host/src/server.ts`, package `@assay/host` (Hono). Runs locally on `http://localhost:8787` with `pnpm --filter @assay/host dev`. To run your own on a VM, see `host/deploy/setup.sh` and `host/deploy/push-secrets.sh`.
+**Live:** mainnet https://34-45-1-81.sslip.io/mainnet (agent 10278, Gemma 4 31B through Google's API) and https://34-45-1-81.sslip.io/kimi (agent 10316, Kimi K2.6 through Moonshot's endpoint); testnet https://34-45-1-81.sslip.io (agent 1962) · **Where:** `host/src/server.ts`, package `@assay/host` (Hono). Runs locally on `http://localhost:8787` with `pnpm --filter @assay/host dev`. To run your own on a VM, see `host/deploy/setup.sh` and `host/deploy/push-secrets.sh`.
 
 The reference host is an OpenAI-compatible proxy in front of OpenRouter, or any OpenAI-compatible API set with `UPSTREAM_URL`. It signs a receipt for every response and anchors batches on Monad. Errors come back as `{"error": {"message": "…"}}`.
 
@@ -103,7 +103,7 @@ Retired keys stay published so receipts they signed still verify.
 
 ## `GET /.well-known/agent-registration.json`
 
-The ERC-8004 registration file: `name` "Assay reference host", `services` for `chat`, `jwks` and `receipts`, and `registrations` with the agent id and `eip155:10143:0x8004A818BFB912233c491871b3d84c89A494BD9e`.
+The ERC-8004 registration file: `name` "Assay reference host", `services` for `chat`, `jwks` and `receipts`, and `registrations` with the agent id and the IdentityRegistry of the host's chain, for example `eip155:143:0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` on mainnet.
 
 ## `GET /v1/grade`
 
@@ -154,7 +154,7 @@ The response includes `reproduce` with the exact `gradeOf(bytes32,bytes32,addres
 | `BATCH_MAX` | no | `64` | Anchor at once when this many receipts wait |
 | `PORT` | no | `8787` | HTTP port |
 | `PUBLIC_URL` | no | `http://localhost:<PORT>` | Base URL in the registration file |
-| `DATA_DIR` | no | `data` | Where `receipts.jsonl` and `batches.jsonl` live |
+| `DATA_DIR` | no | `data` | Where the store lives. The live hosts still use `receipts.jsonl` and `batches.jsonl`; from 3 Nov the store is SQLite (`assay.db`), which imports those files once on first start |
 
 ## Run your own host
 

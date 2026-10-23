@@ -9,7 +9,7 @@ icon: file-contract
 
 Assay has three contracts. `ReceiptAnchor` holds host keys, batch anchors and co-signatures. `VerifierRegistry` holds grades. `CreAttestor` records Chainlink CRE re-checks of grades.
 
-Gas numbers are the maximum from `forge test --gas-report` against a mock identity registry. On testnet the real ERC-8004 `ownerOf` call adds a little, so `setHostKey` lands around 75,000 to 80,000.
+Gas numbers are the maximum from `forge test --gas-report` against a mock identity registry. On Monad the real ERC-8004 `ownerOf` call adds a little, so `setHostKey` lands around 75,000 to 80,000.
 
 ## ReceiptAnchor
 
@@ -23,7 +23,7 @@ Constructor: `ReceiptAnchor(IIdentityRegistry identity, bool requireUV)`. The li
 | `anchor(uint256 agentId, bytes32 root, uint32 count, bytes32 r, bytes32 s)` | Anyone (signature decides) | ~61k | Stores a batch root signed by the host key. Emits `Anchored` |
 | `verifyReceipt(uint256 agentId, bytes32 receiptHash, bytes32[] proof, bytes32 root) view returns (bool)` | Anyone | ~3.6k | `true` if the root is anchored under `agentId` and the proof matches |
 | `cosign(uint256 agentId, bytes32 receiptHash, bytes32[] proof, bytes32 root, WebAuthnAuth auth, bytes32 qx, bytes32 qy)` | Anyone | ~73k | Records a passkey co-signature. Emits `Cosigned` |
-| `cosignK(uint256 agentId, bytes32 receiptHash, bytes32[] proof, bytes32 root, bytes signature)` | Anyone | ~57k | Records a secp256k1 EIP-191 co-signature. Emits `CosignedK`. Not on the current testnet deployment |
+| `cosignK(uint256 agentId, bytes32 receiptHash, bytes32[] proof, bytes32 root, bytes signature)` | Anyone | ~57k | Records a secp256k1 EIP-191 co-signature. Emits `CosignedK`. On mainnet and on the 3 Oct testnet deployment |
 | `anchorMessage(uint256 agentId, bytes32 root, uint32 count) view returns (bytes)` | Anyone | | The bytes the host signs |
 | `leafOf(bytes32 receiptHash) pure returns (bytes32)` | Anyone | | `keccak256(bytes.concat(keccak256(abi.encode(receiptHash))))` |
 | `keyHashOf(bytes32 qx, bytes32 qy) pure returns (bytes32)` | Anyone | | `keccak256(abi.encode(qx, qy))` |
@@ -94,7 +94,7 @@ Constructor: `VerifierRegistry(IIdentityRegistry identity)`.
 
 ## CreAttestor
 
-Constructor: `CreAttestor(address owner)`. Deployed by `script/Deploy.s.sol` only when `DEPLOY_CRE_ATTESTOR=true`. Deployed on testnet at `0xB4A1CB9e40aDa44570Ae790430C23876d460deDC` (block 67462996), not configured yet.
+Constructor: `CreAttestor(address owner, address relayer)`. Deployed by `script/Deploy.s.sol` only when `DEPLOY_CRE_ATTESTOR=true`. With a non-zero `relayer`, `onReport` only accepts transactions sent by that address. Live on mainnet as v2 at `0x71EDfF0bcd68ba2508C4B08a8606F76C5C26915E` (relayer `0x3F3c…a369`), configured for the CRE simulator's forwarder. See [Chainlink CRE](../integrations/chainlink-cre.md) for what its attestations mean.
 
 ### Functions
 
@@ -104,7 +104,7 @@ Constructor: `CreAttestor(address owner)`. Deployed by `script/Deploy.s.sol` onl
 | `onReport(bytes metadata, bytes report)` | The forwarder | ~61k | Decodes `(verifier, model, hostKey, t, passed, total, ciLowBps, ciHighBps, agree)` and stores the attestation. Emits `GradeAttested` |
 | `attestations(address verifier, bytes32 model, bytes32 hostKey, uint64 t) view` | Anyone | | `(passed, total, ciLowBps, ciHighBps, agree)` |
 | `supportsInterface(bytes4) pure returns (bool)` | Anyone | | `true` for IERC165 and the `onReport` selector |
-| `owner`, `forwarder`, `workflowOwner`, `workflowId` | Anyone | | Configuration |
+| `owner`, `relayer`, `forwarder`, `workflowOwner`, `workflowId` | Anyone | | Configuration |
 
 ### Events
 
@@ -123,6 +123,8 @@ Constructor: `CreAttestor(address owner)`. Deployed by `script/Deploy.s.sol` onl
 | `NotForwarder()` | `onReport` from anyone but the forwarder |
 | `BadMetadata()` | Metadata shorter than 64 bytes |
 | `UnauthorizedWorkflow()` | Report from another workflow owner or id |
+| `NotRelayer()` | `relayer` is set and the transaction wasn't sent by it |
+| `AlreadyAttested()` | This grade already has an attestation |
 | `BadReport()` | Wrong length (must be 288 bytes), or counts or interval out of range |
 
 ## Run the tests

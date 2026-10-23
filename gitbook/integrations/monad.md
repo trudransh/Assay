@@ -5,7 +5,7 @@ icon: cube
 
 # Monad
 
-**Where:** `ReceiptAnchor` and `VerifierRegistry` on Monad testnet (chain 10143). The precompile is at `0x0100`. ERC-8004 IdentityRegistry is at `0x8004A818BFB912233c491871b3d84c89A494BD9e`.
+**Where:** `ReceiptAnchor` and `VerifierRegistry` on Monad mainnet (chain 143) since 5 Oct, and on testnet (chain 10143). The precompile is at `0x0100`. ERC-8004 IdentityRegistry is at `0x8004A169FB4a3325136EB29fA0ceB6D2e539a432` on mainnet and `0x8004A818BFB912233c491871b3d84c89A494BD9e` on testnet. Addresses: [Network and contracts](../getting-started/network-and-contracts.md).
 
 Assay needs three things from a chain: cheap P-256 checks, a shared identity registry, and gas low enough to anchor small batches often. Monad has all three natively.
 

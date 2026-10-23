@@ -19,14 +19,14 @@ A receipt proves who served the bytes, not which weights ran. Grades fill that g
 | `passed`, `total` | Passing tool cases out of all cases that got HTTP 200. `total` must be above zero. |
 | `ciLowBps`, `ciHighBps` | 95% Wilson interval in basis points. Low rounds down, high rounds up, both within `[0, 10000]`. |
 | `refModel` | `keccak256(utf8(reference tag))`, the lab endpoint used as reference. |
-| `evidence` | `0x` + sha256 of the evidence tarball (summary CSV and raw JSONL). |
+| `evidence` | `0x` + sha256 of the evidence tarball (summary CSV, raw JSONL and `provenance.json`). |
 | `t` | Grade time in Unix seconds. Must not be in the future, and must be newer than this verifier's last grade for the same pair. |
 
 ## Host keys
 
 | Host | `hostKey` | SDK |
 |---|---|---|
-| Assay host with an ERC-8004 identity | `keccak256(utf8("erc8004:<chainId>:<agentId>"))` | `hostKeyForAgent(10143, 1962)` |
+| Assay host with an ERC-8004 identity | `keccak256(utf8("erc8004:<chainId>:<agentId>"))` | `hostKeyForAgent(143, 10278)` |
 | OpenRouter endpoint | `keccak256(utf8("openrouter:" + tag))` | `hostKeyForEndpoint("deepinfra/fp8")` |
 | A lab's own API graded directly | `keccak256(utf8("direct:<host>"))` | `hostKeyForDirect("api.example.com")` |
 
@@ -51,11 +51,20 @@ Grades follow the host's identity and not its signing key, so rotating a key can
 4. Publish the evidence bundle where readers can fetch it by its sha256.
 5. Call `postGrade(grade)` for each endpoint. A first post costs about 196,000 gas.
 
+## Assay's own grades
+
+Verifier 10279 (`0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7`) grades on Monad mainnet. A job re-grades hosts 10278 and 10316 every Monday and Thursday and alerts if any grade is more than 5 days old, so a pass doesn't quietly turn into "unknown". Each run's evidence is in `docs/evidence/` in the repo, and its `provenance.json` names the grader's git commit, who ran it and their stance (`vouches` or `ran-grader`).
+
+| Model | Host | Reference |
+|---|---|---|
+| `gemma-4-31b-it` | `erc8004:143:10278` | `direct:generativelanguage.googleapis.com` |
+| `moonshotai/kimi-k2.6` | `erc8004:143:10316` and the Kimi K2.6 hosts on OpenRouter (`openrouter:<tag>`) | `openrouter:moonshotai/int4` |
+
 ## Steps for a reader
 
 1. Pick the verifier addresses you trust.
 2. Call `gradeOf(model, hostKey, trusted)`. The newest grade among them wins, and ties go to the verifier listed first.
-3. Pass the result to `gradeStatus`, with the reference endpoint's grade if you have it.
+3. Pass the result to `gradeStatus`, with the reference endpoint's grade if you have it. In an app, `chainGradeCheck` in the SDK does steps 2 and 3 and can gate `wrap()`.
 4. Download the evidence, check its sha256 against `evidence`, and recount if you want to.
 
 ## Revert reasons

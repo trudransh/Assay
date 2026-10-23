@@ -5,7 +5,7 @@ icon: magnifying-glass-chart
 
 # Envio
 
-**Where:** `indexer/` (Envio HyperIndex for `monad-testnet`). The entity reference is on [Indexer and GraphQL](../developers/indexer.md).
+**Where:** `indexer/` (Envio HyperIndex, one deployment for Monad mainnet and testnet since 5 Oct). Live GraphQL: `https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql`. The entity reference is on [Indexer and GraphQL](../developers/indexer.md).
 
 Envio is Assay's read layer. Every trust question an app asks, like which key signed this batch or whether a host is drifting, is answered from entities the handlers compute at index time.
 
@@ -31,7 +31,7 @@ Assay's data is spread across events in its own contracts and the ERC-8004 regis
 | 12 entities | Including `HostModelStats`, `DriftEvent`, `ModelLeaderboard`, `KeyRotation` and `HostActivity` |
 | Derived at index time | Drift, per-verifier leaderboards, daily activity, key history |
 | Agent cards | Fetched from `agentURI` through the Effect API, with timeouts and size limits |
-| Chain-prefixed ids | `10143-…`, so a second chain is a config change and not a migration |
+| Chain-prefixed ids | `143-…` and `10143-…`. Adding mainnet on 5 Oct was a config change, not a migration |
 | Handler tests | 22, on simulated events with no network |
 | Live | Envio Cloud dev plan, synced to the chain head: `https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql` |
 
@@ -48,7 +48,7 @@ It's deployed on Envio Cloud's free development plan from the `indexer/` folder 
 | Page | From the indexer |
 |---|---|
 | [Receipt page](https://assay-ten-xi.vercel.app/app/#r/0x9a166cacb2ffe4784ad556f69b690b7cebf71150f737a5a3c324f9e98e7907e5) | One query by batch root: batch size, block, transaction, **the key that signed this batch**, and every co-signature of the receipt. The contract only stores the current key, so after a rotation this card can't be built from the chain |
-| [Host profile](https://assay-ten-xi.vercel.app/app/#hosts/1962) | One query for the whole page: counts, 14 days of activity, batches with their signing keys, key history, identity and endpoints |
+| [Host profile](https://assay-ten-xi.vercel.app/app/#hosts/10278?chain=143) | One query for the whole page: counts, 14 days of activity, batches with their signing keys, key history, identity and endpoints |
 
 A new receipt goes from the request to an anchor on Monad in a few seconds, and to the indexer and these pages in under a minute.
 

@@ -5,7 +5,7 @@ icon: house
 
 # Welcome to Assay
 
-**Where:** the code is at [github.com/trudransh/Assay](https://github.com/trudransh/Assay). The contracts run on Monad testnet (chain 10143).
+**Where:** the code is at [github.com/trudransh/Assay](https://github.com/trudransh/Assay). The contracts run on Monad mainnet (chain 143), with a copy on testnet (chain 10143) for free experiments.
 
 Assay gives every AI response a signed receipt. The host signs it, you can co-sign it with a passkey, and Monad checks both signatures onchain. Open verifiers grade hosts against the lab's own endpoint, and you choose which verifiers you trust.
 
@@ -46,8 +46,16 @@ A receipt proves who served which bytes and what they claimed. It does not prove
 | Call the SDK, the host or the contracts | [For developers](developers/sdk.md) |
 | See what can go wrong and which test covers it | [Threat model](security/threat-model.md) |
 
-{% hint style="warning" %}
-Assay runs on Monad testnet. The contracts are verified and live, but testnet has been reset before (16 Dec 2025), so check the addresses on [Network and contracts](getting-started/network-and-contracts.md) before you rely on them.
-{% endhint %}
+## Live today
+
+| What | Where |
+|---|---|
+| Two hosts on Monad mainnet: Gemma 4 31B (agent 10278) and Kimi K2.6 (agent 10316), every response signed and anchored | [Network and contracts](getting-started/network-and-contracts.md) |
+| Grades from verifier 10279 against the lab's own endpoint. Both hosts are re-graded twice a week | [Verifiers and grades](how-it-works/verifiers-and-grades.md) |
+| The Kimi K2.6 hosts on OpenRouter graded against Moonshot's endpoint (20 Oct: 15 passed 32/32, one was rate-limited) | [grades_20261020T135810Z.json](https://github.com/trudransh/Assay/blob/dev/docs/evidence/grades_20261020T135810Z.json) |
+| The SDK on npm: `npm install assay-receipts` | [SDK reference](developers/sdk.md) |
+| The web app: ask, verify, grades | [assay-ten-xi.vercel.app/app](https://assay-ten-xi.vercel.app/app/) |
+
+What changed since the Metropolis submission and what comes next is on the [roadmap](resources/roadmap.md).
 
 Next: [Quickstart](getting-started/quickstart.md)
