@@ -62,4 +62,4 @@ icon: book-open
 `hostKey` and `keyHash` are different things. `keyHash` names a signing key. `hostKey` names who a grade is about, and for Assay hosts it does not change when the key does.
 {% endhint %}
 
-Next: [Roadmap after Metropolis](roadmap.md)
+Next: [Roadmap](roadmap.md)
