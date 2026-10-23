@@ -5,7 +5,7 @@ icon: code
 
 # SDK reference
 
-**Where:** `sdk/src/index.ts`, package `@assay/receipts` (ESM, TypeScript). Built on viem, jose, canonicalize and `@openzeppelin/merkle-tree`.
+**Install:** `npm install assay-receipts` (0.2.0 on npm). **Where:** `sdk/src/index.ts`, workspace package `@assay/receipts` (ESM, TypeScript). Built on viem, jose, canonicalize and `@openzeppelin/merkle-tree`.
 
 The SDK is the single source of truth for hashing, signing, Merkle trees and verification. The host, the web app and the contract test vectors all use it, so use it instead of re-implementing any formula.
 
@@ -351,7 +351,7 @@ With `gate`, the host's grade is checked before anything is sent. If the status 
 | `skip(init)` | Return `true` to send without checking. |
 | `failOpen` | Send anyway when the check throws, for example during an RPC outage. Default `false`. |
 
-When the host answers without a usable receipt (none, one that can't be read, or a hash that doesn't match), `wrap` throws `ReceiptError`. The request was sent by then and may be billed, so the error carries `response` with its body unread: you keep the answer and decide what to pay. The receipt arrives with the answer, so `wrap` can't know about it before sending. If you pay after delivery, don't settle a request that ended in `ReceiptError`. If your payment goes with the request, it may already be settled, and the gate is your only check.
+From 0.3.0 (on npm after 3 Nov; 0.2.0 throws a plain `Error` here): when the host answers without a usable receipt (none, one that can't be read, or a hash that doesn't match), `wrap` throws `ReceiptError`. The request was sent by then and may be billed, so the error carries `response` with its body unread: you keep the answer and decide what to pay. The receipt arrives with the answer, so `wrap` can't know about it before sending. If you pay after delivery, don't settle a request that ended in `ReceiptError`. If your payment goes with the request, it may already be settled, and the gate is your only check.
 
 ```typescript
 const ask = wrap(fetch, { cosigner });
@@ -407,6 +407,8 @@ const ask = wrap(fetch, {
 ```
 
 ### `feedStatuses(feed, model, now?)` and `toOpenRouterIgnore(feed, model, { now?, block? })`
+
+From 0.3.0 (on npm after 3 Nov).
 
 A grade feed is one JSON file with every graded host's newest onchain grade for each model, built by `harness/feed.py`. The feed carries the grade numbers and leaves the verdict to the reader: `feedStatuses` judges them with `gradeStatus` against the model's reference at the moment you call it, so an old copy of the feed can't show an expired grade as a pass. It returns a `Map` from host spec to status.
 

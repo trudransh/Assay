@@ -42,7 +42,7 @@ The summary reads "Done. No check failed." or "Done. At least one check failed."
 Anyone can try this in the browser, with no wallet and no terminal: https://assay-ten-xi.vercel.app/app/#ask
 
 1. Type a question, or click one of the examples, then click **Ask**. The app sends it with `wrap(fetch)`, which adds a fresh salt and checks the receipt that comes back.
-2. The answer shows with a gold "Signed by host 1962" chip. If the model wrapped its reasoning in `<thought>…</thought>`, the page hides it behind a toggle. It's still part of the signed output.
+2. The answer shows with a gold "Signed by host" chip naming the host's agent id (10278 on mainnet, 1962 on testnet). If the model wrapped its reasoning in `<thought>…</thought>`, the page hides it behind a toggle. It's still part of the signed output.
 3. "Where your receipt is" tracks the receipt live: signed by the host, waiting for the batch (with the time waited and how many receipts are in the host's queue), then anchored onchain with a link to the transaction. On the reference host this takes a few seconds.
 4. **Open receipt page** shows the receipt's own page. **Copy receipt link** copies a link that works anywhere. **Download bundle** saves `{ body, jws, salt, output, messages }`, plus the Merkle root and proof once anchored.
 
@@ -65,7 +65,7 @@ A receipt that isn't anchored yet shows "Waiting for batch" with **Check again**
 
 ## Host profile (`#hosts/<agentId>`)
 
-[Host 1962](https://assay-ten-xi.vercel.app/app/#hosts/1962) is the reference host. The whole page comes from one query to the Envio indexer:
+[Host 10278](https://assay-ten-xi.vercel.app/app/#hosts/10278?chain=143) is the mainnet reference host, and [host 10316](https://assay-ten-xi.vercel.app/app/#hosts/10316?chain=143) serves Kimi K2.6. The whole page comes from one query to the Envio indexer:
 
 - batches anchored, receipts anchored, co-signatures and signing keys
 - activity for the last 14 days, one group per UTC day
