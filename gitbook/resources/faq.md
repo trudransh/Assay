@@ -7,6 +7,14 @@ icon: circle-question
 
 **Where:** answers point to the page that covers each topic in full.
 
+## General
+
+**Is Assay on mainnet?**
+Yes. The contracts and two hosts have run on Monad mainnet since 5 Oct 2026. Testnet stays live for free experiments. See [Network and contracts](../getting-started/network-and-contracts.md).
+
+**How do I install the SDK?**
+`npm install assay-receipts`. See [SDK reference](../developers/sdk.md).
+
 ## Receipts
 
 **Does a receipt prove which model ran?**
