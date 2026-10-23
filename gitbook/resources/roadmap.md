@@ -28,7 +28,7 @@ This page separates what runs today from what is next. Items move up when they s
 | Grading runs on a schedule: both hosts are re-graded every Monday and Thursday, and an alert fires if any grade is more than 5 days old (grades expire after 7) | `harness/vm_grader.sh` |
 | Each evidence bundle carries a `provenance.json`: the grader's git commit, who ran it, and whether they vouch for the method or only ran the code | `harness/export_grade.py` |
 | SDK `assay-receipts` 0.2.0 on npm. `wrap()` can check a host's grade before sending, and `chainGradeCheck` reads it from the registry instead of asking the host | [SDK reference](../developers/sdk.md) |
-| Kimi K2.6 hosts on OpenRouter re-graded on 20 Oct: 15 passed 32/32, one was rate-limited and got no grade | `docs/evidence/grades_20261020T135810Z.json` |
+| Kimi K2.6 hosts on OpenRouter re-graded on 20 Oct: 15 passed 32/32, one was rate-limited and got no grade | [grades_20261020T135810Z.json](https://github.com/trudransh/Assay/blob/dev/docs/evidence/grades_20261020T135810Z.json) (on `dev` until 3 Nov) |
 | `max_tokens` test on every Kimi K2.6 host: the hosts that ignored the cap were sent their logs on 18 Oct, and the names and raw files are published on 25 Oct | [max_tokens evidence](https://github.com/trudransh/Assay/blob/main/docs/evidence/max-tokens-kimi-k2.6.md) |
 
 ## Built, going live after 3 Nov
@@ -38,7 +38,7 @@ These are merged on the `dev` branch and wait until Metropolis judging ends.
 | Item | What it changes |
 |---|---|
 | Host storage in SQLite | Indexed lookups, no log replayed on every restart |
-| Public grade feed (`harness/feed.py`) and SDK `feedStatuses` / `toOpenRouterIgnore` | A router or agent can skip hosts that fail, or whose grade expired, with one JSON file |
+| Public grade feed (`harness/feed.py` on `dev`) and SDK `feedStatuses` / `toOpenRouterIgnore` | A router or agent can skip hosts that fail, or whose grade expired, with one JSON file |
 | `ReceiptError` in SDK 0.3.0 | A response without a usable receipt still hands you the answer, so you decide what to pay |
 | Check suite v1 | Adds a `max_tokens` billing check and a stop-sequence check to the grade |
 | Receipts count thinking tokens | `tokensOut` includes reasoning that Google's API reports only in `total_tokens` |
