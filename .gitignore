@@ -25,3 +25,4 @@ examples/paid-job/job.json
 # Cloudflare Workers: local secrets and wrangler state
 .dev.vars*
 .wrangler/
+artifacts/
