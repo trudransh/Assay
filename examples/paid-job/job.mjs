@@ -17,7 +17,7 @@ const client = createPublicClient({ transport: http("https://rpc.monad.xyz") });
 // Refuse before paying unless the host is graded "pass" against Moonshot's own endpoint, read from the chain.
 const ask = wrap(fetch, {
   gate: {
-    check: chainGradeCheck(client, { registry: REGISTRY, model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [VERIFIER], reference: "openrouter:moonshotai/int4" }),
+    check: chainGradeCheck(client, { registry: REGISTRY, model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [VERIFIER], reference: "openrouter:moonshotai" }),
     allow: ["pass"],
   },
 });

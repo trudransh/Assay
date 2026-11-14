@@ -58,7 +58,7 @@ Verifier 10279 (`0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7`) grades on Monad ma
 | Model | Host | Reference |
 |---|---|---|
 | `gemma-4-31b-it` | `erc8004:143:10278` | `direct:generativelanguage.googleapis.com` |
-| `moonshotai/kimi-k2.6` | `erc8004:143:10316` and the Kimi K2.6 hosts on OpenRouter (`openrouter:<tag>`) | `openrouter:moonshotai/int4` |
+| `moonshotai/kimi-k2.6` | `erc8004:143:10316` and the Kimi K2.6 hosts on OpenRouter (`openrouter:<tag>`) | `openrouter:moonshotai` (`openrouter:moonshotai/int4` before 29 Oct) |
 
 ## Steps for a reader
 

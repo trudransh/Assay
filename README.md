@@ -122,7 +122,7 @@ const messages = [{ role: "user", content: "Say OK" }];
 // The grade is read from the chain (`client` is a viem public client for Monad), never from the host itself.
 const ask = wrap(fetch, {
   gate: {
-    check: chainGradeCheck(client, { registry: REGISTRY, model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [MY_VERIFIER], reference: "openrouter:moonshotai/int4" }),
+    check: chainGradeCheck(client, { registry: REGISTRY, model: "moonshotai/kimi-k2.6", host: "erc8004:143:10316", verifiers: [MY_VERIFIER], reference: "openrouter:moonshotai" }),
     allow: ["pass"],
   },
 });

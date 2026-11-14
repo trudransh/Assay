@@ -400,7 +400,7 @@ const ask = wrap(fetch, {
       model: "moonshotai/kimi-k2.6",
       host: "erc8004:143:10316",
       verifiers: ["0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"],
-      reference: "openrouter:moonshotai/int4",
+      reference: "openrouter:moonshotai",
     }),
   },
 });
