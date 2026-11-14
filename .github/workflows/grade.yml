@@ -56,7 +56,7 @@ jobs:
           if [ "$OUTCOME" = success ]; then
             title="Assay: ${{ matrix.host }} re-grade ready"
             body="$(tail -n +2 runs/$RUN/merged/summary_*.csv | cut -d, -f1,3,4 | tr , ' ')
-          gh run download ${{ github.run_id }} -n $RUN -D harness/regrade_out/tmp && mv harness/regrade_out/tmp/$RUN harness/regrade_out/ && bash harness/stage.sh harness/regrade_out/$RUN"
+          Download artifact $RUN from $URL, unzip it into harness/regrade_out/, then: bash harness/stage.sh harness/regrade_out/$RUN"
           else
             title="Assay: ${{ matrix.host }} re-grade FAILED"
             body="$(tail -n 5 runs/$RUN/*.log 2>/dev/null) $URL"
