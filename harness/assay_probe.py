@@ -167,6 +167,43 @@ def run_case(key, ep, case):
         good = False
     rec.update(ok=bool(good), reason="" if good else "wrong argument values", args=args); return rec
 
+# What a grade's passed/total counts. v1 adds two parameter checks to every repeat: a capped reply, which passes only
+# if the completion tokens the host reports (what the caller is billed for) stay within max_tokens, and a stop
+# sequence, which passes only if the answer ends before it.
+CHECKS = {"v0": "assay-checks/tool-calls-v0", "v1": "assay-checks/v1"}
+CAP, CAP_SLACK = 16, 2  # some tokenizers return 17 or 18 for a cap of 16
+
+def billed_out(u):
+    """Output tokens billed. Google's API counts thinking only in total_tokens, so take the larger reading."""
+    ct, tt, pt = u.get("completion_tokens"), u.get("total_tokens"), u.get("prompt_tokens")
+    if ct is None and tt is None:
+        return None
+    return max(ct or 0, (tt or 0) - (pt or 0))
+
+def run_cap(key, ep):
+    body = request_body(ep, "Write a 500-word essay about rivers.", max_tokens=CAP, temperature=0)
+    s, d = http("POST", f"{ep['base']}/chat/completions", body, key)
+    rec = {"case": "cap_16", "tag": ep["tag"], "http": s}
+    if s != 200 or not isinstance(d, dict) or "choices" not in d:
+        rec.update(ok=False, reason=f"http {s}: {str(d)[:200]}"); return rec
+    u = d.get("usage") or {}; ct = billed_out(u)
+    ok = ct is not None and ct <= CAP + CAP_SLACK
+    reason = "" if ok else "no usage reported" if ct is None else f"billed output tokens={ct} over max_tokens={CAP}"
+    rec.update(ok=ok, reason=reason, finish=d["choices"][0].get("finish_reason"), usage=u); return rec
+
+# Some models (Gemma on Google's API) put their thinking inside the answer text; a stop sequence only applies after it.
+THINKING = re.compile(r"<(thought|think)>.*?</\1>", re.S)
+
+def run_stop(key, ep):
+    body = request_body(ep, "Count from 1 to 20, separated by spaces. Output only the numbers.", stop=["7"], temperature=0, max_tokens=256)
+    s, d = http("POST", f"{ep['base']}/chat/completions", body, key)
+    rec = {"case": "stop_7", "tag": ep["tag"], "http": s}
+    if s != 200 or not isinstance(d, dict) or "choices" not in d:
+        rec.update(ok=False, reason=f"http {s}: {str(d)[:200]}"); return rec
+    answer = THINKING.sub("", (d["choices"][0].get("message") or {}).get("content") or "")
+    ok = "7" not in answer
+    rec.update(ok=ok, reason="" if ok else f"answer went past the stop sequence: {answer[:80]!r}", finish=d["choices"][0].get("finish_reason")); return rec
+
 def run_max_tokens(key, ep):
     tag = ep["tag"]
     body = request_body(ep, "Write a 500-word essay about rivers.", max_tokens=16, temperature=0)
@@ -193,6 +230,8 @@ def main(argv=None):
     ap.add_argument("--reference-base-url", help="the lab's own OpenAI-compatible API, used as the reference")
     ap.add_argument("--reference-model", help="model id at --reference-base-url (default --model)")
     ap.add_argument("--reference-api-key-env", help="env var holding the reference API key (none sent if unset)")
+    ap.add_argument("--checks", choices=sorted(CHECKS), default="v0",
+                    help="v0: tool calls only; v1: tool calls plus a capped reply per repeat, counted in the grade")
     a = ap.parse_args(argv)
     if a.reference and a.reference_base_url:
         ap.error("use --reference or --reference-base-url, not both")
@@ -214,7 +253,8 @@ def main(argv=None):
             ap.error(f"reference tag {ref_ep['tag']} collides with a graded endpoint; pass --tag")
         eps.append(ref_ep)
         a.reference = ref_ep["tag"]
-    n_req = a.repeats * len(CASES) + 1
+    v1 = a.checks == "v1"
+    n_req = a.repeats * (len(CASES) + 2 * v1) + (not v1)
     est_in, est_out = 700, 200  # rough tokens per request (tool schemas + prompt; short outputs)
     total = 0.0
     print(f"{a.model}: {len(eps)} endpoints, {n_req} requests each\n")
@@ -240,14 +280,22 @@ def main(argv=None):
         for _ in range(a.repeats):
             for c in CASES:
                 r = run_case(key, e, c); recs.append(r); raw.write(json.dumps(r) + "\n"); raw.flush()
-        r = run_max_tokens(key, e); recs.append(r); raw.write(json.dumps(r) + "\n")
+            if v1:
+                for r in (run_cap(key, e), run_stop(key, e)):
+                    recs.append(r); raw.write(json.dumps(r) + "\n"); raw.flush()
+        if not v1:  # v0's single cap trial is reported but not counted
+            r = run_max_tokens(key, e); recs.append(r); raw.write(json.dumps(r) + "\n")
         tool = [r for r in recs if r["case"] != "max_tokens_16" and r.get("http", 200) == 200]
         k = sum(r["ok"] for r in tool); n = len(tool); lo, hi = wilson(k, n)
         errors = sum(1 for r in recs if r.get("http") not in (None, 200))
-        summary.append({"tag": tag, "quantization": e.get("quantization") or "unknown", "tool_pass": k, "tool_n": n,
-                        "pass_rate": round(k/n, 3) if n else None, "ci_low": round(lo, 3), "ci_high": round(hi, 3),
-                        "max_tokens_ok": recs[-1]["ok"], "http_errors": errors})
-        print(f"{tag:28s} tool {k}/{n}  [{lo:.2f}, {hi:.2f}]  max_tokens_ok={recs[-1]['ok']}  errors={errors}")
+        cap_ok = all(r["ok"] for r in tool if r["case"] == "cap_16") if v1 else recs[-1]["ok"]
+        row = {"tag": tag, "quantization": e.get("quantization") or "unknown", "tool_pass": k, "tool_n": n,
+               "pass_rate": round(k/n, 3) if n else None, "ci_low": round(lo, 3), "ci_high": round(hi, 3),
+               "max_tokens_ok": cap_ok, "http_errors": errors}
+        if v1:  # v0 summaries keep their old columns
+            row["checks"] = CHECKS["v1"]
+        summary.append(row)
+        print(f"{tag:28s} checks {k}/{n}  [{lo:.2f}, {hi:.2f}]  max_tokens_ok={cap_ok}  errors={errors}")
     raw.close()
     ref = next((s for s in summary if a.reference and a.reference.lower() in s["tag"].lower()), None)
     for s in summary:

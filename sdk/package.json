@@ -25,5 +25,5 @@
   "exports": {
     ".": "./src/index.ts"
   },
-  "publishVersion": "0.2.0"
+  "publishVersion": "0.3.0"
 }

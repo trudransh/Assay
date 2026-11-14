@@ -33,6 +33,15 @@ export class GradeGateError extends Error {
   }
 }
 
+/// The host answered without a usable receipt: none, one that can't be read, or a hash that doesn't match.
+/// The request was already sent and may be billed. `response` is the reply with its body unread, so you can keep
+/// the answer and still refuse to settle a job you pay for after delivery.
+export class ReceiptError extends Error {
+  constructor(message: string, readonly response: Response) {
+    super(message);
+  }
+}
+
 /// A GradeGate check backed by an Assay host's GET /v1/grade. That host answers, so never point it at the host
 /// being graded: a dishonest one could just say "pass". chainGradeCheck reads the registry directly.
 export function hostGradeCheck(
@@ -116,11 +125,16 @@ export function wrap(fetchImpl: typeof fetch, opts: { cosigner?: Hex; gate?: Gra
 
     const response = await fetchImpl(input, { ...init, headers });
     const header = response.headers.get("X-Assay-Receipt");
-    if (!header) throw new Error(`no X-Assay-Receipt header in the response (HTTP ${response.status}); is this an Assay host?`);
-    const { body, jws } = JSON.parse(new TextDecoder().decode(base64url.decode(header))) as { body: ReceiptBody; jws: string };
-    const hash = receiptHash(body);
+    if (!header) throw new ReceiptError(`no X-Assay-Receipt header in the response (HTTP ${response.status}); is this an Assay host?`, response);
+    let body: ReceiptBody, jws: string, hash: Hex;
+    try {
+      ({ body, jws } = JSON.parse(new TextDecoder().decode(base64url.decode(header))) as { body: ReceiptBody; jws: string });
+      hash = receiptHash(body);
+    } catch (e) {
+      throw new ReceiptError(`X-Assay-Receipt can't be read: ${(e as Error).message}`, response);
+    }
     const claimed = response.headers.get("X-Assay-Receipt-Hash");
-    if (claimed !== null && claimed.toLowerCase() !== hash) throw new Error(`X-Assay-Receipt-Hash ${claimed} != sha256(JCS(body)) ${hash}`);
+    if (claimed !== null && claimed.toLowerCase() !== hash) throw new ReceiptError(`X-Assay-Receipt-Hash ${claimed} != sha256(JCS(body)) ${hash}`, response);
 
     const json = (await response.json()) as { choices?: { message?: unknown }[] };
     const text = assistantOutput(json.choices?.[0]?.message);

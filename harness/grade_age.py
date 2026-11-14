@@ -22,10 +22,26 @@ def calldata(model, host, verifier):
     return "0x" + keccak_hex("gradeOf(bytes32,bytes32,address[])")[2:10] + "".join(words)
 
 
+FIELDS = ("model", "hostKey", "checks", "passed", "total", "ciLowBps", "ciHighBps", "refModel", "evidence", "t", "verifier")
+HASHES = {"model", "hostKey", "checks", "refModel", "evidence"}
+
+
 def decode(result):
-    """(passed, total, t) from the returned (Grade, address); t is 0 when no trusted verifier graded the host."""
-    w = [int(result[2 + 64 * i: 66 + 64 * i], 16) for i in range(11)]
-    return w[3], w[4], w[9]
+    """The returned (Grade, address) as a dict; t is 0 when no trusted verifier graded the host."""
+    w = [result[2 + 64 * i: 66 + 64 * i] for i in range(11)]
+    out = {f: "0x" + v if f in HASHES else int(v, 16) for f, v in zip(FIELDS, w)}
+    out["verifier"] = "0x" + w[10][24:]
+    return out
+
+
+def grade_of(model, host, rpc=RPC, verifier=VERIFIER):
+    """Newest grade from `verifier` for (model, host), or None when there is none. Raises if the RPC fails."""
+    s, d = http("POST", rpc, {"jsonrpc": "2.0", "id": 1, "method": "eth_call",
+                              "params": [{"to": REGISTRY, "data": calldata(model, host, verifier)}, "latest"]})
+    if s != 200 or not isinstance(d, dict) or "result" not in d:
+        raise RuntimeError(f"RPC failed ({s}): {str(d)[:120]}")
+    g = decode(d["result"])
+    return g if g["t"] else None
 
 
 def main(argv=None):
@@ -35,13 +51,13 @@ def main(argv=None):
     a = p.parse_args(argv)
     ok = True
     for name, (model, host) in HOSTS.items():
-        s, d = http("POST", a.rpc_url, {"jsonrpc": "2.0", "id": 1, "method": "eth_call",
-                                        "params": [{"to": REGISTRY, "data": calldata(model, host, VERIFIER)}, "latest"]})
-        if s != 200 or not isinstance(d, dict) or "result" not in d:
-            print(f"{name}: RPC failed ({s}): {str(d)[:120]}"); ok = False; continue
-        passed, total, t = decode(d["result"])
-        if not t:
+        try:
+            g = grade_of(model, host, a.rpc_url)
+        except RuntimeError as e:
+            print(f"{name}: {e}"); ok = False; continue
+        if not g:
             print(f"{name}: no grade onchain"); ok = False; continue
+        passed, total, t = g["passed"], g["total"], g["t"]
         age = (time.time() - t) / 86400
         ok &= age <= a.max_days
         print(f"{name}: {passed}/{total}, {age:.1f} days old (run {time.strftime('%d %b %H:%M UTC', time.gmtime(t))}, expires after 7)")

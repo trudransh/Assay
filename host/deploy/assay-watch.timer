@@ -1,0 +1,8 @@
+[Unit]
+Description=Run the Assay watch every 15 minutes
+
+[Timer]
+OnCalendar=*:0/15
+
+[Install]
+WantedBy=timers.target

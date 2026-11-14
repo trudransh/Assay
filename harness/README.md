@@ -10,8 +10,10 @@ The Python scripts use only the standard library. A few small shell scripts wrap
 | `regrade.sh` | Re-grades one of our hosts (`gemma` or `kimi`) end to end: both probes, merge, export with provenance, post commands written, evidence staged (`STAGE=0` skips that). |
 | `stage.sh` | Copies a run's evidence bundle to where CRE fetches it and to `docs/evidence`. Never overwrites a published bundle with different bytes. |
 | `post.sh` | Runs those post commands with the verifier keystore, asking for its password once. |
+| `feed.py` | Builds the public grade feed: every host in the published grade files with its newest onchain grade, as numbers. Readers judge them with the SDK's `feedStatuses`. |
 | `grade_age.py` | Reads our hosts' newest grades from `VerifierRegistry` and exits 1 if one is missing or more than 5 days old. |
-| `vm_grader.sh` | The VM's daily job (`host/deploy/assay-grader.timer`): re-grades both hosts on Mondays and Thursdays, checks grade age every day, and sends each result to an ntfy topic. Posting stays manual. |
+| `watch.py` | Checks our three hosts, the indexer, and the relayer and verifier balances, and alerts the ntfy topic. It doesn't repeat an alert within 3 hours. `.github/workflows/watch.yml` runs it every 15 minutes from outside the VM once it's on main; until then the VM's `assay-watch.timer` does. |
+| `vm_grader.sh` | The VM's daily job (`host/deploy/assay-grader.timer`): re-grades both hosts on Mondays and Thursdays, checks grade age every day, and sends each result to an ntfy topic, while posting the grades stays manual. |
 
 ## Grade a host from your own key
 
@@ -59,6 +61,7 @@ Any OpenAI-compatible API can be graded or used as the reference. Direct endpoin
 | `--reference-base-url URL` | Use this endpoint, usually the lab's own API, as the reference. Replaces `--reference`. |
 | `--reference-model ID` | Model id at the reference URL. Default `--model`. |
 | `--reference-api-key-env NAME` | Env var with the reference API key. No key is sent if unset. |
+| `--checks v0\|v1` | `v0` (default) grades tool calls only. `v1` adds two checks to every repeat. A capped reply (`max_tokens` 16, an essay prompt) passes only if the billed output tokens stay at 18 or under. That's the larger of `completion_tokens` and `total_tokens` minus `prompt_tokens`, because Google's API counts thinking only in the total. A stop sequence (`stop: ["7"]` while counting to 20) passes only if the answer, with any `<think>` or `<thought>` block removed, ends before it. All of them count in passed/total, and the grade's `checks` field names the suite. |
 
 Each endpoint receives its own key and never the key of another endpoint.
 

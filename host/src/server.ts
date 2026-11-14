@@ -80,6 +80,10 @@ export interface AppDeps {
 const fail = (c: Context, status: ContentfulStatusCode, message: string) => c.json({ error: { message } }, status);
 const isObj = (v: unknown): v is Record<string, any> => typeof v === "object" && v !== null && !Array.isArray(v);
 const count = (v: unknown) => (Number.isSafeInteger(v) && (v as number) >= 0 ? (v as number) : 0);
+/// Output tokens the caller is billed for. Google's OpenAI-compatible API leaves thinking out of completion_tokens
+/// but counts it in total_tokens, so the larger of the two readings is the honest one.
+const billedOut = (u: { prompt_tokens?: unknown; completion_tokens?: unknown; total_tokens?: unknown } | undefined) =>
+  Math.max(count(u?.completion_tokens), count(u?.total_tokens) - count(u?.prompt_tokens));
 const publicPart = ({ kty, crv, x, y, kid }: JWK): JWK => ({ kty, crv, x, y, kid, alg: "ES256", use: "sig" });
 
 /// Used when a request sets neither max_tokens nor max_completion_tokens.
@@ -169,7 +173,7 @@ export function createApp(d: AppDeps): Hono {
       res: {
         commit: commitResponse(salt, text),
         tokensIn: count(out.usage?.prompt_tokens),
-        tokensOut: count(out.usage?.completion_tokens),
+        tokensOut: billedOut(out.usage),
         finish: typeof choice.finish_reason === "string" ? choice.finish_reason : "unknown",
       },
     });

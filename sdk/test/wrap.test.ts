@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import { commitRequest, commitResponse } from "../src/commit.js";
 import { createHostSigner } from "../src/hostSigner.js";
 import { buildReceipt, receiptHash } from "../src/receipt.js";
-import { wrap } from "../src/wrap.js";
+import { ReceiptError, wrap } from "../src/wrap.js";
 
 const COSIGNER = ("0x" + "cd".repeat(32)) as Hex;
 const URL_ = "http://localhost:8787/v1/chat/completions";
@@ -79,14 +79,24 @@ describe("wrap", () => {
     expect((await wrap(fetchImpl)(URL_, post())).outputCommitOk).toBe(false);
   });
 
-  it("throws a clear error when the receipt header is missing", async () => {
+  it("throws a ReceiptError carrying the unread reply when the receipt header is missing", async () => {
     const { fetchImpl } = await fakeHost({ noReceipt: true });
-    await expect(wrap(fetchImpl)(URL_, post())).rejects.toThrow(/no X-Assay-Receipt header .*HTTP 200/);
+    const err = await wrap(fetchImpl)(URL_, post()).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(ReceiptError);
+    expect((err as ReceiptError).message).toMatch(/no X-Assay-Receipt header .*HTTP 200/);
+    // The answer was paid for: it's still there to keep.
+    expect(((await (err as ReceiptError).response.json()) as any).choices[0].message.content).toBe("OK");
   });
 
-  it("throws when X-Assay-Receipt-Hash doesn't match the body", async () => {
+  it("throws a ReceiptError when X-Assay-Receipt-Hash doesn't match the body", async () => {
     const { fetchImpl } = await fakeHost({ hashHeader: () => "0x" + "00".repeat(32) });
+    await expect(wrap(fetchImpl)(URL_, post())).rejects.toThrow(ReceiptError);
     await expect(wrap(fetchImpl)(URL_, post())).rejects.toThrow(/X-Assay-Receipt-Hash/);
+  });
+
+  it("throws a ReceiptError when the receipt header isn't readable", async () => {
+    const fetchImpl = (async () => new Response("{}", { headers: { "X-Assay-Receipt": "not-base64url-json" } })) as typeof fetch;
+    await expect(wrap(fetchImpl)(URL_, post())).rejects.toThrow(/X-Assay-Receipt can't be read/);
   });
 
   it("rejects a malformed cosigner up front", () => {

@@ -24,7 +24,7 @@ This page shows how the parts of Assay fit together and what happens to one requ
 3. The host forwards the request to OpenRouter. When `UPSTREAM_PROVIDER` is set it pins that provider with `allow_fallbacks: false`.
 4. If OpenRouter reports a different provider, or returns no assistant text, the host answers 502 and signs nothing.
 5. The host computes `req.commit = sha256(salt ‖ JCS({messages, params}))` and `res.commit = sha256(salt ‖ output)` from the bytes it actually received and returned.
-6. It builds the receipt body, signs `JCS(body)` as an ES256 JWS, and appends the receipt to `data/receipts.jsonl`.
+6. It builds the receipt body, signs `JCS(body)` as an ES256 JWS, and stores the receipt in `data/assay.db` (SQLite).
 7. It returns the upstream JSON with two headers. `X-Assay-Receipt` is base64url of `{body, jws}`, and `X-Assay-Receipt-Hash` is `sha256(JCS(body))`.
 8. `wrap` parses the receipt, checks the hash header against the body and checks `res.commit` against the text it received. It returns the receipt and the salt, and the app keeps both.
 9. Later, the batcher anchors the receipt (next section). `GET /v1/receipts/:hash` then returns the Merkle proof, the root, the anchor transaction and a ready `cast call` line.

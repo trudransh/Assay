@@ -1,0 +1,13 @@
+[Unit]
+Description=Assay watch: hosts, indexer and gas balances, alerts via ntfy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=assay
+WorkingDirectory=/opt/assay-grader
+# NTFY_TOPIC (and the grader's keys, unused here), written by push-secrets.sh grader
+EnvironmentFile=/etc/assay/grader.env
+ExecStart=/usr/bin/python3 harness/watch.py
+TimeoutStartSec=5min

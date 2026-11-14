@@ -4,6 +4,7 @@
 # Probes the reference and the host in parallel, merges the two runs, exports grades with provenance
 # (operator = our verifier agent, stance "vouches"), writes the post commands and stages the bundle (stage.sh;
 # STAGE=0 skips that, as on the VM). It never touches a key: run `bash harness/post.sh <post_cmds.txt>` yourself.
+# CHECKS=v1 grades with the v1 suite (tool calls plus a capped reply per repeat); the default is v0.
 # Re-running the same day skips probes that already finished. The host probe sends GRADER_TOKEN from .env, which
 # lets it past the host's chat limits (Kimi's allows 10 an hour); push-secrets.sh puts the same token on the VM.
 set -euo pipefail
@@ -29,7 +30,7 @@ if [ -f .env ]; then set -a; . ./.env; set +a; fi
 probe() { # <dir> <assay_probe args...>; skipped when the dir already holds a finished run
   local dir=$1; shift
   compgen -G "$dir/summary_*.csv" >/dev/null && return 0
-  python3 -u harness/assay_probe.py --model "$MODEL" --repeats "$REPEATS" --out "$dir" "$@" > "$dir.log" 2>&1
+  python3 -u harness/assay_probe.py --model "$MODEL" --repeats "$REPEATS" --checks "${CHECKS:-v0}" --out "$dir" "$@" > "$dir.log" 2>&1
 }
 probe "$OUT/ref" "${REF_ARGS[@]}" & REF_PID=$!
 probe "$OUT/host" --base-url "$HOST_URL" --tag "$TAG" --api-key-env GRADER_TOKEN & HOST_PID=$!

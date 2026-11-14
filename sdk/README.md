@@ -40,6 +40,8 @@ const { json, receipt, salt } = await ask(`${HOST}/v1/chat/completions`, {
 
 `chainGradeCheck` reads `VerifierRegistry.gradeOf` for the host and the reference and keeps the answer for 5 minutes (`cacheMs`). If the read fails, nothing is sent. Set `failOpen: true` on the gate to send anyway when the chain can't be read; a grade that reads "unknown" or "fail" still blocks. `hostGradeCheck` asks a host's `GET /v1/grade` instead, so only point it at a host you trust to answer, never at the host being graded.
 
+The receipt arrives with the answer, so a missing one can only be found after the host has replied. `wrap` then throws `ReceiptError`, and its `response` still holds the reply with the body unread. If you pay after delivery, as in `examples/paid-job`, don't settle a request that ended in `ReceiptError`. If your payment goes with the request, it may already be settled, and the gate is your only check.
+
 ## Verify a receipt
 
 ```ts
@@ -96,6 +98,7 @@ A host can rotate its key. Onchain checks follow the rotation; pinned offline ke
 | `waitForAnchor(host, hash)` | Waits until a receipt is anchored and returns its proof and root, or throws `AnchorTimeoutError` saying when the host's next batch is |
 | `checkRecord(record, pins)` | Checks the receipt carried with a piece of context (for example a Mida record) before an agent uses it. Fails closed |
 | `gradeOf`, `gradeStatus` | Read a host's grade from VerifierRegistry for the verifiers you trust, and turn it into pass, warn, fail or unknown |
+| `feedStatuses(feed, model)`, `toOpenRouterIgnore(feed, model)` | Judge a grade feed (one JSON file with every graded host's newest onchain grade, built by `harness/feed.py`) at the moment you read it, and list the OpenRouter providers to put in `provider: { ignore }`. By default only failing providers are listed |
 | `hostKeyForAgent`, `hostKeyForEndpoint`, `hostKeyForDirect` | The host keys grades are stored under: an ERC-8004 identity, an OpenRouter endpoint or a lab's own API |
 | `registerPasskey`, `cosignReceipt` | Co-sign a receipt with a passkey (WebAuthn, checked onchain by Monad's P256 precompile) |
 | `sponsoredCallTypedData`, `assayAccountAbi` | Sign a call for an EIP-7702 per-app account, so a relayer can pay its gas |

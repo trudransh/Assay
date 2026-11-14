@@ -72,6 +72,32 @@ class RequestBuilding(unittest.TestCase):
         self.assertEqual(body["model"], "gemma-4-31b-it")
         self.assertNotIn("provider", body)
 
+    def test_cap_check_passes_only_within_max_tokens(self):
+        ep = ap.direct_ep("https://h/v1", "m", None)
+        reply = lambda ct: (200, {"choices": [{"finish_reason": "length"}], "usage": {} if ct is None else {"completion_tokens": ct}})
+        for ct, ok, why in [(16, True, ""), (18, True, ""), (2057, False, "billed output tokens=2057 over max_tokens=16"), (None, False, "no usage reported")]:
+            with mock.patch.object(ap, "http", return_value=reply(ct)):
+                r = ap.run_cap(None, ep)
+            self.assertEqual((r["case"], r["ok"], r["reason"]), ("cap_16", ok, why))
+        with mock.patch.object(ap, "http", return_value=(503, {"error": "busy"})):
+            self.assertEqual((ap.run_cap(None, ep)["ok"], ap.run_cap(None, ep)["http"]), (False, 503))
+
+    def test_billed_output_counts_thinking_reported_only_in_the_total(self):
+        self.assertEqual(ap.billed_out({"prompt_tokens": 13, "completion_tokens": 0, "total_tokens": 26}), 13)
+        self.assertEqual(ap.billed_out({"prompt_tokens": 13, "completion_tokens": 2057, "total_tokens": 2070}), 2057)
+        self.assertIsNone(ap.billed_out({}))
+
+    def test_stop_check_reads_the_answer_after_any_thinking(self):
+        ep = ap.direct_ep("https://h/v1", "m", None)
+        reply = lambda text: (200, {"choices": [{"message": {"content": text}, "finish_reason": "stop"}]})
+        for text, ok in [("1 2 3 4 5 6 ", True), ("<thought>1 2 3 4 5 6 7 8</thought>1 2 3 4 5 6 ", True),
+                         ("<think>7</think>", True), ("1 2 3 4 5 6 7 8 9", False), (None, True)]:
+            with mock.patch.object(ap, "http", return_value=reply(text)):
+                r = ap.run_stop(None, ep)
+            self.assertEqual((r["case"], r["ok"]), ("stop_7", ok), text)
+        with mock.patch.object(ap, "http", return_value=(500, {"error": "x"})):
+            self.assertFalse(ap.run_stop(None, ep)["ok"])
+
     def test_no_key_sends_no_authorization(self):
         seen = []
         def fake(req, timeout):

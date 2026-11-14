@@ -1,0 +1,19 @@
+name: watch
+# Uptime and gas checks from outside the VM (harness/watch.py). Alerts go to the ntfy topic in the NTFY_TOPIC secret;
+# without it, a problem still fails the run, which GitHub reports by email.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+jobs:
+  watch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python3 harness/watch.py
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
