@@ -5,7 +5,7 @@ icon: database
 
 # Indexer and GraphQL
 
-**Where:** `indexer/` (Envio HyperIndex, its own install, outside the pnpm workspace). `schema.graphql` defines the entities and `src/` holds the handlers. Live endpoint (public, read-only): `https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql`. Locally the API is at `http://localhost:8080`.
+**Where:** `indexer/` (Envio HyperIndex, its own install, outside the pnpm workspace). `schema.graphql` defines the entities and `src/` holds the handlers. Live endpoint (public, read-only): `https://indexer.dev.hyperindex.xyz/51b6a26/v1/graphql`. Locally the API is at `http://localhost:8080`.
 
 The indexer joins Assay's contracts with the ERC-8004 identity registry and the CRE attestor. Handlers compute drift, leaderboards, activity and key history at index time, so GraphQL only reads.
 

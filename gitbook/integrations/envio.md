@@ -5,7 +5,7 @@ icon: magnifying-glass-chart
 
 # Envio
 
-**Where:** `indexer/` (Envio HyperIndex, one deployment for Monad mainnet and testnet since 5 Oct). Live GraphQL: `https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql`. The entity reference is on [Indexer and GraphQL](../developers/indexer.md).
+**Where:** `indexer/` (Envio HyperIndex, one deployment for Monad mainnet and testnet since 5 Oct). Live GraphQL: `https://indexer.dev.hyperindex.xyz/51b6a26/v1/graphql`. The entity reference is on [Indexer and GraphQL](../developers/indexer.md).
 
 Envio is Assay's read layer. Every trust question an app asks, like which key signed this batch or whether a host is drifting, is answered from entities the handlers compute at index time.
 
@@ -33,7 +33,7 @@ Assay's data is spread across events in its own contracts and the ERC-8004 regis
 | Agent cards | Fetched from `agentURI` through the Effect API, with timeouts and size limits |
 | Chain-prefixed ids | `143-…` and `10143-…`. Adding mainnet on 5 Oct was a config change, not a migration |
 | Handler tests | 22, on simulated events with no network |
-| Live | Envio Cloud dev plan, synced to the chain head: `https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql` |
+| Live | Envio Cloud dev plan, synced to the chain head: `https://indexer.dev.hyperindex.xyz/51b6a26/v1/graphql` |
 
 ## How to try it
 
