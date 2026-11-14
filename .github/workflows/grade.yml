@@ -1,0 +1,80 @@
+name: grade
+# Re-grades our two mainnet hosts against the lab's own endpoint every Monday and Thursday (harness/regrade.sh), and
+# checks every day that no onchain grade is more than 5 days old (harness/grade_age.py). Results go to the ntfy topic.
+# Posting stays with the owner, whose verifier key never leaves their machine: the alert says what to download and run.
+# Secrets: GEMINI_API_KEY, OPENROUTER_API_KEY, GRADER_TOKEN, NTFY_TOPIC.
+on:
+  schedule:
+    - cron: "30 0 * * 1,4" # re-grade
+    - cron: "30 1 * * *" # grade age
+  workflow_dispatch:
+    inputs:
+      host:
+        description: "Host to re-grade now"
+        type: choice
+        options: [both, gemma, kimi]
+        default: both
+jobs:
+  regrade:
+    if: github.event_name == 'workflow_dispatch' || github.event.schedule == '30 0 * * 1,4'
+    runs-on: ubuntu-latest
+    # Google's endpoint has taken hours for one Gemma run; 6 hours is GitHub's limit.
+    timeout-minutes: 350
+    strategy:
+      fail-fast: false
+      matrix:
+        host: [gemma, kimi]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - id: run
+        if: github.event_name != 'workflow_dispatch' || inputs.host == 'both' || inputs.host == matrix.host
+        run: |
+          RUN=${{ matrix.host }}-$(date -u +%Y%m%d)
+          echo "name=$RUN" >> "$GITHUB_OUTPUT"
+          STAGE=0 OUT=runs/$RUN bash harness/regrade.sh ${{ matrix.host }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GRADER_TOKEN: ${{ secrets.GRADER_TOKEN }}
+      - if: always() && steps.run.outcome != 'skipped'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.run.outputs.name }}
+          path: runs/
+          retention-days: 30
+      - if: always() && steps.run.outcome != 'skipped'
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}
+          RUN: ${{ steps.run.outputs.name }}
+          OUTCOME: ${{ steps.run.outcome }}
+          URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          [ -n "$NTFY_TOPIC" ] || exit 0
+          if [ "$OUTCOME" = success ]; then
+            title="Assay: ${{ matrix.host }} re-grade ready"
+            body="$(tail -n +2 runs/$RUN/merged/summary_*.csv | cut -d, -f1,3,4 | tr , ' ')
+          gh run download ${{ github.run_id }} -n $RUN -D harness/regrade_out/tmp && mv harness/regrade_out/tmp/$RUN harness/regrade_out/ && bash harness/stage.sh harness/regrade_out/$RUN"
+          else
+            title="Assay: ${{ matrix.host }} re-grade FAILED"
+            body="$(tail -n 5 runs/$RUN/*.log 2>/dev/null) $URL"
+          fi
+          curl -fsS -m 20 -H "Title: $title" -d "$body" "https://ntfy.sh/$NTFY_TOPIC" >/dev/null
+  age:
+    if: github.event.schedule == '30 1 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: |
+          python3 harness/grade_age.py > age.txt 2>&1 && exit 0
+          cat age.txt
+          [ -z "$NTFY_TOPIC" ] || curl -fsS -m 20 -H "Title: Assay: grade over 5 days old" -d "$(cat age.txt)" "https://ntfy.sh/$NTFY_TOPIC" >/dev/null
+          exit 1
+        env:
+          NTFY_TOPIC: ${{ secrets.NTFY_TOPIC }}

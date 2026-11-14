@@ -1,44 +1,25 @@
 #!/usr/bin/env bash
-# Run from the repo root on your machine: host/deploy/push-secrets.sh <user@vm> <domain> [testnet|mainnet|kimi|grader]
+# For running the Node host on your own VM (Assay's hosts run on Cloudflare Workers, see host/wrangler.jsonc).
+# Run from the repo root on your machine: host/deploy/push-secrets.sh <user@vm> <domain> [testnet|mainnet|kimi]
 # Writes /etc/assay/host-<instance>.env on the VM and restarts assay-host@<instance>. Prints no values.
 # The per-network settings follow the host's rule: NAME_<NETWORK> first, and plain NAME only for testnet.
 # `kimi` is a second mainnet host: its own agent (HOST_AGENT_ID_KIMI), key (host/.keys/kimi.jwk.json) and port,
 # serving Kimi K2.6 through OpenRouter pinned to Moonshot's own endpoint, with tight caps because it's paid.
-# `grader` writes /etc/assay/grader.env and turns on the daily grading job (assay-grader.timer).
 set -euo pipefail
-TARGET=${1:?usage: push-secrets.sh <user@vm> <domain> [testnet|mainnet|kimi|grader]}
-DOMAIN=${2:?usage: push-secrets.sh <user@vm> <domain> [testnet|mainnet|kimi|grader]}
+TARGET=${1:?usage: push-secrets.sh <user@vm> <domain> [testnet|mainnet|kimi]}
+DOMAIN=${2:?usage: push-secrets.sh <user@vm> <domain> [testnet|mainnet|kimi]}
 INST=${3:-testnet}
 case "$INST" in
   testnet) NET=testnet; PORT=8787; DATA=data; URL="https://$DOMAIN"; JWK=host.jwk.json ;;
   mainnet) NET=mainnet; PORT=8788; DATA=data-mainnet; URL="https://$DOMAIN/mainnet"; JWK=host.jwk.json ;;
   kimi) NET=mainnet; PORT=8789; DATA=data-kimi; URL="https://$DOMAIN/kimi"; JWK=kimi.jwk.json ;;
-  grader) NET=mainnet; GRADER_BRANCH=${GRADER_BRANCH:-dev} ;;  # main is frozen for judging until 3 Nov
-  *) echo "instance must be testnet, mainnet, kimi or grader"; exit 1 ;;
+  *) echo "instance must be testnet, mainnet or kimi"; exit 1 ;;
 esac
 SUFFIX="_${NET^^}"
 # A missing key is empty, not an error: with pipefail a failed grep would stop the script silently.
 val() { { grep "^$1=" .env || true; } | tail -1 | cut -d= -f2-; }
 trap 'echo "push-secrets: failed at line $LINENO" >&2' ERR
 net() { local v; v=$(val "$1$SUFFIX"); [ -z "$v" ] && [ "$NET" = testnet ] && v=$(val "$1"); echo "$v"; }
-
-if [ "$INST" = grader ]; then
-  ENV_FILE=$(mktemp); trap 'rm -f "$ENV_FILE"' EXIT; chmod 600 "$ENV_FILE"
-  for k in GEMINI_API_KEY OPENROUTER_API_KEY GRADER_TOKEN NTFY_TOPIC; do
-    if [ -z "$(val $k)" ]; then echo "push-secrets: set $k in .env first" >&2; exit 1; fi
-    echo "$k=$(val $k)"
-  done > "$ENV_FILE"
-  scp -q "$ENV_FILE" "$TARGET:/tmp/grader.env"
-  scp -q host/deploy/assay-grader.{service,timer} host/deploy/assay-watch.{service,timer} "$TARGET:/tmp/"
-  # The grading job and the watch run from their own checkout of $GRADER_BRANCH, never the hosts' /opt/assay.
-  ssh "$TARGET" "sudo install -m 640 -g assay /tmp/grader.env /etc/assay/grader.env && rm -f /tmp/grader.env &&
-    { [ -d /opt/assay-grader ] || { sudo git clone -q -b $GRADER_BRANCH https://github.com/trudransh/Assay.git /opt/assay-grader && sudo chown -R assay:assay /opt/assay-grader; }; } &&
-    cd /tmp && sudo install -m 644 assay-grader.service assay-grader.timer assay-watch.service assay-watch.timer /etc/systemd/system/ &&
-    rm -f /tmp/assay-grader.service /tmp/assay-grader.timer /tmp/assay-watch.service /tmp/assay-watch.timer &&
-    sudo systemctl daemon-reload && sudo systemctl enable -q --now assay-grader.timer assay-watch.timer &&
-    systemctl list-timers 'assay-*' --no-pager | head -3"
-  exit 0
-fi
 
 ENV_FILE=$(mktemp)
 trap 'rm -f "$ENV_FILE"' EXIT

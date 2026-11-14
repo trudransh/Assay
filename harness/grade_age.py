@@ -2,7 +2,7 @@
 
   python3 harness/grade_age.py                 (Monad mainnet, our verifier, both hosts)
 
-Grades stop counting 7 days after their run, so the VM job (harness/vm_grader.sh) alerts at 5.
+Grades stop counting 7 days after their run, so the daily check in .github/workflows/grade.yml alerts at 5.
 Stdlib only: one eth_call per host to VerifierRegistry.gradeOf.
 """
 import argparse, sys, time

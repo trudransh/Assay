@@ -12,8 +12,8 @@ The Python scripts use only the standard library. A few small shell scripts wrap
 | `post.sh` | Runs those post commands with the verifier keystore, asking for its password once. |
 | `feed.py` | Builds the public grade feed: every host in the published grade files with its newest onchain grade, as numbers. Readers judge them with the SDK's `feedStatuses`. |
 | `grade_age.py` | Reads our hosts' newest grades from `VerifierRegistry` and exits 1 if one is missing or more than 5 days old. |
-| `watch.py` | Checks our three hosts, the indexer, and the relayer and verifier balances, and alerts the ntfy topic. It doesn't repeat an alert within 3 hours. `.github/workflows/watch.yml` runs it every 15 minutes from outside the VM once it's on main; until then the VM's `assay-watch.timer` does. |
-| `vm_grader.sh` | The VM's daily job (`host/deploy/assay-grader.timer`): re-grades both hosts on Mondays and Thursdays, checks grade age every day, and sends each result to an ntfy topic, while posting the grades stays manual. |
+| `watch.py` | Checks our three hosts, the indexer, and the relayer and verifier balances, and alerts the ntfy topic. It doesn't repeat an alert within 3 hours. `.github/workflows/watch.yml` runs it every 15 minutes. |
+| `.github/workflows/grade.yml` | Re-grades both hosts on Mondays and Thursdays with `regrade.sh`, checks grade age every day, and sends each result to the ntfy topic. Each run is an artifact; posting the grades stays manual. |
 
 ## Grade a host from your own key
 
@@ -23,7 +23,7 @@ Anyone can post grades, and readers choose which verifiers to trust. This grades
 git clone https://github.com/trudransh/Assay && cd Assay
 python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai --repeats 8 --out og --dry-run   # prints the cost
 python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai --repeats 8 --out og
-python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --base-url https://34-45-1-81.sslip.io/kimi/v1 --tag assay-kimi-10316 --repeats 8 --out og_host   # the host bills us, not you
+python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --base-url https://assay-host.assay-host.workers.dev/kimi/v1 --tag assay-kimi-10316 --repeats 8 --out og_host   # the host bills us, not you
 # one run with both endpoints: append the host run to the Moonshot run
 S=$(ls og/summary_*.csv | sed 's/.*summary_//;s/.csv//'); cat og_host/raw_*.jsonl >> og/raw_$S.jsonl; tail -n +2 og_host/summary_*.csv >> og/summary_$S.csv
 python3 harness/export_grade.py --out og --model moonshotai/kimi-k2.6 --reference moonshotai --assay-agent 143:10316 --assay-tag assay-kimi-10316 --operator erc8004:143:<your agentId>
