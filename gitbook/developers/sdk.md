@@ -410,12 +410,12 @@ const ask = wrap(fetch, {
 
 From 0.3.0.
 
-A grade feed is one JSON file with every graded host's newest onchain grade for each model, built by `harness/feed.py`. The feed carries the grade numbers and leaves the verdict to the reader: `feedStatuses` judges them with `gradeStatus` against the model's reference at the moment you call it, so an old copy of the feed can't show an expired grade as a pass. It returns a `Map` from host spec to status.
+A grade feed is one JSON file with every graded host's newest onchain grade for each model, built by `harness/feed.py`. Assay's own is at `https://trudransh.github.io/Assay/feed.json`, rebuilt every hour. The feed carries the grade numbers and leaves the verdict to the reader: `feedStatuses` judges them with `gradeStatus` against the model's reference at the moment you call it, so an old copy of the feed can't show an expired grade as a pass. It returns a `Map` from host spec to status.
 
 `toOpenRouterIgnore` turns that into OpenRouter provider tags for `provider: { ignore }`. By default it lists only failing providers; pass `block: ["fail", "unknown"]` to also skip providers whose grade has expired. Hosts that nobody has graded don't appear in the feed at all.
 
 ```typescript
-const feed = await fetch(FEED_URL).then((r) => r.json());
+const feed = await fetch("https://trudransh.github.io/Assay/feed.json").then((r) => r.json());
 const ignore = toOpenRouterIgnore(feed, "moonshotai/kimi-k2.6");
 // body: { model: "moonshotai/kimi-k2.6", messages, provider: { ignore } }
 ```

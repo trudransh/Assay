@@ -38,13 +38,13 @@ This page separates what runs today from what is next. Items move up when they s
 | The three hosts run on Cloudflare Workers, a Durable Object with its own SQLite per host, anchored by alarms. Every receipt from the old VM moved over with the same keys | [Network and contracts](../getting-started/network-and-contracts.md) |
 | Receipts count thinking tokens: `tokensOut` includes reasoning that Google's API reports only in `total_tokens` | `host/src/server.ts` |
 | Uptime and low-gas alerts for the hosts, the indexer and the wallets that pay gas, every 15 minutes | `.github/workflows/watch.yml` |
+| Public grade feed at https://trudransh.github.io/Assay/feed.json, rebuilt hourly from the registry; SDK `feedStatuses` and `toOpenRouterIgnore` read it | `.github/workflows/feed.yml` |
 | Kimi host 10316 re-graded 32/32 against Moonshot's endpoint, which OpenRouter now lists as `moonshotai` | `docs/evidence/grades_20261114T143548Z.json` |
 
 ## Built, not yet switched on
 
 | Item | What it changes |
 |---|---|
-| Public grade feed (`harness/feed.py`, published hourly by `.github/workflows/feed.yml`) and SDK `feedStatuses` / `toOpenRouterIgnore` | A router or agent can skip hosts that fail, or whose grade expired, with one JSON file |
 | Check suite v1 (`--checks v1`) | Adds a `max_tokens` billing check and a stop-sequence check to the grade |
 
 ## Next
