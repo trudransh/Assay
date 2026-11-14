@@ -2,7 +2,7 @@ import { buildBatch, type HostSigner } from "@assay/receipts";
 import { parseEther, type Address, type Hex } from "viem";
 import { anchorWriteAbi, sendTx, type ChainClient } from "./chain.js";
 import { CHAIN_ID } from "./config.js";
-import type { Store } from "./store.js";
+import type { SqlStore as Store } from "./sql-store.js";
 
 export const LOW_BALANCE = parseEther("1");
 

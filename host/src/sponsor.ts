@@ -5,7 +5,7 @@ import { decodeFunctionData, isAddress, isHex, parseAbi, recoverMessageAddress, 
 import { recoverAuthorizationAddress } from "viem/utils";
 import { publicError } from "./errors.js";
 import { clientIp, overLimit } from "./limits.js";
-import type { Store } from "./store.js";
+import type { SqlStore as Store } from "./sql-store.js";
 
 /// Sponsored transactions for per-app requester keys (Kai's paymaster advice). The relayer pays the gas, so a
 /// per-app address never holds MON and is never linked to a funding wallet. To keep the relayer from paying for
