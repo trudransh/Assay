@@ -14,7 +14,7 @@ A receipt proves who served which bytes and what they claimed. It doesn't prove 
 import { createPublicClient, http } from "viem";
 import { wrap, chainGradeCheck } from "assay-receipts";
 
-const HOST = "https://34-45-1-81.sslip.io/mainnet"; // Assay host 10278 on Monad mainnet
+const HOST = "https://assay-host.assay-host.workers.dev/mainnet"; // Assay host 10278 on Monad mainnet
 const REGISTRY = "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1"; // VerifierRegistry on Monad mainnet
 const VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"; // a verifier you choose to trust
 const monad = createPublicClient({ transport: http("https://rpc.monad.xyz") });

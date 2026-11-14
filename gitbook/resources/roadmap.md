@@ -61,7 +61,7 @@ These are merged on the `dev` branch and wait until Metropolis judging ends.
 |---|---|
 | Hosts that sign from inside a TEE | A TEE quote that includes a model hash is the path to proving which weights ran |
 | `anchorK` for secp256k1 hosts | Hosts whose node key is secp256k1 can anchor without a P-256 key |
-| Keys in Cloud KMS, with a rotation runbook | The host key no longer lives in a file on the VM |
+| Keys in Cloud KMS, with a rotation runbook | The host key no longer lives in a Worker secret |
 | CRE live spot checks | Nodes call a host directly on a schedule, so the DON becomes a verifier and not only a re-checker |
 | ES384 support | NVIDIA attestation tokens use ES384. Monad has no P-384 precompile, so this needs offchain checks or a wrapper |
 

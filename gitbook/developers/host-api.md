@@ -5,7 +5,7 @@ icon: server
 
 # Host API
 
-**Live:** mainnet https://34-45-1-81.sslip.io/mainnet (agent 10278, Gemma 4 31B through Google's API) and https://34-45-1-81.sslip.io/kimi (agent 10316, Kimi K2.6 through Moonshot's endpoint); testnet https://34-45-1-81.sslip.io (agent 1962) · **Where:** `host/src/server.ts`, package `@assay/host` (Hono). Runs locally on `http://localhost:8787` with `pnpm --filter @assay/host dev`. To run your own on a VM, see `host/deploy/setup.sh` and `host/deploy/push-secrets.sh`.
+**Live:** mainnet https://assay-host.assay-host.workers.dev/mainnet (agent 10278, Gemma 4 31B through Google's API) and https://assay-host.assay-host.workers.dev/kimi (agent 10316, Kimi K2.6 through Moonshot's endpoint); testnet https://assay-host.assay-host.workers.dev (agent 1962) · **Where:** `host/src/server.ts`, package `@assay/host` (Hono). Runs locally on `http://localhost:8787` with `pnpm --filter @assay/host dev`. To run your own on a VM, see `host/deploy/setup.sh` and `host/deploy/push-secrets.sh`.
 
 The reference host is an OpenAI-compatible proxy in front of OpenRouter, or any OpenAI-compatible API set with `UPSTREAM_URL`. It signs a receipt for every response and anchors batches on Monad. Errors come back as `{"error": {"message": "…"}}`.
 
@@ -50,7 +50,7 @@ The output commit covers the assistant's text. When the model answers only with 
 
 ```bash
 SALT=$(openssl rand -hex 32)
-curl -s https://34-45-1-81.sslip.io/v1/chat/completions -D - \
+curl -s https://assay-host.assay-host.workers.dev/v1/chat/completions -D - \
   -H "content-type: application/json" -H "X-Assay-Salt: $SALT" \
   -d '{"messages":[{"role":"user","content":"Say OK"}],"max_tokens":256,"temperature":0}'
 ```

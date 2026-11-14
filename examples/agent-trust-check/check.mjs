@@ -6,7 +6,7 @@ import { gate } from "monadguard";
 
 const TOOL = { kind: "mcp", name: "memory-server", origin: "npm:@modelcontextprotocol/server-memory" };
 const TOOL_ATTESTORS = [process.env.MONADGUARD_ATTESTOR]; // whose scan verdicts you accept
-const ASSAY_HOST = "https://34-45-1-81.sslip.io"; // any Assay host serves /v1/grade
+const ASSAY_HOST = "https://assay-host.assay-host.workers.dev"; // any Assay host serves /v1/grade
 const MODEL = "google/gemma-4-31b-it";
 const INFERENCE_HOST = "openrouter:google-ai-studio"; // the host you're about to pay
 const VERIFIERS = ["0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"]; // whose grades you accept

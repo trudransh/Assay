@@ -29,7 +29,7 @@ First sponsored run, testnet, 7 Oct: a fresh per-app address `0xBB14ffc0…Bc2f`
 
 ### Kimi host (8 Oct)
 
-A second mainnet host, ERC-8004 agent **10316** ("Assay Kimi host"), serves Kimi K2.6 through OpenRouter pinned to Moonshot's own endpoint (`moonshotai/int4`), with its own signing key (kid `F6V1sRvW…Wstls`). It runs at https://34-45-1-81.sslip.io/kimi, with reasoning turned off by the host (signed into every receipt's `req.params`) and tight request caps.
+A second mainnet host, ERC-8004 agent **10316** ("Assay Kimi host"), serves Kimi K2.6 through OpenRouter pinned to Moonshot's own endpoint (`moonshotai/int4`), with its own signing key (kid `F6V1sRvW…Wstls`). It runs at https://assay-host.assay-host.workers.dev/kimi (until 14 Nov at 34-45-1-81.sslip.io/kimi), with reasoning turned off by the host (signed into every receipt's `req.params`) and tight request caps.
 
 | Identity or action | Tx | Block |
 |---|---|---|
@@ -64,7 +64,7 @@ Same escrow, job `0x1ee5059b…8738`: 5 responses from host 10278 at `max_tokens
 | `deliver(jobId, root)` from the host's owner | [`0x8b6f4e54…`](https://monadvision.com/tx/0x8b6f4e5481e452f44c8a43009fa7b04653734b369b10ca67091f64028dad050f) | 112650052 |
 | Settled 5 units, 0.05 USDC to `0xF3Cb…18d9` | [`0xd74d97dc…`](https://monadvision.com/tx/0xd74d97dc3de0a489767f5750a6e58dfe95793654791fa819f20d80fa937a46c3) | 112681861 |
 
-The mainnet host runs at https://34-45-1-81.sslip.io/mainnet (the web app reaches it at `/host-mainnet`). Testnet stays live below as the place to experiment for free.
+The mainnet host runs at https://assay-host.assay-host.workers.dev/mainnet (the web app reaches it at `/host-mainnet`). Testnet stays live below as the place to experiment for free.
 
 ## Monad testnet (chain 10143)
 
@@ -94,7 +94,17 @@ Hosted on Vercel from the `web/` folder of `main`: https://assay-ten-xi.vercel.a
 
 ## Host
 
-The reference hosts run on a Google Cloud VM behind Caddy, one per network: testnet (agent 1962) at https://34-45-1-81.sslip.io and mainnet (agent 10278) at https://34-45-1-81.sslip.io/mainnet (`/health`, `/.well-known/jwks.json`, `/v1/receipts/:hash`, `/v1/grade`). The web app reaches it same-origin through a Vercel rewrite of `/host/*` (`web/vercel.json`). Setup is `host/deploy/setup.sh` plus `host/deploy/push-secrets.sh`.
+Since 14 Nov 2026 the three reference hosts run as one Cloudflare Worker, `assay-host`, with a Durable Object (its own SQLite) per host. An alarm in each one anchors pending receipts every `BATCH_SECONDS`. Config is `host/wrangler.jsonc`; secrets are set with `wrangler secret bulk`.
+
+| Host | URL |
+|---|---|
+| Testnet, agent 1962 (Gemma 4 31B) | https://assay-host.assay-host.workers.dev |
+| Mainnet, agent 10278 (Gemma 4 31B) | https://assay-host.assay-host.workers.dev/mainnet |
+| Mainnet, agent 10316 (Kimi K2.6) | https://assay-host.assay-host.workers.dev/kimi |
+
+Each serves `/health`, `/.well-known/jwks.json`, `/v1/receipts/:hash` and `/v1/grade`. The web app reaches them same-origin through Vercel rewrites of `/host/*`, `/host-mainnet/*` and `/host-kimi/*` (`web/vercel.json`).
+
+From 5 Oct to 14 Nov the hosts ran on a Google Cloud VM behind Caddy at `34-45-1-81.sslip.io`. Every receipt and batch they stored (550 for 10278, 184 for 10316, 53 for 1962) was moved to the Worker with `host/scripts/import-history.ts`, with the same signing keys, so old receipts and proofs still resolve. The Kimi host failed every request from about 29 Oct, when OpenRouter renamed Moonshot's endpoint from `moonshotai/int4` to `moonshotai`; it pins `moonshotai` now.
 
 ## Indexer
 

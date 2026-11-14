@@ -8,7 +8,7 @@ import { writeFileSync } from "node:fs";
 
 const N = Number(process.argv[2] ?? 10);
 const MAX_TOKENS = 256;
-const HOST = "https://34-45-1-81.sslip.io/kimi";
+const HOST = "https://assay-host.assay-host.workers.dev/kimi";
 const ANCHOR = "0x049A73755cA3508ef3Daa4752A3406f6e00CfB13"; // ReceiptAnchor, Monad mainnet
 const REGISTRY = "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1"; // VerifierRegistry, Monad mainnet
 const VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7";

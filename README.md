@@ -113,7 +113,7 @@ flowchart LR
 ```ts
 import { wrap, chainGradeCheck, verifyReceipt, GradeGateError } from "assay-receipts";
 
-const HOST = "https://34-45-1-81.sslip.io/kimi";                  // Assay host 10316 (Kimi K2.6) on Monad mainnet
+const HOST = "https://assay-host.assay-host.workers.dev/kimi";                  // Assay host 10316 (Kimi K2.6) on Monad mainnet
 const REGISTRY = "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1";    // VerifierRegistry on Monad mainnet
 const MY_VERIFIER = "0x4BaC2Be288B5931886EeC4c555895CE6BcAB19e7"; // a verifier you choose to trust
 const messages = [{ role: "user", content: "Say OK" }];
@@ -173,7 +173,7 @@ All three are verified on Sourcify (exact match). The testnet CreAttestor predat
 | 🎯 Reference grade: same model on Google's own API, 19/19, 83.18% to 100% | [tx `0x137f910d…`](https://testnet.monadvision.com/tx/0x137f910d3e2181a9b2930170d47126370ae282e8dab7f8f91287b6aaa1dd16f6) |
 | 🪪 Host agent 1962 key set · verifier agent 1981 registered | [`0xcfd45e43…`](https://testnet.monadvision.com/tx/0xcfd45e4304e7de3c0337eb83288d657e978efc2a0df614c74cfb1a9adcc7b8b4) · [`0x752c6fe5…`](https://testnet.monadvision.com/tx/0x752c6fe566c60f390a79c449c812afc1fcd8b6802b1877da7bdc6231da52d178) |
 
-Both grades read `warn` until a host has 30 samples. The reference hosts run at https://34-45-1-81.sslip.io (testnet) and https://34-45-1-81.sslip.io/mainnet (mainnet), and anchor each batch within seconds. Every address and tx is in [`docs/deployments.md`](docs/deployments.md).
+Both grades read `warn` until a host has 30 samples. The reference hosts run at https://assay-host.assay-host.workers.dev (testnet) and https://assay-host.assay-host.workers.dev/mainnet (mainnet), and anchor each batch within seconds. Every address and tx is in [`docs/deployments.md`](docs/deployments.md).
 
 ## Integrations
 

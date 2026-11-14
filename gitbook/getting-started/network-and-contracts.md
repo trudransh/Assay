@@ -42,8 +42,8 @@ CreAttestor v1 (`0xAD9e30dcC63670E1e54f1f12468D16eC1bceDf7a`) was retired on 8 O
 
 | Host | URL |
 |---|---|
-| 10278 | https://34-45-1-81.sslip.io/mainnet |
-| 10316 | https://34-45-1-81.sslip.io/kimi |
+| 10278 | https://assay-host.assay-host.workers.dev/mainnet |
+| 10316 | https://assay-host.assay-host.workers.dev/kimi |
 
 ## Testnet contracts
 
@@ -56,7 +56,7 @@ The current testnet deployment is from 3 Oct 2026.
 | CreAttestor | [`0xB4A1CB9e40aDa44570Ae790430C23876d460deDC`](https://testnet.monadvision.com/address/0xB4A1CB9e40aDa44570Ae790430C23876d460deDC) | [`0x0d2dc7b2…`](https://testnet.monadvision.com/tx/0x0d2dc7b2fc51c718226a28bc2b0027a94d74409b1060f47b795d9582ab6bb00a) | 67462996 |
 | AssayAccount (EIP-7702 delegate) | [`0x4eaDaC20fc6842F360884a31cfA11411C664a2A1`](https://testnet.monadvision.com/address/0x4eaDaC20fc6842F360884a31cfA11411C664a2A1) | [`0xf8844127…`](https://testnet.monadvision.com/tx/0xf8844127b363252cbefd3c867f3c8f6a68fdfea91db9bb543ee3ee6e213d1114) | 68954825 |
 
-Testnet agents: host **1962** (`erc8004:10143:1962`, https://34-45-1-81.sslip.io) and verifier **1981**. The first version from 1 Oct (no `cosignK`) is listed in `docs/deployments.md`; its addresses happen to equal the mainnet ReceiptAnchor and VerifierRegistry addresses because the same deployer was at the same nonce.
+Testnet agents: host **1962** (`erc8004:10143:1962`, https://assay-host.assay-host.workers.dev) and verifier **1981**. The first version from 1 Oct (no `cosignK`) is listed in `docs/deployments.md`; its addresses happen to equal the mainnet ReceiptAnchor and VerifierRegistry addresses because the same deployer was at the same nonce.
 
 ## ERC-8004 registries
 
