@@ -4,6 +4,7 @@ import type { Context } from "hono";
 export const HOUR = 3_600_000;
 
 /// The client behind the proxies. Caddy (same machine) and Vercel forward it; directly connected callers are taken as-is.
+/// Behind Vercel's rewrite this is Vercel's address, so web-app users share one client budget.
 /// Forwarded headers can be forged by anyone calling the VM directly, so the global limit is the hard bound.
 export function clientIp(c: Context): string {
   let remote = "unknown";
@@ -13,6 +14,8 @@ export function clientIp(c: Context): string {
     // No socket (in-process requests, tests): fall back to the forwarded headers below.
   }
   if (remote !== "unknown" && !/^(127\.|::1$|::ffff:127\.)/.test(remote)) return remote;
+  // No socket on Cloudflare Workers: there the edge sets cf-connecting-ip, and a client can't override it.
+  if (remote === "unknown" && c.req.header("cf-connecting-ip")) return c.req.header("cf-connecting-ip") as string;
   return c.req.header("x-real-ip") ?? c.req.header("x-forwarded-for")?.split(",")[0]?.trim() ?? remote;
 }
 
