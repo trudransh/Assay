@@ -5,7 +5,7 @@ icon: map
 
 # Roadmap
 
-**Where:** status comes from the repo README, `docs/deployments.md` and the evidence in `docs/evidence/`. Updated 23 Oct 2026.
+**Where:** status comes from the repo README, `docs/deployments.md` and the evidence in `docs/evidence/`. Updated 14 Nov 2026.
 
 This page separates what runs today from what is next. Items move up when they ship, with a link to the evidence.
 
@@ -25,24 +25,27 @@ This page separates what runs today from what is next. Items move up when they s
 
 | Item | Evidence |
 |---|---|
-| Grading runs on a schedule: both hosts are re-graded every Monday and Thursday, and an alert fires if any grade is more than 5 days old (grades expire after 7) | `harness/vm_grader.sh` |
+| Grading runs on a schedule: both hosts are re-graded every Monday and Thursday, and an alert fires if any grade is more than 5 days old (grades expire after 7) | `.github/workflows/grade.yml` |
 | Each evidence bundle carries a `provenance.json`: the grader's git commit, who ran it, and whether they vouch for the method or only ran the code | `harness/export_grade.py` |
-| SDK `assay-receipts` 0.2.0 on npm. `wrap()` can check a host's grade before sending, and `chainGradeCheck` reads it from the registry instead of asking the host | [SDK reference](../developers/sdk.md) |
-| Kimi K2.6 hosts on OpenRouter re-graded on 20 Oct: 15 passed 32/32, one was rate-limited and got no grade | [grades_20261020T135810Z.json](https://github.com/trudransh/Assay/blob/dev/docs/evidence/grades_20261020T135810Z.json) (on `dev` until 3 Nov) |
+| SDK `assay-receipts` 0.3.0 on npm. `wrap()` can check a host's grade before sending, `chainGradeCheck` reads it from the registry instead of asking the host, and `ReceiptError` hands back an answer that came without a usable receipt so you decide what to pay | [SDK reference](../developers/sdk.md) |
+| Kimi K2.6 hosts on OpenRouter re-graded on 20 Oct: 15 passed 32/32, one was rate-limited and got no grade | [grades_20261020T135810Z.json](https://github.com/trudransh/Assay/blob/main/docs/evidence/grades_20261020T135810Z.json) |
 | `max_tokens` test on every Kimi K2.6 host: the hosts that ignored the cap were sent their logs on 18 Oct, and the names and raw files are published on 25 Oct | [max_tokens evidence](https://github.com/trudransh/Assay/blob/main/docs/evidence/max-tokens-kimi-k2.6.md) |
 
-## Built, going live after 3 Nov
+## Since judging ended (14 Nov)
 
-These are merged on the `dev` branch and wait until Metropolis judging ends.
+| Item | Evidence |
+|---|---|
+| The three hosts run on Cloudflare Workers, a Durable Object with its own SQLite per host, anchored by alarms. Every receipt from the old VM moved over with the same keys | [Network and contracts](../getting-started/network-and-contracts.md) |
+| Receipts count thinking tokens: `tokensOut` includes reasoning that Google's API reports only in `total_tokens` | `host/src/server.ts` |
+| Uptime and low-gas alerts for the hosts, the indexer and the wallets that pay gas, every 15 minutes | `.github/workflows/watch.yml` |
+| Kimi host 10316 re-graded 32/32 against Moonshot's endpoint, which OpenRouter now lists as `moonshotai` | `docs/evidence/grades_20261114T143548Z.json` |
+
+## Built, not yet switched on
 
 | Item | What it changes |
 |---|---|
-| Host storage in SQLite | Indexed lookups, no log replayed on every restart |
-| Public grade feed (`harness/feed.py` on `dev`) and SDK `feedStatuses` / `toOpenRouterIgnore` | A router or agent can skip hosts that fail, or whose grade expired, with one JSON file |
-| `ReceiptError` in SDK 0.3.0 | A response without a usable receipt still hands you the answer, so you decide what to pay |
-| Check suite v1 | Adds a `max_tokens` billing check and a stop-sequence check to the grade |
-| Receipts count thinking tokens | `tokensOut` includes reasoning that Google's API reports only in `total_tokens` |
-| Uptime and low-gas alerts | Hosts, the indexer and the wallets that pay gas are checked every 15 minutes |
+| Public grade feed (`harness/feed.py`, published hourly by `.github/workflows/feed.yml`) and SDK `feedStatuses` / `toOpenRouterIgnore` | A router or agent can skip hosts that fail, or whose grade expired, with one JSON file |
+| Check suite v1 (`--checks v1`) | Adds a `max_tokens` billing check and a stop-sequence check to the grade |
 
 ## Next
 
@@ -52,7 +55,7 @@ These are merged on the `dev` branch and wait until Metropolis judging ends.
 | A second EVM chain with the RIP-7212 P-256 precompile | The same receipts and grades readable on another chain |
 | x402 pay-after-check | An agent reads the grade onchain and pays per request only when it passes |
 | A grade from an outside verifier, re-checked by CRE | Today every grade comes from Assay's own verifier |
-| A real domain for the hosts and the app | Replaces the sslip.io hostname |
+| A real domain for the hosts and the app | Replaces the workers.dev and vercel.app hostnames |
 | Monthly host report with every raw log | One place to compare every host for the models we cover |
 
 ## Later

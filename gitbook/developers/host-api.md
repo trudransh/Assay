@@ -154,7 +154,7 @@ The response includes `reproduce` with the exact `gradeOf(bytes32,bytes32,addres
 | `BATCH_MAX` | no | `64` | Anchor at once when this many receipts wait |
 | `PORT` | no | `8787` | HTTP port |
 | `PUBLIC_URL` | no | `http://localhost:<PORT>` | Base URL in the registration file |
-| `DATA_DIR` | no | `data` | Where the store lives. The live hosts still use `receipts.jsonl` and `batches.jsonl`; from 3 Nov the store is SQLite (`assay.db`), which imports those files once on first start |
+| `DATA_DIR` | no | `data` | Node host only: where the SQLite store `assay.db` lives. A JSONL store from before 19 Oct is imported once on first start. On Workers each host keeps its store in its Durable Object |
 
 ## Run your own host
 
