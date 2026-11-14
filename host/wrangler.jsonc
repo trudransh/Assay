@@ -24,7 +24,7 @@
     "TESTNET__HOST_AGENT_ID_TESTNET": "1962",
     "TESTNET__ACCOUNT_IMPL_TESTNET": "0x4eaDaC20fc6842F360884a31cfA11411C664a2A1",
     "TESTNET__BATCH_SECONDS": "30",
-    "TESTNET__PUBLIC_URL": "https://assay-host.workers.dev",
+    "TESTNET__PUBLIC_URL": "https://assay-host.assay-host.workers.dev",
 
     "MAINNET__ASSAY_NETWORK": "mainnet",
     "MAINNET__UPSTREAM_URL": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
@@ -34,7 +34,7 @@
     "MAINNET__VERIFIER_REGISTRY_MAINNET": "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1",
     "MAINNET__ACCOUNT_IMPL_MAINNET": "0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91",
     "MAINNET__BATCH_SECONDS": "120",
-    "MAINNET__PUBLIC_URL": "https://assay-host.workers.dev/mainnet",
+    "MAINNET__PUBLIC_URL": "https://assay-host.assay-host.workers.dev/mainnet",
 
     "KIMI__ASSAY_NETWORK": "mainnet",
     "KIMI__UPSTREAM_MODEL": "moonshotai/kimi-k2.6",
@@ -51,6 +51,6 @@
     "KIMI__VERIFIER_REGISTRY_MAINNET": "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1",
     "KIMI__ACCOUNT_IMPL_MAINNET": "0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91",
     "KIMI__BATCH_SECONDS": "120",
-    "KIMI__PUBLIC_URL": "https://assay-host.workers.dev/kimi"
+    "KIMI__PUBLIC_URL": "https://assay-host.assay-host.workers.dev/kimi"
   }
 }
