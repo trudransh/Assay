@@ -11,7 +11,7 @@ from assay_probe import http
 
 BASE = "https://assay-host.assay-host.workers.dev"  # Cloudflare Worker serving all three hosts
 HOSTS = {"testnet host 1962": BASE, "Gemma host 10278": BASE + "/mainnet", "Kimi host 10316": BASE + "/kimi"}
-INDEXER = "https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql"
+INDEXER = "https://indexer.dev.hyperindex.xyz/51b6a26/v1/graphql"
 MAINNET, TESTNET = "https://rpc.monad.xyz", "https://testnet-rpc.monad.xyz"
 # (name, address, rpc, alert below this many MON). The hosts warn in their logs below 1 MON.
 WALLETS = [("host relayer", "0x4B497c919075E81344dD494Aea0Fc1e2a6499BF5", MAINNET, 1.0),
