@@ -18,7 +18,7 @@ case "$WHO" in
          HOST_URL=https://34-45-1-81.sslip.io/mainnet/v1 REFERENCE=direct:generativelanguage.googleapis.com
          REF_ARGS=(--base-url https://generativelanguage.googleapis.com/v1beta/openai --api-key-env GEMINI_API_KEY --reference "$REFERENCE") ;;
   kimi)  MODEL=moonshotai/kimi-k2.6 AGENT=143:10316 TAG=assay-kimi-10316 REPEATS=8
-         HOST_URL=https://34-45-1-81.sslip.io/kimi/v1 REFERENCE=moonshotai/int4
+         HOST_URL=https://34-45-1-81.sslip.io/kimi/v1 REFERENCE=moonshotai
          REF_ARGS=(--only moonshotai --reference "$REFERENCE") ;;
   *) echo "regrade.sh: host must be gemma or kimi" >&2; exit 1 ;;
 esac

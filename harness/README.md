@@ -21,12 +21,12 @@ Anyone can post grades, and readers choose which verifiers to trust. This grades
 
 ```bash
 git clone https://github.com/trudransh/Assay && cd Assay
-python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai/int4 --repeats 8 --out og --dry-run   # prints the cost
-python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai/int4 --repeats 8 --out og
+python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai --repeats 8 --out og --dry-run   # prints the cost
+python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --only moonshotai --reference moonshotai --repeats 8 --out og
 python3 harness/assay_probe.py --model moonshotai/kimi-k2.6 --base-url https://34-45-1-81.sslip.io/kimi/v1 --tag assay-kimi-10316 --repeats 8 --out og_host   # the host bills us, not you
 # one run with both endpoints: append the host run to the Moonshot run
 S=$(ls og/summary_*.csv | sed 's/.*summary_//;s/.csv//'); cat og_host/raw_*.jsonl >> og/raw_$S.jsonl; tail -n +2 og_host/summary_*.csv >> og/summary_$S.csv
-python3 harness/export_grade.py --out og --model moonshotai/kimi-k2.6 --reference moonshotai/int4 --assay-agent 143:10316 --assay-tag assay-kimi-10316 --operator erc8004:143:<your agentId>
+python3 harness/export_grade.py --out og --model moonshotai/kimi-k2.6 --reference moonshotai --assay-agent 143:10316 --assay-tag assay-kimi-10316 --operator erc8004:143:<your agentId>
 # once, if you have no ERC-8004 identity on Monad mainnet; the agentId is in the Transfer event
 cast send 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432 'register(string)' "<your agent card URL>" --rpc-url https://rpc.monad.xyz --account <yours>
 # once, as the owner of that agentId

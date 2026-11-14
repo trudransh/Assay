@@ -48,7 +48,7 @@ chmod 600 "$ENV_FILE"
   if [ "$INST" = kimi ]; then
     echo "OPENROUTER_API_KEY=$(val OPENROUTER_API_KEY)"
     echo "UPSTREAM_MODEL=moonshotai/kimi-k2.6"
-    echo "UPSTREAM_PROVIDER=moonshotai/int4"
+    echo "UPSTREAM_PROVIDER=moonshotai"
     echo "HOST_JWK_PATH=.keys/kimi.jwk.json"
     echo "HOST_NAME=Assay Kimi host"
     # K2.6 reasons by default and can spend the whole budget thinking, leaving no answer: turn it off

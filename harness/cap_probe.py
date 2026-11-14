@@ -5,8 +5,8 @@ This repeats it: every host, N trials with the same cap, once with OpenRouter's 
 once on. With it on, OpenRouter only routes to a provider that declares support for every parameter sent,
 so an overrun that survives it is the provider's, and one that disappears was the routing path's.
 
-  python3 cap_probe.py --model moonshotai/kimi-k2.6 --reference moonshotai/int4 --trials 10 --dry-run
-  python3 cap_probe.py --model moonshotai/kimi-k2.6 --reference moonshotai/int4 --trials 10
+  python3 cap_probe.py --model moonshotai/kimi-k2.6 --reference moonshotai --trials 10 --dry-run
+  python3 cap_probe.py --model moonshotai/kimi-k2.6 --reference moonshotai --trials 10
 
 Writes cap_<stamp>.jsonl (one line per request) and cap_summary_<stamp>.csv, and prints the sha256 of the raw file.
 Stdlib only, like assay_probe.py.
@@ -73,7 +73,7 @@ def summarize(recs, reference_tag=None):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--model", required=True)
-    ap.add_argument("--reference", help="exact tag of the lab's own endpoint, e.g. moonshotai/int4")
+    ap.add_argument("--reference", help="exact tag of the lab's own endpoint, e.g. moonshotai")
     ap.add_argument("--trials", type=int, default=10)
     ap.add_argument("--cap", type=int, default=16)
     ap.add_argument("--only", help="comma-separated substrings to restrict endpoints (the reference is always kept)")
