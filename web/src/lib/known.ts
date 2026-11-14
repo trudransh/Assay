@@ -43,6 +43,8 @@ export const KNOWN_HOSTS: Record<string, { preimage: string; label: string }> = 
   "0x00624d3fc072fca0ca6fd7152fd5e69583b101c12263dcac132d73f853eafe75": { preimage: "openrouter:mistral/zdr", label: "mistral/zdr" },
   "0x9dd68264b4d575978030d86db03fecf37b687e2b0de4dbd69c9726e56c20d017": { preimage: "openrouter:modal", label: "modal" },
   "0x6849fe73bcbb94684ee6d8acf477aeace982661db21d6ac8a7ba57820e6bcd60": { preimage: "openrouter:moonshotai/int4", label: "moonshotai/int4" },
+  // OpenRouter renamed Moonshot's own endpoint around 29 Oct 2026; grades before that use the tag above.
+  "0x8ed51adfc1580dbf73c83e8986ab4cdc4d317c5d8942f2be466c8b218d021fc3": { preimage: "openrouter:moonshotai", label: "moonshotai" },
   "0x1cf98070ee3829db4e33038dfa3859f3167ae956b2b19107a033eaf036e71b9a": { preimage: "openrouter:morph/fp8", label: "morph/fp8" },
   "0x3324d7db10fa85f90aa8d162cb6a48daac506f58c5b3bc82bba7b9eebe2f1445": { preimage: "openrouter:nebius/fp4", label: "nebius/fp4" },
   "0xd6b5ef40c4b03005abe1d4a225540da1c529a67cdc2ed93c4e655996911977fa": { preimage: "openrouter:novita", label: "novita" },
@@ -70,6 +72,6 @@ export const KNOWN_HOSTS: Record<string, { preimage: string; label: string }> = 
 export const KNOWN_REFERENCES: Record<string, string> = {
   "gemma-4-31b-it": "direct:generativelanguage.googleapis.com",
   "google/gemma-4-31b-it": "direct:generativelanguage.googleapis.com",
-  "moonshotai/kimi-k2.6": "openrouter:moonshotai/int4",
+  "moonshotai/kimi-k2.6": "openrouter:moonshotai",
   "z-ai/glm-5.3": "openrouter:z-ai/fp8",
 };
