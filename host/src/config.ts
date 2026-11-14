@@ -66,6 +66,15 @@ export interface Config {
 }
 
 /// Reads every variable and reports all problems at once. Values are never echoed, since some are secrets.
+/// Settings for one host: NAME__KEY (e.g. KIMI__UPSTREAM_MODEL) wins over a plain KEY shared by all hosts.
+export function scopedEnv(env: Record<string, unknown>, name: string): Record<string, string> {
+  const prefix = `${name.toUpperCase()}__`;
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(env)) if (typeof v === "string" && !k.includes("__")) out[k] = v;
+  for (const [k, v] of Object.entries(env)) if (typeof v === "string" && k.startsWith(prefix)) out[k.slice(prefix.length)] = v;
+  return out;
+}
+
 /// `paths: false` leaves file paths as written (a Worker reads its key from a secret, not a file).
 export function loadConfig(env: Record<string, string | undefined> = process.env, { paths = true } = {}): Config {
   const errors: string[] = [];

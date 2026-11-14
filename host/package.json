@@ -10,7 +10,7 @@
     "dev": "tsx watch --env-file-if-exists=../.env src/main.ts",
     "start": "tsx --env-file-if-exists=../.env src/main.ts",
     "test": "vitest run --passWithNoTests",
-    "typecheck": "tsc -p . --noEmit",
+    "typecheck": "tsc -p . --noEmit && tsc -p tsconfig.worker.json --noEmit",
     "keygen": "tsx --env-file-if-exists=../.env scripts/keygen.ts",
     "register": "tsx --env-file-if-exists=../.env scripts/register-agent.ts",
     "e2e": "tsx --env-file-if-exists=../.env scripts/e2e-testnet.ts",

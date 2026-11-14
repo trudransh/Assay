@@ -1,0 +1,56 @@
+// Assay hosts on Cloudflare Workers: one Worker, one Durable Object (with its own SQLite) per host.
+// Paths: /mainnet/* is host 10278 (Gemma 4 31B), /kimi/* is host 10316 (Kimi K2.6), everything else testnet host 1962.
+// NAME__KEY settings apply to one host, plain KEY to all. Secrets (set with `wrangler secret bulk`, never here):
+//   RELAYER_PRIVATE_KEY, OPENROUTER_API_KEY, GRADER_TOKEN, ADMIN_TOKEN,
+//   TESTNET__UPSTREAM_API_KEY, MAINNET__UPSTREAM_API_KEY (Google AI Studio),
+//   TESTNET__MONAD_RPC_URL_TESTNET, MAINNET__MONAD_RPC_URL_MAINNET, KIMI__MONAD_RPC_URL_MAINNET,
+//   TESTNET__HOST_JWK, MAINNET__HOST_JWK, KIMI__HOST_JWK (the private JWK as JSON).
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "assay-host",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "durable_objects": { "bindings": [{ "name": "HOST", "class_name": "Host" }] },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Host"] }],
+  "observability": { "enabled": true },
+  "vars": {
+    "BATCH_MAX": "64",
+
+    "TESTNET__ASSAY_NETWORK": "testnet",
+    "TESTNET__UPSTREAM_URL": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    "TESTNET__UPSTREAM_MODEL": "gemma-4-31b-it",
+    "TESTNET__ANCHOR_ADDRESS_TESTNET": "0x63e4F42E6d254ed6aAE735F9F4169BbFd12c1a24",
+    "TESTNET__HOST_AGENT_ID_TESTNET": "1962",
+    "TESTNET__ACCOUNT_IMPL_TESTNET": "0x4eaDaC20fc6842F360884a31cfA11411C664a2A1",
+    "TESTNET__BATCH_SECONDS": "30",
+    "TESTNET__PUBLIC_URL": "https://assay-host.workers.dev",
+
+    "MAINNET__ASSAY_NETWORK": "mainnet",
+    "MAINNET__UPSTREAM_URL": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+    "MAINNET__UPSTREAM_MODEL": "gemma-4-31b-it",
+    "MAINNET__ANCHOR_ADDRESS_MAINNET": "0x049A73755cA3508ef3Daa4752A3406f6e00CfB13",
+    "MAINNET__HOST_AGENT_ID_MAINNET": "10278",
+    "MAINNET__VERIFIER_REGISTRY_MAINNET": "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1",
+    "MAINNET__ACCOUNT_IMPL_MAINNET": "0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91",
+    "MAINNET__BATCH_SECONDS": "120",
+    "MAINNET__PUBLIC_URL": "https://assay-host.workers.dev/mainnet",
+
+    "KIMI__ASSAY_NETWORK": "mainnet",
+    "KIMI__UPSTREAM_MODEL": "moonshotai/kimi-k2.6",
+    // OpenRouter renamed Moonshot's own endpoint from moonshotai/int4 to moonshotai around 29 Oct 2026.
+    "KIMI__UPSTREAM_PROVIDER": "moonshotai",
+    "KIMI__HOST_NAME": "Assay Kimi host",
+    "KIMI__UPSTREAM_REASONING": "off",
+    "KIMI__DEFAULT_MAX_TOKENS": "768",
+    "KIMI__MAX_TOKENS_CAP": "1024",
+    "KIMI__CHAT_LIMIT": "10",
+    "KIMI__CHAT_LIMIT_GLOBAL": "20",
+    "KIMI__ANCHOR_ADDRESS_MAINNET": "0x049A73755cA3508ef3Daa4752A3406f6e00CfB13",
+    "KIMI__HOST_AGENT_ID_MAINNET": "10316",
+    "KIMI__VERIFIER_REGISTRY_MAINNET": "0x0C8603041E7d425c4DCa041680C7AF4581dDa9a1",
+    "KIMI__ACCOUNT_IMPL_MAINNET": "0x7755818dc08659D2A3A66FA3ddb1Ce636c145C91",
+    "KIMI__BATCH_SECONDS": "120",
+    "KIMI__PUBLIC_URL": "https://assay-host.workers.dev/kimi"
+  }
+}

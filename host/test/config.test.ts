@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loadConfig } from "../src/config.js";
+import { loadConfig, scopedEnv } from "../src/config.js";
 
 const base = {
   OPENROUTER_API_KEY: "sk-or-test",
@@ -100,5 +100,13 @@ describe("UPSTREAM_REASONING", () => {
     expect(loadConfig({ ...base, UPSTREAM_REASONING: "off" }).reasoning).toEqual({ enabled: false });
     expect(loadConfig({ ...base, UPSTREAM_REASONING: "low" }).reasoning).toEqual({ effort: "low" });
     expect(() => loadConfig({ ...base, UPSTREAM_REASONING: "max" })).toThrow(/UPSTREAM_REASONING/);
+  });
+});
+
+describe("scopedEnv", () => {
+  it("gives NAME__KEY priority over a shared KEY and hides other hosts' settings", () => {
+    const env = { BATCH_MAX: "64", BATCH_SECONDS: "300", KIMI__BATCH_SECONDS: "120", MAINNET__UPSTREAM_MODEL: "gemma", HOST: {} };
+    expect(scopedEnv(env, "kimi")).toEqual({ BATCH_MAX: "64", BATCH_SECONDS: "120" });
+    expect(scopedEnv(env, "mainnet")).toEqual({ BATCH_MAX: "64", BATCH_SECONDS: "300", UPSTREAM_MODEL: "gemma" });
   });
 });
