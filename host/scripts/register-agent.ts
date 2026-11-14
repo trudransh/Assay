@@ -5,7 +5,7 @@ import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createPublicClient, http, parseAbi, parseEventLogs, toHex, type Address, type Hex } from "viem";
 import { makeClients, monadTestnet, sendTx } from "../src/chain.js";
-import { readJwk } from "../src/config.js";
+import { readJwk } from "../src/jwk-file.js";
 import { IDENTITY_REGISTRY } from "../src/server.js";
 
 const need = (name: string) => process.env[name] || (console.error(`${name} is required`), process.exit(1));

@@ -8,7 +8,7 @@ User=assay
 WorkingDirectory=/opt/assay/host
 # One instance per host: assay-host@testnet (8787), assay-host@mainnet (8788), assay-host@kimi (8789, mainnet).
 EnvironmentFile=/etc/assay/host-%i.env
-ExecStart=/opt/assay/host/node_modules/.bin/tsx src/server.ts
+ExecStart=/opt/assay/host/node_modules/.bin/tsx src/main.ts
 Restart=always
 RestartSec=5
 # Sandbox: the host reads its code, key and env, and writes only its receipt store.

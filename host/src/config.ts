@@ -1,4 +1,3 @@
-import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { calculateJwkThumbprint, type JWK } from "jose";
@@ -29,7 +28,8 @@ export const NETWORKS = {
 } as const satisfies Record<string, { chainId: number; name: string; publicRpc: string; identityRegistry: string; reputationRegistry: string; verifierRegistry: string | undefined }>;
 export type Network = keyof typeof NETWORKS;
 export const DEFAULT_VERIFIER_REGISTRY = NETWORKS.testnet.verifierRegistry;
-const HOST_DIR = fileURLToPath(new URL("..", import.meta.url));
+// Relative paths in the config are relative to host/. Computed on use: a Worker never resolves a path.
+const hostDir = () => fileURLToPath(new URL("..", import.meta.url));
 
 export interface Config {
   network: Network;
@@ -66,8 +66,10 @@ export interface Config {
 }
 
 /// Reads every variable and reports all problems at once. Values are never echoed, since some are secrets.
-export function loadConfig(env: Record<string, string | undefined> = process.env): Config {
+/// `paths: false` leaves file paths as written (a Worker reads its key from a secret, not a file).
+export function loadConfig(env: Record<string, string | undefined> = process.env, { paths = true } = {}): Config {
   const errors: string[] = [];
+  const at = (p: string) => (paths ? resolve(hostDir(), p) : p);
   const networkRaw = env.ASSAY_NETWORK?.trim() || "testnet";
   if (!(networkRaw in NETWORKS)) errors.push("ASSAY_NETWORK must be testnet or mainnet");
   const network = (networkRaw in NETWORKS ? networkRaw : "testnet") as Network;
@@ -149,13 +151,13 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
     verifierRegistry: verifierRegistry as Address,
     hostAgentId: agentRaw && /^[1-9]\d*$/.test(agentRaw) ? BigInt(agentRaw) : 0n,
     relayerPrivateKey: relayerPrivateKey as Hex,
-    hostJwkPath: resolve(HOST_DIR, get("HOST_JWK_PATH") ?? ".keys/host.jwk.json"),
+    hostJwkPath: at(get("HOST_JWK_PATH") ?? ".keys/host.jwk.json"),
     retiredJwkPaths: (get("RETIRED_JWK_PATHS") ?? "")
       .split(",")
       .map((p) => p.trim())
       .filter(Boolean)
-      .map((p) => resolve(HOST_DIR, p)),
-    dataDir: resolve(HOST_DIR, get("DATA_DIR") ?? "data"),
+      .map(at),
+    dataDir: at(get("DATA_DIR") ?? "data"),
     publicUrl: (get("PUBLIC_URL") ?? `http://localhost:${port}`).replace(/\/$/, ""),
     batchSeconds: int("BATCH_SECONDS", 300, 1),
     batchMax: int("BATCH_MAX", 64, 1),
@@ -172,14 +174,14 @@ export function loadConfig(env: Record<string, string | undefined> = process.env
   return cfg;
 }
 
-/// Loads a JWK file and fills in `kid` (RFC 7638 thumbprint) when the file has none.
-export async function readJwk(path: string): Promise<JWK & { kid: string }> {
+/// Parses a P-256 JWK and fills in `kid` (RFC 7638 thumbprint) when it has none. `where` names the source in errors.
+export async function parseJwk(text: string, where: string): Promise<JWK & { kid: string }> {
   let jwk: JWK;
   try {
-    jwk = JSON.parse(readFileSync(path, "utf8")) as JWK;
+    jwk = JSON.parse(text) as JWK;
   } catch (e) {
-    throw new Error(`cannot read JWK at ${path} (run scripts/keygen.ts first?): ${(e as Error).message}`);
+    throw new Error(`cannot parse the JWK in ${where}: ${(e as Error).message}`);
   }
-  if (jwk.kty !== "EC" || jwk.crv !== "P-256") throw new Error(`${path} is not a P-256 JWK`);
+  if (jwk.kty !== "EC" || jwk.crv !== "P-256") throw new Error(`${where} is not a P-256 JWK`);
   return { ...jwk, kid: jwk.kid ?? (await calculateJwkThumbprint(jwk)) };
 }

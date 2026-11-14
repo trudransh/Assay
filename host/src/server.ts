@@ -1,32 +1,25 @@
-import { timingSafeEqual } from "node:crypto";
-import { pathToFileURL } from "node:url";
-import { serve } from "@hono/node-server";
 import {
   assistantOutput,
   buildReceipt,
   commitRequest,
   commitResponse,
-  createHostSigner,
-  receiptAnchorAbi,
   receiptHash,
-  type ContractReader,
   type HostSigner,
 } from "@assay/receipts";
 import { Hono, type Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { secureHeaders } from "hono/secure-headers";
 import type { ContentfulStatusCode } from "hono/utils/http-status";
-import type { JWK } from "jose";
-import { createPublicClient, http, isHex, type Address, type Hex, type PublicClient } from "viem";
-import { createBatcher, type Batcher } from "./batcher.js";
-import { anchorWriteAbi, makeClients, sendTx, type WriteRequest } from "./chain.js";
-import { CHAIN_ID, loadConfig, NETWORKS, readJwk } from "./config.js";
+import { base64url, type JWK } from "jose";
+import { isHex, type Address, type Hex } from "viem";
+import type { Batcher } from "./batcher.js";
+import { CHAIN_ID, NETWORKS } from "./config.js";
 import { mountGrades, type GradeDeps } from "./grades.js";
 import { mountSponsor, type SponsorDeps } from "./sponsor.js";
 import { publicError } from "./errors.js";
 import { clientIp, overLimit } from "./limits.js";
-import { Store } from "./store.js";
-import { openRouter, providerMatches, providerPin, type Upstream } from "./upstream.js";
+import type { SqlStore } from "./sql-store.js";
+import { providerMatches, providerPin, type Upstream } from "./upstream.js";
 
 export const IDENTITY_REGISTRY = "0x8004A818BFB912233c491871b3d84c89A494BD9e";
 export const COSIGN_LIMIT = 10;
@@ -60,7 +53,7 @@ export interface AppDeps {
   publicRpc?: string;
   /// Old public keys kept so receipts they signed still verify (D22).
   retiredJwks?: JWK[];
-  store: Store;
+  store: SqlStore;
   upstream: Upstream;
   model: string;
   provider?: string;
@@ -75,6 +68,14 @@ export interface AppDeps {
   /// Enables POST /v1/sponsor/*: the relayer pays gas for per-app keys.
   sponsor?: Omit<SponsorDeps, "store" | "chainId" | "agentId" | "anchor" | "now">;
   now?: () => number;
+}
+
+/// Constant-time string comparison (no node:crypto, so the app also runs on Workers).
+export function sameSecret(a: string, b: string): boolean {
+  const [x, y] = [new TextEncoder().encode(a), new TextEncoder().encode(b)];
+  let diff = x.length ^ y.length;
+  for (let i = 0; i < y.length; i++) diff |= (x[i] ?? 0) ^ y[i];
+  return diff === 0;
 }
 
 const fail = (c: Context, status: ContentfulStatusCode, message: string) => c.json({ error: { message } }, status);
@@ -123,11 +124,8 @@ export function createApp(d: AppDeps): Hono {
   const cosignHits = new Map<string, number[]>();
 
   const chatHits = new Map<string, number[]>();
-  const graderAuth = d.graderToken === undefined ? undefined : Buffer.from(`Bearer ${d.graderToken}`);
-  const isGrader = (h: string | undefined) => {
-    const got = Buffer.from(h ?? "");
-    return graderAuth !== undefined && got.length === graderAuth.length && timingSafeEqual(got, graderAuth);
-  };
+  const graderAuth = d.graderToken === undefined ? undefined : `Bearer ${d.graderToken}`;
+  const isGrader = (h: string | undefined) => graderAuth !== undefined && sameSecret(h ?? "", graderAuth);
   app.post("/v1/chat/completions", async (c) => {
     const t0 = now();
     if (!isGrader(c.req.header("authorization"))) {
@@ -182,7 +180,7 @@ export function createApp(d: AppDeps): Hono {
     d.store.addReceipt({ hash, body, jws });
     d.batcher?.notify();
 
-    c.header("X-Assay-Receipt", Buffer.from(JSON.stringify({ body, jws })).toString("base64url"));
+    c.header("X-Assay-Receipt", base64url.encode(JSON.stringify({ body, jws })));
     c.header("X-Assay-Receipt-Hash", hash);
     return c.json(out);
   });
@@ -287,75 +285,4 @@ export function createApp(d: AppDeps): Hono {
   if (d.sponsor) mountSponsor(app, { ...d.sponsor, store: d.store, chainId, agentId: d.agentId, anchor: d.anchor, now });
 
   return app;
-}
-
-async function main() {
-  const cfg = loadConfig();
-  const jwk = await readJwk(cfg.hostJwkPath);
-  const signer = await createHostSigner(jwk, jwk.kid);
-  const retiredJwks = await Promise.all(cfg.retiredJwkPaths.map(readJwk));
-  const store = new Store(cfg.dataDir);
-  const { clients, relayer } = makeClients(cfg.rpcUrls, cfg.relayerPrivateKey, cfg.network);
-  const batcher = createBatcher({
-    chainId: cfg.chainId,
-    store,
-    signer,
-    clients,
-    anchor: cfg.anchorAddress,
-    agentId: cfg.hostAgentId,
-    relayer,
-    batchSeconds: cfg.batchSeconds,
-    batchMax: cfg.batchMax,
-  });
-  const app = createApp({
-    chainId: cfg.chainId,
-    identityRegistry: cfg.identityRegistry,
-    publicRpc: NETWORKS[cfg.network].publicRpc,
-    signer,
-    retiredJwks,
-    store,
-    upstream: openRouter(cfg.openrouterApiKey, fetch, cfg.upstreamUrl),
-    model: cfg.upstreamModel,
-    provider: cfg.upstreamProvider,
-    chatLimit: cfg.chatLimit,
-    chatLimitGlobal: cfg.chatLimitGlobal,
-    graderToken: cfg.graderToken,
-    defaultMaxTokens: cfg.defaultMaxTokens,
-    maxTokensCap: cfg.maxTokensCap,
-    hostName: cfg.hostName,
-    reasoning: cfg.reasoning,
-    agentId: cfg.hostAgentId,
-    anchor: cfg.anchorAddress,
-    publicUrl: cfg.publicUrl,
-    batcher,
-    relayCosign: (args) => sendTx(clients, { address: cfg.anchorAddress, abi: anchorWriteAbi, functionName: "cosign", args }),
-    // The wallet clients extend publicActions, so they can read contracts too.
-    grades: { reader: clients[0] as unknown as ContractReader, registry: cfg.verifierRegistry },
-    sponsor: {
-      reputation: cfg.reputationRegistry,
-      accountImpl: cfg.accountImpl,
-      code: (address) => (clients[0] as unknown as PublicClient).getCode({ address }),
-      cosignedK: async (hash, signer) =>
-        (await (clients[0] as unknown as ContractReader).readContract({ address: cfg.anchorAddress, abi: receiptAnchorAbi, functionName: "cosignedK", args: [hash, signer] })) as boolean,
-      send: (req) => sendTx(clients, req as WriteRequest),
-    },
-  });
-
-  // Refuse to start on the wrong chain: a mainnet host pointed at a testnet RPC would sign anchors nobody can verify.
-  for (const url of cfg.rpcUrls) {
-    const got = await createPublicClient({ transport: http(url) }).getChainId();
-    if (got !== cfg.chainId) throw new Error(`RPC ${new URL(url).host} is chain ${got}, but ASSAY_NETWORK=${cfg.network} needs ${cfg.chainId}`);
-  }
-  await batcher.checkBalance();
-  batcher.start();
-  serve({ fetch: app.fetch, port: cfg.port }, () =>
-    console.info(`[host] ${cfg.upstreamModel} on :${cfg.port}, kid ${signer.kid}, ${store.pending().length} receipts pending`),
-  );
-}
-
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((e) => {
-    console.error((e as Error).message);
-    process.exit(1);
-  });
 }
