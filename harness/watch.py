@@ -2,16 +2,15 @@
 
   python3 harness/watch.py            (prints each problem and exits 1 if there is one)
 
-Best run outside the VM (.github/workflows/watch.yml), since a VM that's down can't report itself; scheduled
-workflows only run on main, so until it's merged the VM runs it every 15 minutes (host/deploy/assay-watch.timer).
+Runs every 15 minutes from GitHub Actions (.github/workflows/watch.yml), outside the hosts it checks.
 The same alert isn't sent twice within 3 hours, because the script reads the topic's recent messages first. Stdlib only.
 """
 import json, os, sys, time, urllib.parse, urllib.request
 
 from assay_probe import http
 
-VM = "https://34-45-1-81.sslip.io"
-HOSTS = {"testnet host 1962": VM, "Gemma host 10278": VM + "/mainnet", "Kimi host 10316": VM + "/kimi"}
+BASE = "https://assay-host.assay-host.workers.dev"  # Cloudflare Worker serving all three hosts
+HOSTS = {"testnet host 1962": BASE, "Gemma host 10278": BASE + "/mainnet", "Kimi host 10316": BASE + "/kimi"}
 INDEXER = "https://indexer.dev.hyperindex.xyz/557d70c/v1/graphql"
 MAINNET, TESTNET = "https://rpc.monad.xyz", "https://testnet-rpc.monad.xyz"
 # (name, address, rpc, alert below this many MON). The hosts warn in their logs below 1 MON.
