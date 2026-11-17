@@ -1,0 +1,39 @@
+{
+  "stamp": "20261116T070712Z",
+  "modelId": "moonshotai/kimi-k2.6",
+  "checksId": "assay-checks/tool-calls-v0",
+  "reference": "moonshotai",
+  "evidenceFile": "evidence_20261116T070712Z.tar.gz",
+  "evidence": "0xb50b98ff38494249d7ba3ba4177e16ee957fa0c545f25d18dd7fe6f1afa3eb3d",
+  "grades": [
+    {
+      "tag": "moonshotai",
+      "hostKeyPreimage": "openrouter:moonshotai",
+      "model": "0x87ee87bf5e3d5cc82c897dd19527c9f47935f16d0bc8a2efda4c6a33066ad569",
+      "hostKey": "0x8ed51adfc1580dbf73c83e8986ab4cdc4d317c5d8942f2be466c8b218d021fc3",
+      "checks": "0x414c940358dd4cd842c195ab1ad421a6a54559284c6846f743916a5f934e001e",
+      "passed": 32,
+      "total": 32,
+      "ciLowBps": 8928,
+      "ciHighBps": 10000,
+      "refModel": "0xf47f902f755148c761bacacb5f5aa7faaac5013b055dff0ffe40e69bf337f71b",
+      "evidence": "0xb50b98ff38494249d7ba3ba4177e16ee957fa0c545f25d18dd7fe6f1afa3eb3d",
+      "t": 1794812832
+    },
+    {
+      "tag": "assay-kimi-10316",
+      "hostKeyPreimage": "erc8004:143:10316",
+      "model": "0x87ee87bf5e3d5cc82c897dd19527c9f47935f16d0bc8a2efda4c6a33066ad569",
+      "hostKey": "0x57b4dfbdf9734c34770238340612b51cd2d264ed2c0643cd548f80078b53b984",
+      "checks": "0x414c940358dd4cd842c195ab1ad421a6a54559284c6846f743916a5f934e001e",
+      "passed": 32,
+      "total": 32,
+      "ciLowBps": 8928,
+      "ciHighBps": 10000,
+      "refModel": "0xf47f902f755148c761bacacb5f5aa7faaac5013b055dff0ffe40e69bf337f71b",
+      "evidence": "0xb50b98ff38494249d7ba3ba4177e16ee957fa0c545f25d18dd7fe6f1afa3eb3d",
+      "t": 1794812832
+    }
+  ],
+  "skipped": []
+}
