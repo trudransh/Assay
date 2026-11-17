@@ -26,3 +26,6 @@ examples/paid-job/job.json
 .dev.vars*
 .wrangler/
 artifacts/
+
+# Showcase and posts working folder (shared with other agents; never commit)
+showcase/
